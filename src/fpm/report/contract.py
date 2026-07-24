@@ -54,14 +54,14 @@ S3_ADDITIONS = (
     "a source and threshold, or tell us what you could expose:"
 )
 S4_INTRO = (
-    "Please list your **top three in each direction** — the projects, services, or teams whose "
-    "relationship to this work matters most to the health of a Filecoin kernel function.\n\n"
-    "Ring-fence the list to the Filecoin ecosystem. Prioritise what is close to the network — "
-    "other Filecoin clients, protocols, services, storage providers, or ProPGF-funded work — over "
-    "generic infrastructure (cloud providers, language runtimes, ubiquitous libraries) that isn't "
-    "specific to Filecoin. The test is: *if this link broke, would a Filecoin function degrade?* "
-    "If a generic dependency is nonetheless a genuine single point of failure, include it and say "
-    "why.\n\n"
+    "List your top three in each direction: the three things your work would break without "
+    "(dependencies), and the three projects, teams, or services that would break without your "
+    "work (dependents).\n\n"
+    "Prioritise what is close to the network — other Filecoin clients, protocols, services, "
+    "storage providers, or ProPGF-funded work — over generic infrastructure (cloud providers, "
+    "language runtimes, ubiquitous libraries) that isn't specific to Filecoin. The test: if this "
+    "link broke, would a Filecoin function degrade? If a generic dependency really is a single "
+    "point of failure, include it and say why.\n\n"
     "*Example below pre-filled by ProPGF for illustration — the Recipient should confirm, correct, "
     "or replace each row.*"
 )
