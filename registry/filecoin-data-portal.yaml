@@ -1,47 +1,14 @@
-# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
-# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
-# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+# The Filecoin Data Portal aggregates Filecoin on/off-chain data into open, queryable datasets
+# and dashboards. This manifest tracks freshness of the daily dataset-build pipeline.
 team: filecoin-data-portal
 maintainers: ["@davidgasquez"]   # named steward for network-data-portal; team confirms
-# x_draft (promotion note — annotations preserved as comments):
-#   slate_status: "Advance"
-#   slate_tier: "ESS"
-#   working_usd: "$120k"
-#   app_ref: "APP-0QLIOMS2-JSK1EM"
-#   prepared_by: "OSO, 2026-07-15"
-#   allowlist_additions: []   # api.github.com already allowlisted
-#   unmeasured:
-#     - function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
-#       reason: >-
-#         Only partially unmeasured: the dashboards half of the function (filecoindataportal.xyz)
-#         serves HTML, not JSON, so dashboard freshness/quality has no pipeline-fetchable metric.
-#         The datasets half is covered below via the daily Pipeline workflow.
-#   candidates:
-#     - metric: "parquet dataset last-modified age (data.filecoindataportal.xyz/filecoin_daily_metrics.parquet)"
-#       why_unverified: >-
-#         PROBED 2026-07-15: HEAD -> 200 but content-type application/octet-stream (parquet, not
-#         JSON) so the http-json pipeline cannot ingest it. Also the Last-Modified header read
-#         2026-04-29 while the GitHub Pipeline workflow succeeded 2026-07-12 — either this file is
-#         deprecated or served from a stale cache; team should confirm the canonical artifact URL
-#         (and whether a JSON index/manifest of published datasets exists — none found at
-#         /datasets.json, /api/datasets, or data.filecoindataportal.xyz/).
-#         Would need allowlist addition: data.filecoindataportal.xyz.
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  datasets_with_tests_docs   : needs a dataset manifest/health endpoint from the team
-#  committed_datasets_present : needs a source listing committed datasets
-#  datasets_served_available  : needs a served-datasets availability endpoint
 functions:
   # Data freshness is THE metric for this function: the portal's value is a daily-updated,
-  # vendor-neutral dataset anyone can reuse. The published artifacts are parquet (not JSON),
-  # so the closest pipeline-fetchable signal is the GitHub Actions "Pipeline" workflow that
-  # builds and publishes them daily.
-  # PROBED 2026-07-15: curl "https://api.github.com/repos/davidgasquez/filecoin-data-portal/actions/workflows/pipeline.yml/runs?status=success&per_page=5"
-  #   -> 200; latest successful Pipeline run created_at 2026-07-12T14:28:42Z (~2.6 days old at probe);
-  #   332 successful runs total. NOTE: the two most recent Pipeline runs (2026-07-13, 2026-07-14)
-  #   concluded "failure" — the daily pipeline is flaky right now, so this metric starts out
-  #   genuinely near its threshold. That is the point of monitoring it.
-  # THRESHOLD: PLACEHOLDER — pipeline is scheduled daily; 3 days tolerates two consecutive failed
-  #   runs before alerting. Observed 2.6d at probe (currently borderline).
+  # vendor-neutral dataset anyone can reuse. The published artifacts are parquet (not JSON), so
+  # the closest pipeline-fetchable signal is the GitHub Actions "Pipeline" workflow that builds
+  # and publishes them daily.
+  # THRESHOLD (placeholder, confirm with team): pipeline is scheduled daily; 3 days tolerates two
+  # consecutive failed runs before alerting.
   - function_id: network-data-portal-pipeline-freshness
     kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
     origin: oso

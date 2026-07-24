@@ -1,68 +1,19 @@
-# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
-# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
-# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
-#
-# SCOPE NOTE: FilOz spans two things in this batch:
-#   1. Curio (funded this batch, ESS / Re-scope, $250k + 67.2k FIL) — one workstream across
-#      TWO Karma apps: APP-P3NAPR7O-TSQ67Q ("Curio Core + Lantern") and
-#      APP-HDYJESMD-2WLL00 ("Curio", canonical filecoin-project/curio repo).
-#   2. PRE-EXISTING agreements FilOz stewards outside this slate: Lotus (consensus client),
-#      lotus-miner (WinningPoSt leader election / block assembly), and the EVM + EAM actor
-#      (co-maintained with Forest and Fil-B inside builtin-actors). Those functions get
-#      their own entries below; the x_draft slate fields describe the Curio row only.
+# FilOz spans Curio (the sealing/proving/deal-making stack, canonical repo
+# filecoin-project/curio) plus its pre-existing stewardship of Lotus (consensus client),
+# lotus-miner (WinningPoSt leader election / block assembly), and the EVM + EAM actors
+# (co-maintained inside builtin-actors). This manifest tracks release cadence, PDP proof-set
+# activity, and mainnet block-production health across that portfolio.
 team: filoz
 maintainers: ["@TODO-github-handle"]   # team fills in
-# x_draft (promotion note — annotations preserved as comments):
-#   slate_status: "Re-scope"
-#   slate_tier: "ESS"
-#   working_usd: "$250k + 67.2k FIL (Curio row; Lotus/actors items are pre-existing agreements)"
-#   app_ref: "APP-P3NAPR7O-TSQ67Q, APP-HDYJESMD-2WLL00"
-#   prepared_by: "OSO, 2026-07-15"
-#   allowlist_additions: [api.goldsky.com]
-#   unmeasured: []
-#   candidates:
-#     - metric: lotus_version_adoption_share
-#       why_unverified: >-
-#         Ideal signal for the consensus-client function (share of network peers on a
-#         supported Lotus version), but no public unauthenticated telemetry found:
-#         Spacescope (api.spacescope.io) requires a bearer token, filscan's open API is
-#         undocumented (probed 2026-07-15, method-not-found), and ProbeLab publishes
-#         dashboards rather than a stable JSON API. Flag for committee: worth provisioning
-#         a Spacescope token via source.auth.secret_ref.
-#     - metric: daily_sector_onboarding_rate
-#       why_unverified: >-
-#         Live evidence for the sealing-pipeline function. Spacescope has it but needs auth.
-#         Filfox overview's totalRawBytePowerDelta was probed NEGATIVE on 2026-07-15
-#         (network power currently shrinking net of expirations), so a "power delta >= 0"
-#         SLA would fail for reasons unrelated to Curio's sealing pipeline. Dropped.
-#     - metric: market_deal_count_growth
-#       why_unverified: >-
-#         filfox /api/v1/deal/list probed OK (totalCount = 133,733,026 top-level; deal rows
-#         are a nested array -> child table, unreachable by transform). totalCount is a
-#         monotonic counter, so any fixed threshold is either trivially green or a one-way
-#         ratchet — not a defensible SLA without a diff-over-time primitive.
-#     - metric: fevm_new_contracts_24h
-#       why_unverified: >-
-#         filecoin.blockscout.com/api/v2/smart-contracts/counters probed 2026-07-15:
-#         new_smart_contracts_24h = 0 on a normal day — deployment is too bursty to be a
-#         daily SLA for the EVM + EAM actor.
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  curio_core_release_tags   : staged in registry/drafts/filoz.yaml (curio-core-release-cadence) — confirm threshold + promote
-#  lantern_release_tags      : staged in registry/drafts/filoz.yaml (lantern-release-cadence) — confirm threshold + promote (Reiers/Lantern)
-#  synapse_sdk_compat_ci     : from the FilOz application; needs a public CI/compat source
-#  usdfc_settled_curio       : FOC "USDFC settled via Filecoin Pay"; no public source — ask David Gasquez
 functions:
   # ---------------------------------------------------------------------------
-  # CURIO — funded this batch (both Karma apps; canonical repo filecoin-project/curio)
+  # CURIO — canonical repo filecoin-project/curio
   # ---------------------------------------------------------------------------
 
-  # PROBED 2026-07-15: curl https://api.github.com/repos/filecoin-project/curio/releases?per_page=30
-  #   -> 200; 30 releases spanning v1.22.0 (2024-06-12) .. v1.28.2 (2026-06-11);
-  #   avg gap ~25.1 days (incl. RCs and the pdp/v1.0.0 tag).
-  # THRESHOLD: PLACEHOLDER — observed ~25d avg; 45 matches the forest-release-cadence
-  #   convention in kernel_demo.yaml and leaves ~2x headroom.
-  # NOTE: maintenance-cadence proxy. Live sealing evidence (daily sector onboarding)
-  #   needs an authed source — see x_draft.candidates.
+  # Maintenance-cadence proxy for the sealing pipeline; live sealing evidence (daily sector
+  # onboarding) needs an authenticated source, not yet available.
+  # THRESHOLD (placeholder, confirm with team): ~25d observed avg release cadence; 45 leaves
+  # ~2x headroom.
   - function_id: curio-sealing-release-cadence
     kernel_function: "Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)"
     origin: oso
@@ -82,19 +33,16 @@ functions:
       endpoint: "https://api.github.com/repos/filecoin-project/curio/releases?per_page=30"
       query: "/repos/filecoin-project/curio/releases?per_page=30"
     transform:
-      # avg days between consecutive releases (same pattern as kernel_demo forest-release-cadence)
+      # avg days between consecutive releases (same pattern as forest-release-cadence)
       sql: "SELECT date_diff('second', MIN(published_at), MAX(published_at)) / NULLIF(COUNT(*) - 1, 0) / 86400.0 FROM raw"
 
-  # PROBED 2026-07-15: curl https://filfox.info/api/v1/overview -> 200,
-  #   averageTipsetBlocks = 4.938 (nominal expectation is 5 blocks/tipset).
-  # THRESHOLD: PLACEHOLDER — observed 4.94; sustained < 4.5 means elected winners are
-  #   failing to submit blocks (WinningPoSt/scheduler trouble across the SP fleet).
-  # NOTE: network-wide win-count health, a JOINT signal for Curio + lotus-miner fleets —
-  #   not attributable to Curio alone. Deliberately a DIFFERENT angle from kernel_demo's
-  #   mainnet-block-explorer entry (tipset indexing gaps on the same host).
-  # NOTE: filfox /api/v1/tipset/recent has per-tipset "blocks" as a nested array (probed:
-  #   lands in a child table a transform cannot reach) — hence the precomputed average
-  #   from /overview, a single top-level JSON object.
+  # Network-wide win-count health — a joint signal across Curio + lotus-miner fleets, not
+  # attributable to Curio alone.
+  # filfox /api/v1/tipset/recent nests per-tipset "blocks" as an array landing in a child
+  # table transforms can't reach — hence the precomputed average from /overview.
+  # THRESHOLD (placeholder, confirm with team): observed ~4.94 avg; sustained < 4.5 means
+  # elected winners are failing to submit blocks (WinningPoSt/scheduler trouble across the SP
+  # fleet).
   - function_id: curio-windowpost-winningpost-scheduler
     kernel_function: "Block production - WindowPoSt + WinningPoSt scheduler"
     origin: oso
@@ -109,27 +57,20 @@ functions:
       cadence: daily
     source:
       adapter: oso
-      # CAVEAT (probed 2026-07-15): filfox 403s the default python-requests User-Agent on
-      # /overview (any other UA passes). If the OSO/dlt fetch presents that UA, the dry-run
-      # will fail — verify at PR time; fallback is a UA header or a different host.
+      # CAVEAT: filfox 403s the default python-requests User-Agent on /overview (any other
+      # UA passes); fallback is a UA header or a different host.
       kind: http-json
       base_url: "https://filfox.info"
       endpoint: "https://filfox.info/api/v1/overview"
       query: "/api/v1/overview"
       extract: { column: average_tipset_blocks, reduce: single, derive: value, unit: blocks }
 
-  # PROBED 2026-07-15: POST https://api.goldsky.com/api/public/project_cmdfaaxeuz6us01u359yjdctw/subgraphs/pdp-explorer/mainnet311e/gn
-  #   body {"query": "{ networkMetric(id: \"0x7064...7473\") { totalActiveProofSets } }"}
-  #   -> 200, data.networkMetric.totalActiveProofSets = "1032" (string; also
-  #   totalProviders = 29, totalProofs = 60605). This is the public Goldsky subgraph
-  #   behind FilOzone's own PDP explorer (pdp.vxb.ai / github.com/FilOzone/pdp-explorer).
-  # THRESHOLD: PLACEHOLDER — observed 1032 active proof sets; >= 500 asserts PDP proving
-  #   stays in production at roughly half current scale. Team should calibrate.
-  # NOTE: single-object GraphQL query on purpose — a list response would land in a child
-  #   table. Column name assumes dlt's snake_case flattening of
-  #   data.networkMetric.totalActiveProofSets; verify on first pipeline run.
-  # NOTE: needs allowlist addition api.goldsky.com. Covers the PDP leg of the function;
-  #   deal-making leg candidates were probed but rejected (see x_draft.candidates).
+  # Public Goldsky subgraph behind FilOzone's own PDP explorer (pdp.vxb.ai / github.com/FilOzone/pdp-explorer).
+  # Single-object GraphQL query on purpose — a list response would land in a child table.
+  # Column name assumes dlt's snake_case flattening of data.networkMetric.totalActiveProofSets.
+  # Covers the PDP leg of the function only; the deal-making leg has no verified public source.
+  # THRESHOLD (placeholder, confirm with team): observed ~1032 active proof sets; >= 500
+  # asserts PDP proving stays in production at roughly half current scale.
   - function_id: curio-pdp-active-proofsets
     kernel_function: "Deal-making + PDP + HTTP retrieval"
     origin: oso
@@ -149,24 +90,22 @@ functions:
       endpoint: "https://api.goldsky.com/api/public/project_cmdfaaxeuz6us01u359yjdctw/subgraphs/pdp-explorer/mainnet311e/gn"
       query: "/api/public/project_cmdfaaxeuz6us01u359yjdctw/subgraphs/pdp-explorer/mainnet311e/gn"
       method: POST
-      # NOTE: literal GraphQL braces are doubled ({{ }}) — dlt's rest_api treats single
-      # braces in param/json values as placeholder expressions (found live 2026-07-15).
+      # literal GraphQL braces are doubled ({{ }}) — dlt's rest_api treats single
+      # braces in param/json values as placeholder expressions
       params: { query: '{{ networkMetric(id: "0x7064705f6e6574776f726b5f7374617473") {{ totalActiveProofSets }} }}' }
       extract: { column: data__network_metric__total_active_proof_sets, cast: float, reduce: single, derive: value, unit: proof_sets }
 
   # ---------------------------------------------------------------------------
-  # PRE-EXISTING FilOz agreements (not on this batch's slate): Lotus, lotus-miner,
-  # EVM + EAM actor. Included so kernel coverage is complete for the steward.
+  # PRE-EXISTING FilOz agreements: Lotus, lotus-miner, EVM + EAM actor — included so
+  # kernel coverage is complete for the steward.
   # ---------------------------------------------------------------------------
 
-  # PROBED 2026-07-15: curl https://api.github.com/repos/filecoin-project/lotus/releases?per_page=30
-  #   -> 200; stable (tag 'v*', non-rc) releases: 9 spanning v1.34.0 (2025-09-11) ..
-  #   v1.36.1 (2026-06-30), avg gap 36.4 days. Feed mixes lotus and miner/* tags plus
-  #   RCs, hence the WHERE filter in the transform.
-  # THRESHOLD: PLACEHOLDER — observed 36.4d avg for stable releases; 60 leaves headroom
-  #   for the between-network-upgrade lull.
-  # CANDIDATE (unverified): Lotus version adoption across network peers — see
-  #   x_draft.candidates; no public unauthenticated telemetry found.
+  # GitHub feed mixes lotus and miner/* tags plus release candidates, hence the WHERE filter
+  # in the transform (stable 'v*' tags only).
+  # Lotus version adoption across network peers would be the ideal signal here, but no
+  # public unauthenticated telemetry source was found.
+  # THRESHOLD (placeholder, confirm with team): observed ~36d avg for stable releases; 60
+  # leaves headroom for the between-network-upgrade lull.
   - function_id: lotus-consensus-client-release-cadence
     kernel_function: "Consensus/validation client: fork-choice, state validation, message pool"
     origin: oso
@@ -189,14 +128,11 @@ functions:
       # stable node releases only: keep 'v*' tags, drop 'miner/*' tags and release candidates
       sql: "SELECT date_diff('second', MIN(published_at), MAX(published_at)) / NULLIF(COUNT(*) - 1, 0) / 86400.0 FROM raw WHERE tag_name LIKE 'v%' AND tag_name NOT LIKE '%-rc%'"
 
-  # PROBED 2026-07-15: curl https://filfox.info/api/v1/overview -> 200,
-  #   averageTipsetInterval = 30.27 seconds (nominal epoch time is 30s).
-  # THRESHOLD: PLACEHOLDER — observed 30.3s; sustained > 45s means leader election /
-  #   block assembly is failing network-wide (null tipsets, missed epochs). 70%+ of
-  #   block producers run lotus-miner, so this is the closest live network signal.
-  # NOTE: joint fleet signal (lotus-miner + Curio + sophon-miner). Complementary
-  #   maintenance signal probed but not used: 'miner/*' GitHub release tags avg 41.6d
-  #   between stable releases (lotus-miner is on a deprecation path toward Curio).
+  # Joint fleet signal (lotus-miner + Curio + sophon-miner). lotus-miner is on a deprecation
+  # path toward Curio; its 'miner/*' release tags average ~41.6d between stable releases.
+  # THRESHOLD (placeholder, confirm with team): observed ~30.3s; sustained > 45s means leader
+  # election / block assembly is failing network-wide (null tipsets, missed epochs). 70%+ of
+  # block producers run lotus-miner, making this the closest live network signal.
   - function_id: lotus-miner-winningpost-block-production
     kernel_function: "Block production - WinningPoSt leader election & block assembly"
     origin: oso
@@ -211,24 +147,20 @@ functions:
       cadence: daily
     source:
       adapter: oso
-      # CAVEAT: filfox /overview 403s the default python-requests UA — see note on the
-      # curio scheduler entry above; verify at dry-run time.
+      # CAVEAT: filfox /overview 403s the default python-requests User-Agent; fallback is a
+      # UA header or a different host.
       kind: http-json
       base_url: "https://filfox.info"
       endpoint: "https://filfox.info/api/v1/overview"
       query: "/api/v1/overview"
       extract: { column: average_tipset_interval, reduce: single, derive: value, unit: seconds }
 
-  # PROBED 2026-07-15: curl https://api.github.com/repos/filecoin-project/builtin-actors/releases?per_page=30
-  #   -> 200; 30 releases v12.0.0-dev.2 (2023-09-22) .. v18.0.0 (2026-04-28),
-  #   avg gap 32.7 days.
-  # THRESHOLD: PLACEHOLDER — observed 32.7d avg; 60 gives ~2x headroom.
-  # NOTE: the EVM + EAM actors ship inside builtin-actors (actors/evm, actors/eam);
-  #   there is no separately-released artifact. kernel_demo's builtin-actors entry
-  #   monitors release AGE (<= 90d) for the core-actors function; this entry monitors
-  #   release CADENCE — a different metric per the no-duplication rule, evidencing
-  #   the sustained co-maintenance (FilOz + Forest + Fil-B) the function requires.
-  #   EVM-specific live telemetry was probed and rejected (see x_draft.candidates).
+  # The EVM + EAM actors ship inside builtin-actors (actors/evm, actors/eam); there's no
+  # separately-released artifact. This tracks release cadence — a different metric from the
+  # builtin-actors release-age check below — as a signal of sustained co-maintenance (FilOz +
+  # Forest + Fil-B). EVM-specific live telemetry was evaluated but no usable public source
+  # was found.
+  # THRESHOLD (placeholder, confirm with team): observed ~32.7d avg; 60 gives ~2x headroom.
   - function_id: evm-eam-actor-maintenance
     origin: oso
     tier: essential
@@ -250,12 +182,11 @@ functions:
       # avg days between consecutive releases (cadence, not age — see note above)
       sql: "SELECT date_diff('second', MIN(published_at), MAX(published_at)) / NULLIF(COUNT(*) - 1, 0) / 86400.0 FROM raw"
 
-  # ---- From the team's own Karma application (3.2 Verification metrics) --------------
-  # Curio Core proposed: "Mainnet SPs running Curio Core — on-chain ServiceProviderRegistry
-  # — target >= 3 mainnet providers." The subgraph cannot attribute providers to Curio Core
-  # BUILDS (that needs web3_clientVersion fingerprinting), so this tracks the network-level
-  # provider count the target lives inside — attribution stays a review-time check.
-  # PROBED 2026-07-15: networkMetric.totalProviders via the pdp-explorer subgraph -> 200.
+  # From the team's own Karma application: Curio Core proposed "Mainnet SPs running Curio
+  # Core — on-chain ServiceProviderRegistry — target >= 3 mainnet providers." The subgraph
+  # cannot attribute providers to Curio Core builds specifically (that needs
+  # web3_clientVersion fingerprinting), so this tracks the network-level provider count the
+  # target lives inside — attribution stays a review-time check.
   # THRESHOLD: >= 3 — the team's own Karma target as a network-level floor.
   - function_id: pdp-active-providers
     kernel_function: "Deal-making + PDP + HTTP retrieval"
@@ -280,7 +211,8 @@ functions:
       params: { query: '{{ networkMetric(id: "0x7064705f6e6574776f726b5f7374617473") {{ totalProviders }} }}' }
       extract: { column: data__network_metric__total_providers, cast: float, reduce: single, derive: value, unit: providers }
 
-  # ---- Routed from registry/kernel_demo.yaml (dissolved 2026-07-15); OSO reference metric ----
+  # Release-age check for builtin-actors (home of the storage market / miner / power /
+  # system / reward / datacap actors).
   - function_id: builtin-actors
     kernel_function: "Storage market / miner / power / system / reward / datacap actors"
     origin: oso

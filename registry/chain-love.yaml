@@ -1,60 +1,24 @@
-# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
-# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
-# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
-#
 # Chain.Love operates public Filecoin chain-access infrastructure (the RPC-hosting class of
-# the "Chain sync & state management" kernel function — same class as the Ankr draft, but a
-# DIFFERENT independently-operated endpoint, so both drafts measuring head freshness is
-# redundancy of the service, not duplication of the metric). Both entries below measure the
-# SERVICE OUTPUT of api.chain.love directly: a stalled or forked backing node shows up as a
-# stale reported chain head on the endpoint the community actually calls.
+# the "Chain sync & state management" kernel function). This manifest measures the SERVICE
+# OUTPUT of api.chain.love directly: a stalled or forked backing node shows up as a stale
+# reported chain head on the endpoint the community actually calls.
 team: chain-love
 maintainers: ["@TODO-github-handle"]   # team fills in
-# x_draft (promotion note — annotations preserved as comments):
-#   slate_status: "Advance"
-#   slate_tier: "ESS"
-#   working_usd: "$75-107k"
-#   app_ref: "APP-P706QNLF-NLQPG5"
-#   prepared_by: "OSO, 2026-07-15"
-#   allowlist_additions: [api.chain.love]
-#   unmeasured:
-#     - function: "Snapshot bootstrap (the snapshot-hosting slice of chain sync & state management)"
-#       reason: "No public Chain.Love snapshot endpoint found: snapshots.chain.love and snapshot.chain.love do not resolve (probed 2026-07-15) and api.chain.love/snapshot -> 404. If the team publishes a snapshot manifest URL (JSON with a timestamp), a snapshot_age_hours metric can be added at adoption time."
-#   candidates:
-#     - metric: rpc_calibnet_head_lag_epochs
-#       why_unverified: >
-#         PROBED 2026-07-15: no calibration-testnet endpoint found — api.calibration.chain.love
-#         and calibration.chain.love do not resolve; api.chain.love/calibration/rpc/v1 -> 404.
-#         If Chain.Love operates a calibnet RPC under another host, mirror the mainnet entry
-#         against it (calibnet genesis unix ts 1667326380).
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  supply_deals_api      : NEW source given (Grafana + status.node.glif.io) — needs wiring
-#  free_rate_limit_floor : ask team
-#  NEW: RPC latency / req / availability + FEVM archival health + customer-support response time (beyond head-lag)
 functions:
   # Kernel function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)".
   # Chain.Love's funded scope is public RPC / chain-access hosting; this measures the native
   # Lotus read surface of their endpoint keeping pace with the chain.
-  #
-  # PROBED 2026-07-15T02:31Z: curl -X POST https://api.chain.love/rpc/v1
-  #   '{"jsonrpc":"2.0","method":"Filecoin.ChainHead","params":[],"id":1}' -> 200, no auth
-  #   required; result.Height = 6192542 vs wall-clock expected epoch 6192542 (lag 0).
-  #   Filecoin.Version -> {"Version":"1.36.1-rc1+mainnet","BlockDelay":30,"Agent":"lotus"}.
-  #   /rpc/v0 answers identically; behind a load balancer (x-chainlove-lb-* headers).
   # JSON shape: single object -> one parent row; result is a nested OBJECT so dlt flattens
   #   result.Height to column height. Blocks/Cids are nested ARRAYS -> child tables
   #   the transform cannot reach (so max_table_nesting: 0 must NOT be set) — Height is all
   #   we need and it lives on the parent row.
-  # ROBUSTNESS NOTE: one probe out of five returned the response body duplicated (two
-  #   newline-delimited copies of the same JSON-RPC object; suspect an LB retry quirk —
-  #   x-chainlove-lb-attempts header). Four subsequent probes were clean single objects. If
-  #   the fetch ever fails to parse, retry before concluding the endpoint is down, and worth
-  #   flagging to the team at adoption.
+  # CAVEAT: the endpoint sits behind a load balancer and has occasionally been observed to
+  #   return the response body duplicated (two newline-delimited copies of the same JSON-RPC
+  #   object). If the fetch ever fails to parse, retry before concluding the endpoint is down.
   # Expected epoch = floor((now - 1598306400) / 30): mainnet genesis 2020-08-24T22:00:00Z,
-  #   30s epochs. Same formula/constant as the Ankr draft; cross-checked against the probed
-  #   Height (delta 0 at probe time).
-  # THRESHOLD: PLACEHOLDER — observed lag 0; 5 epochs (150s) tolerates fetch-timing noise and
-  #   brief block-delivery delays while still catching a genuinely stalled backing node.
+  #   30s epochs. Same formula/constant used across the registry's RPC-freshness entries.
+  # THRESHOLD (placeholder, confirm with team): 5 epochs (150s) tolerates fetch-timing noise
+  #   and brief block-delivery delays while still catching a genuinely stalled backing node.
   - function_id: chain-sync-rpc-mainnet-head-lag
     kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
     origin: oso
@@ -76,7 +40,7 @@ functions:
       method: POST
       params: { jsonrpc: "2.0", method: "Filecoin.ChainHead", params: [], id: 1 }
       # result is the JSON-RPC payload object; without an explicit selector dlt
-      # auto-descends into the LONGEST nested list (Cids!) — found live 2026-07-15.
+      # would auto-descend into the longest nested list (Cids) instead.
       data_selector: result
     transform:
       # expected epoch from wall clock minus the head Height the endpoint reports; single
@@ -87,15 +51,10 @@ functions:
   # surface for "FEVM dApps", and dApps hit the eth_* API, which is served by a distinct
   # code path (Lotus ETH RPC / chain indexer) that can break while the native API stays up.
   # Distinct from the entry above: same endpoint, different API surface.
-  #
-  # PROBED 2026-07-15T02:31Z: curl -X POST https://api.chain.love/rpc/v1
-  #   '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' -> 200 unauthenticated;
-  #   result = "0x5e7d9d" = 6192541 vs wall-clock expected epoch 6192542 (lag 1 — the eth
-  #   view normally trails the native head by ~1 epoch).
   # JSON shape: single flat object {id, jsonrpc, result} -> one row; result is a top-level
   #   hex STRING column, no nested arrays. The extract vocab cannot cast hex, so the
   #   transform decodes it with from_base(substr(result, 3), 16).
-  # THRESHOLD: PLACEHOLDER — observed lag 1; 10 epochs (300s) = the mainnet-head allowance
+  # THRESHOLD (placeholder, confirm with team): 10 epochs (300s) = the mainnet-head allowance
   #   plus slack for the eth view's structural ~1-epoch trail and indexer catch-up.
   - function_id: chain-sync-rpc-fevm-eth-head-lag
     kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"

@@ -1,50 +1,14 @@
-# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
-# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
-# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
-#
-# Funded scope is the operational stability layer for CalibrationNet (NV upgrade rehearsal
-# environment + successor to the Curio/Blueshift calibnet miner side letter).
-# calibnet-chain-liveness (avg seconds/epoch via calibration.filfox.info) is monitored by
-# the OSO reference metric routed into this file below — the entries below are deliberately
-# COMPLEMENTARY: head lag
-# measured against wall clock from an independent RPC (Glif, not Filfox), miner-set
-# breadth, and block-win spread. NOTE: the calibnet miner topology recently changed
-# (committee flagged stale milestones in this application) — the team should re-confirm
-# which miners it operates and tighten thresholds accordingly on adoption.
+# Plumbline operates calibnet storage-provider infrastructure supporting CalibrationNet, the
+# NV-upgrade rehearsal environment. This manifest tracks the team's own committed metric:
+# decentralization of its calibnet SP's quality-adjusted power share.
 team: plumbline
 maintainers: ["@TODO-github-handle"]   # team fills in
-# x_draft (promotion note — annotations preserved as comments):
-#   slate_status: "Advance"
-#   slate_tier: "ESS"
-#   working_usd: "$17k"
-#   app_ref: "APP-U5CX297Z-XKDQDZ"
-#   prepared_by: "OSO, 2026-07-15"
-#   allowlist_additions: [api.calibration.node.glif.io]
-#   unmeasured:
-#     - function: "NV upgrade rehearsal validation (per-upgrade milestone work)"
-#       reason: "Participation in a specific network-version rehearsal is event-based, not a recurring scalar; it is evidenced indirectly by the head-lag and miner metrics continuing to pass through an NV boundary."
-#   candidates:
-#     - metric: "Per-miner power/liveness for Plumbline-operated calibnet miners"
-#       why_unverified: "PROBED 2026-07-15: calibration.filfox.info/api/v1/miner/list/power -> 200, 8 miners with tags (e.g. t0143103 'Curio Storage Inc.'), but the topology recently changed and OSO cannot attribute specific miner IDs to Plumbline from public data. Team should list its miner addresses on adoption so a per-miner metric can be added (the miners array also lands in a child table, so this needs a per-miner endpoint, e.g. /api/v1/address/<miner>/power-stats)."
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  faucet_uptime / faucet_p99_latency : no public calibnet faucet health/latency endpoint — ask team
 functions:
-  # (calibnet-head-epoch-lag, calibnet-active-miners and calibnet-block-win-spread removed
-  #  2026-07-22 — dropped by the ProPGF committee review, which retained only the
-  #  team-committed Karma metric below. Per the sheet: "Mainly this matters for Reiers'
-  #  Calib miner." The dissolved OSO reference metric calibnet-chain-liveness was dropped
-  #  in the same pass.)
-
-  # ---- From the team's own Karma application (3.2 Verification metrics) --------------
-  # Plumbline proposed: "SP test-target availability + decentralization — on-chain power
-  # on calibration.filfox.info — t0143103 online & steady, held < 1/3 of calibration QAP."
-  # PROBED 2026-07-15: calibration.filfox.info/api/v1/address/t0143103 -> 200,
-  #   miner.qualityAdjPower = 385241386582016, networkQualityAdjPower = 1040241079091200
-  #   -> share 0.370: currently ABOVE the team's own < 1/3 commitment (calibnet has only
-  #   8 active miners after the topology change) — expected to read as a breach until the
-  #   miner sheds power or the network grows. Both numerator and denominator ride the
-  #   SAME response, so the ratio is a single-table transform.
-  # THRESHOLD: 0.3334 — the team's own Karma target, not a placeholder.
+  # Plumbline's own commitment: SP test-target availability + decentralization — on-chain
+  # power on calibration.filfox.info — t0143103 online & steady, held < 1/3 of calibration QAP.
+  # Both numerator and denominator ride the same response, so the ratio is a single-table
+  # transform.
+  # THRESHOLD: 0.3334 — the team's own committed target, not a placeholder.
   - function_id: calibnet-sp-power-share
     origin: karma
     tier: essential

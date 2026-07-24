@@ -1,80 +1,15 @@
+# ChainSafe builds and operates Forest, an independent Rust Filecoin full node, plus
+# mainnet/calibnet bootstrap and snapshot infrastructure. This manifest tracks snapshot
+# freshness, bootstrap DNS reachability, calibnet rehearsal miner power, and Forest's
+# release cadence.
 team: chainsafe
 maintainers: ["@lemmih", "@dignifiedquire"]
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  faucet_reachable / faucet_wallet_active           : faucet is an HTML SPA, no JSON health (see registry/drafts/chainsafe.yaml candidates)
-#  diff_snapshots_per_week / lite_snapshots_available: staged in registry/drafts/chainsafe.yaml (mainnet-diff/lite-snapshot-freshness) — confirm + promote
-#  NEW "Infra Providers using Forest"                : adoption count via Slack/Telegram — not machine-checkable
 functions:
 
-# ---- Merged from registry/drafts/chainsafe.yaml (promoted 2026-07-15) ----
-# x_draft (promotion note — annotations preserved as comments):
-#   # This one draft covers BOTH ChainSafe slate rows:
-#   slates:
-#     - app_ref: "APP-P0UD8I92-78VVRM"   # Forest — an efficient and lightweight Filecoin Node
-#       slate_status: "Unresolved"
-#       slate_tier: "ESS"
-#       working_usd: "$300-400k"
-#       functions: [forest-ci-main-health, mainnet-snapshot-freshness]
-#     - app_ref: "APP-VQC3PIBY-G2UDZJ"   # Filecoin Infrastructure Services
-#       slate_status: "Advance"
-#       slate_tier: "ESS"
-#       working_usd: "$8.4k"
-#       functions: [bootstrap-dns-mainnet, calibnet-snapshot-freshness]
-#   prepared_by: "OSO, 2026-07-15"
-#   allowlist_additions: [forest-archive.chainsafe.dev, dns.google]
-#   unmeasured:
-#     - function: "Operation of seed nodes a new peer contacts on startup"
-#       reason: >
-#         Direct liveness of the bootstrap nodes is libp2p (TCP 34000), not HTTP/JSON —
-#         the pipeline cannot dial it. bootstrap-dns-mainnet below covers only the DNS
-#         precondition; actual peer reachability remains unmeasured.
-#     - function: "Calibration Network faucet operation (part of the Infra Services bid)"
-#       reason: >
-#         faucet.calibnet.chainsafe-fil.io serves an HTML SPA only; no public JSON
-#         health/API endpoint found (probed 2026-07-15: / -> 200 text/html,
-#         /api/health -> 404).
-#     - function: "FVM engine / builtin-actors / EVM+EAM co-maintenance (Forest bid, low-medium confidence)"
-#       reason: >
-#         Co-maintenance share is not machine-checkable; builtin-actors release age is
-#         already monitored in kernel_demo.yaml (builtin-actors).
-#   candidates:
-#     - metric: forest_node_uptime_ratio (replacement for the network-uptime fixture)
-#       why_unverified: >
-#         ChainSafe's Grafana/Prometheus for Forest nodes is not publicly reachable
-#         (past probes and 2026-07-15 re-check). Committee could ask ChainSafe to expose
-#         a read-only JSON uptime endpoint; until then the grafana fixture stands.
-#     - metric: latest-snapshot age via HTTP redirect (non-JSON)
-#       why_unverified: >
-#         GET https://forest-archive.chainsafe.dev/latest/mainnet -> 302 whose Location
-#         encodes date+height (probed 2026-07-15: forest_snapshot_mainnet_2026-07-15_
-#         height_6192240). Pipeline needs JSON, so superseded by the verified
-#         ?format=json listing used below.
-#     - metric: forest-explorer.chainsafe.dev health
-#       why_unverified: "Cloudflare returns 403 to non-browser clients (probed 2026-07-15); unusable by the pipeline."
-#     - metric: bootstrap peer list contents (raw.githubusercontent.com)
-#       why_unverified: >
-#         Canonical list lives at ChainSafe/forest build/bootstrap/{mainnet,calibnet};
-#         raw.githubusercontent.com is JSON-hostile and the contents API returns base64 —
-#         fine for research (used to identify the chainsafe-fil.io hosts) but not a metric.
-#     - metric: forest CI success RATIO over recent runs
-#       why_unverified: >
-#         /actions/runs returns runs nested under workflow_runs; a ratio needs SQL over
-#         the child rows, which transform cannot reach and extract cannot express.
-#         Latest-successful-run age (verified, below) is the expressible proxy.
-  # ---- Slate row 1: Forest (APP-P0UD8I92-78VVRM) — Forest bid --------------------------
-  # (forest-ci-main-health removed 2026-07-22 — dropped by the ProPGF committee review;
-  #  Forest maintenance is covered by forest-release-cadence below.)
-  # Kernel: "Validated snapshot generation & hosting (~2h cadence)".
-  # REAL replacement for the forest-snapshots fixture in registry/chainsafe.yaml (same
-  # <=6h SLA intent). The snapshot-listing worker (ChainSafe/filecoin-snapshot-listing)
-  # exposes a JSON listing via ?format=json.
-  # PROBED 2026-07-15: curl 'https://forest-archive.chainsafe.dev/list/mainnet/latest-v2?format=json&limit=20'
-  #   -> 200 application/json, total=122, items[0].uploaded=2026-07-15T01:13:42Z (~1.3h old);
-  #   previous item 2026-07-14T23:10:30Z -> observed cadence ~2.05h. items[] is nested ->
-  #   extract.path selects it. NOTE: /list/mainnet/latest (unversioned) returned total=0;
-  #   the populated bucket is latest-v2.
-  # THRESHOLD: 21600s (6h) — observed ~2h publish cadence, so 6h = roughly three missed
-  #   cycles; matches the existing fixture SLA in registry proper.
+  # Snapshot-listing worker (ChainSafe/filecoin-snapshot-listing) publishes a JSON listing
+  # via ?format=json — used here instead of the unversioned /list/mainnet/latest endpoint,
+  # which returns an empty listing.
+  # THRESHOLD: 6h — roughly three missed cycles at the observed ~2h publish cadence.
   - function_id: mainnet-snapshot-freshness
     kernel_function: "Validated snapshot generation & hosting (~2h cadence)"
     origin: oso
@@ -95,16 +30,11 @@ functions:
       query: "/list/mainnet/latest-v2?format=json&limit=20"
       extract: { path: items, column: uploaded, timestamp_column: uploaded, cast: date, reduce: latest, derive: age_seconds, unit: seconds }
 
-  # ---- Slate row 2: Infra Services (APP-VQC3PIBY-G2UDZJ) ------------------------------
-  # Kernel: "Operation of seed nodes a new peer contacts on startup".
-  # ChainSafe operates bootstrap-{mainnet,calibnet}-{0,1,2}.chainsafe-fil.io (canonical
-  # list: ChainSafe/forest build/bootstrap/*). HONEST LIMIT: this checks only that the
-  # bootstrap hostname RESOLVES (DNS-over-HTTPS, JSON); libp2p reachability on TCP 34000
-  # is not HTTP-probeable — see x_draft.unmeasured.
-  # PROBED 2026-07-15: curl 'https://dns.google/resolve?name=bootstrap-mainnet-0.chainsafe-fil.io&type=A'
-  #   -> 200, Status=0 (NOERROR), 1 A record (148.113.16.168). calibnet-0 likewise Status=0.
-  #   dlt normalizes the Status field to column `status`; Question/Answer arrays land in
-  #   child tables (do NOT set max_table_nesting: 0).
+  # ChainSafe operates bootstrap-{mainnet,calibnet}-{0,1,2}.chainsafe-fil.io. This checks
+  # only that the bootstrap hostname resolves (DNS-over-HTTPS, JSON); libp2p reachability
+  # on TCP 34000 is not HTTP-probeable and remains unmeasured.
+  # dlt normalizes the Status field to column `status`; Question/Answer arrays land in
+  # child tables — do not set max_table_nesting: 0.
   # THRESHOLD: == 0 is the DNS RCODE for NOERROR — self-evident, not a placeholder.
   - function_id: bootstrap-dns-mainnet
     kernel_function: "Operation of seed nodes a new peer contacts on startup"
@@ -125,19 +55,13 @@ functions:
       endpoint: "https://dns.google/resolve?name=bootstrap-mainnet-0.chainsafe-fil.io&type=A"
       query: "/resolve?name=bootstrap-mainnet-0.chainsafe-fil.io&type=A"
       # explicit root selector: without it dlt auto-descends into the longest nested
-      # list (Question/Answer) and the Status field never lands (found live 2026-07-15)
+      # list (Question/Answer) and the Status field never lands
       data_selector: "$"
       extract: { column: status, reduce: single, derive: value, unit: rcode }
 
-  # Calibnet infra support: the Infra Services bid explicitly covers the calibnet
-  # snapshot service. Chain liveness for calibnet is already in kernel_demo.yaml
-  # (calibnet-chain-liveness via calibration.filfox.info) — this measures the DIFFERENT
-  # thing ChainSafe operates: calibnet snapshot hosting, which keeps the upgrade-rehearsal
-  # testnet cheap to (re)join.
-  # PROBED 2026-07-15: curl 'https://forest-archive.chainsafe.dev/list/calibnet/latest-v2?format=json&limit=20'
-  #   -> 200, total=166, items[0].uploaded=2026-07-15T00:32:55Z (~2h old); previous item
-  #   2026-07-14T22:41:31Z -> same ~2h cadence as mainnet.
-  # THRESHOLD: 21600s (6h) — same rationale as mainnet-snapshot-freshness.
+  # Calibnet snapshot hosting keeps the upgrade-rehearsal testnet cheap to (re)join — a
+  # distinct metric from calibnet chain liveness.
+  # THRESHOLD: 6h — same rationale as mainnet-snapshot-freshness.
   - function_id: calibnet-snapshot-freshness
     origin: oso
     tier: essential
@@ -157,13 +81,10 @@ functions:
       query: "/list/calibnet/latest-v2?format=json&limit=20"
       extract: { path: items, column: uploaded, timestamp_column: uploaded, cast: date, reduce: latest, derive: age_seconds, unit: seconds }
 
-  # ---- From the team's own Karma application (3.2 Verification metrics) --------------
-  # Infra Services proposed: "Calibnet miner power — Filfox: miner t0181521 — on-chain
-  # QAP — target 250 TB QAP on-chain."
-  # PROBED 2026-07-15: calibration.filfox.info/api/v1/address/t0181521 -> 200,
-  #   miner.qualityAdjPower = 261477608980480 (~261 TB, above their 250 TB target).
-  #   Nested `miner` object flattens to miner__quality_adj_power; tokens/ownedMiners are
-  #   nested ARRAYS -> data_selector "$" pins the root object.
+  # From the team's own Karma application: Infra Services proposed "Calibnet miner power —
+  # Filfox: miner t0181521 — on-chain QAP — target 250 TB QAP on-chain."
+  # Nested `miner` object flattens to miner__quality_adj_power; tokens/ownedMiners are
+  # nested arrays, hence data_selector "$" to pin the root object.
   # THRESHOLD: 250e12 — the team's own Karma target, not a placeholder.
   - function_id: calibnet-miner-power
     origin: karma
@@ -185,7 +106,7 @@ functions:
       data_selector: "$"
       extract: { column: miner__quality_adj_power, cast: float, reduce: single, derive: value, unit: bytes }
 
-  # ---- Routed from registry/kernel_demo.yaml (dissolved 2026-07-15); OSO reference metric ----
+  # Forest's own release cadence (active-maintenance signal for the node client).
   - function_id: forest-release-cadence
     kernel_function: "Independent Rust full node (sync, validation, RPC, snapshot export)"
     origin: oso

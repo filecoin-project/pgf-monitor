@@ -1,42 +1,14 @@
-# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
-# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
-# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
-#
-# Funded scope is the ESSENTIAL relay/distribution function ("High-SLA HTTP + gossipsub
-# relays & quarterly resharing"), NOT the core beacon: the IRREPLACEABLE randomness-beacon
-# function is monitored by the OSO reference metric routed into this file below
-# (api.drand.sh/health, beacon_round_lag) and is covered by a separate B2 contract through
-# Dec. Both relay entries below evidence that
-# randomness stays REACHABLE across multiple independent relays — the point of this function.
+# Randamu operates drand, the randomness beacon Filecoin consensus depends on. This manifest
+# tracks the essential HTTP relay distribution network — randomness staying reachable across
+# multiple independent relays — plus the beacon's own freshness, drand's operator-reported
+# status page, and software-stack release cadence.
 team: randamu
 maintainers: ["@TODO-github-handle"]   # team fills in
-# x_draft (promotion note — annotations preserved as comments):
-#   slate_status: "Re-scope"
-#   slate_tier: "IRR"
-#   working_usd: "~$33k"
-#   app_ref: "APP-KOZT1PS1-T25XTE"
-#   prepared_by: "OSO, 2026-07-15"
-#   allowlist_additions: [drand.cloudflare.com, api3.drand.sh]
-#   unmeasured:
-#     - function: "Quarterly resharing of the League of Entropy threshold group"
-#       reason: "No public API exposes reshare ceremony dates or group epoch history. /info groupHash changes on reshare, but change-detection over time is not expressible as a single-scalar threshold in this pipeline. Verify via LoE ceremony announcements instead."
-#     - function: "GossipSub (libp2p pubsub) relay distribution health"
-#       reason: "The libp2p gossipsub side of relay distribution is not observable over public HTTP; only the HTTP relay surface is machine-checkable here. Team-operated telemetry (if published as JSON) could close this gap."
-#   candidates:
-#     - metric: "quicknet freshness on drand.cloudflare.com via /v2"
-#       why_unverified: "PROBED 2026-07-15: https://drand.cloudflare.com/v2/beacons/quicknet/rounds/latest -> 404 (Cloudflare relay serves the v1 API only). Its v1 /health and /public/latest do work and are used below."
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  drand_release_cadence         : staged in registry/drafts/randamu.yaml (drand-release-cadence) — confirm + promote
-#  quicknet_freshness_cloudflare : candidate; needs the drand.cloudflare endpoint wired
-#  NEW: threshold-signature participation : no public per-node LoE API; verify via LoE ceremony announcements
 functions:
-  # Independent relay operator liveness. kernel_demo.yaml already watches the PRIMARY relay
-  # (api.drand.sh/health); this watches a DIFFERENT League of Entropy HTTP relay so a primary
-  # outage vs a distribution outage are distinguishable — multi-relay reachability is the function.
-  # PROBED 2026-07-15: curl https://drand.cloudflare.com/health -> 200,
-  #   {"current":6288382,"expected":6288382} (lag = 0). api2/api3.drand.sh /health identical.
-  # THRESHOLD: PLACEHOLDER — observed lag 0; <= 2 rounds (60s at the 30s period) allows one
-  #   round of propagation slack on a mirror vs the <= 1 used for the primary in kernel_demo.
+  # Independent relay liveness: watches a second League of Entropy HTTP relay so a primary-relay
+  # outage and a distribution outage are distinguishable — multi-relay reachability is the point.
+  # THRESHOLD (placeholder, confirm with team): <= 2 rounds allows one round of propagation slack
+  # on a mirror (60s at the 30s beacon period), vs <= 1 on the primary relay.
   - function_id: drand-relay-mirror-liveness
     origin: oso
     tier: essential
@@ -56,17 +28,12 @@ functions:
       query: "/health"
       extract: { column: expected, column2: current, reduce: single, derive: diff, unit: rounds }
 
-  # Wall-clock relay freshness on a Randamu-operated mirror, on the 3s quicknet chain. Unlike
-  # /health this does NOT trust the relay's self-reported "expected": expected round is computed
-  # from committed chain constants (genesis_time 1692803367, period 3s, from
-  # api.drand.sh/v2/beacons/quicknet/info) against :now_tz, so a relay serving stale rounds
-  # cannot self-certify as healthy.
-  # PROBED 2026-07-15: curl https://api3.drand.sh/v2/beacons/quicknet/rounds/latest -> 200,
-  #   round = 30426375; wall clock 1784082490 -> expected floor((now-genesis)/3)+1 = 30426375
-  #   (lag = 0, formula verified exact).
-  # THRESHOLD: PLACEHOLDER — observed lag 0; <= 20 rounds (60s on the 3s chain) tolerates
-  #   fetch-vs-transform timing noise while still failing any relay more than a minute stale,
-  #   which would breach a high-SLA distribution promise.
+  # Wall-clock relay freshness on a Randamu-operated mirror (the 3s quicknet chain). Unlike
+  # /health this does not trust the relay's self-reported "expected": the expected round is
+  # computed from committed chain constants (genesis, 3s period) against the wall clock, so a
+  # relay serving stale rounds cannot self-certify as healthy.
+  # THRESHOLD (placeholder, confirm with team): <= 20 rounds (60s on the 3s chain) tolerates
+  # fetch-vs-transform timing noise while still failing any relay more than a minute stale.
   - function_id: drand-relay-quicknet-freshness
     origin: oso
     tier: essential
@@ -89,7 +56,8 @@ functions:
       # minus the round the relay actually serves; 0 when fresh
       sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now_tz) - 1692803367) / 3.0) + 1 - MAX(CAST(round AS DOUBLE))) FROM raw"
 
-  # ---- Routed from registry/kernel_demo.yaml (dissolved 2026-07-15); OSO reference metric ----
+  # The randomness beacon itself: lag on the primary drand relay's beacon (the irreplaceable
+  # randomness function that Filecoin leader election and block validation depend on).
   - function_id: randomness-beacon
     origin: oso
     tier: irreplaceable
@@ -109,13 +77,10 @@ functions:
       query: "/health"
       extract: { column: expected, column2: current, reduce: single, derive: diff, unit: rounds }
 
-  # Operator-reported relay health from drand's OWN status page (status.drand.love /
-  # drand.statuspage.io). This is the SELF-REPORTED layer (Section 2 of the contract calls the
-  # independent measure primary; this complements it + gives the public Atlassian-style tracker
-  # its component/incident history). data_selector: status pins the root {indicator, description}
-  # object so dlt doesn't auto-descend into the components/incidents arrays.
-  # PROBED 2026-07-20: summary.json status.indicator = "none" ("All Systems Operational").
-  # THRESHOLD: PLACEHOLDER — indicator maps none->0, minor/major/critical->1; committed <= 0.
+  # Operator-reported relay health from drand's own status page (status.drand.love). Complements
+  # the independent relay checks above and gives the public tracker its incident history.
+  # data_selector pins the root status object so the fetch doesn't descend into the nested arrays.
+  # THRESHOLD (placeholder, confirm with team): indicator maps none -> 0, minor/major/critical -> 1.
   - function_id: drand-relay-statuspage
     origin: oso
     tier: essential
@@ -137,15 +102,11 @@ functions:
     transform:
       sql: "SELECT MAX(CASE WHEN indicator = 'none' THEN 0 ELSE 1 END) FROM raw"
 
-  # Promoted from registry/drafts/randamu.yaml 2026-07-23 (committee-kept; team named GitHub
-  # releases as their verification method, ~2-3 upgrades). Software-stack release cadence for
-  # drand itself (mirrors chainsafe forest-release-cadence) — watches that the software ships
-  # upgrades, complementary to the relay-liveness/beacon-lag functions above.
-  # PROBED 2026-07-16: curl 'https://api.github.com/repos/drand/drand/releases?per_page=30'
-  #   -> 200, resolves (releases feed populated). avg-days-between-releases is a rich cadence
-  #   metric the extract vocab cannot express, so it uses a transform (same as forest-release-cadence).
-  # THRESHOLD: PLACEHOLDER — confirm with team. drand ships timely software-stack upgrades;
-  #   pending the team's committed cadence, mirror the 45-day forest ceiling as a starting point.
+  # Software-stack release cadence for drand itself (the team named GitHub releases as its
+  # verification method) — evidences that the software ships upgrades, complementary to the
+  # relay and beacon liveness checks above.
+  # THRESHOLD (placeholder, confirm with team): <= 45 days average between releases as a starting
+  # point, pending the team's committed cadence.
   - function_id: drand-release-cadence
     origin: karma
     tier: essential
@@ -155,7 +116,7 @@ functions:
     sla:
       statement: "drand ships a software-stack release at least every 45 days on average (active-maintenance signal), measured monthly"
       metric: avg_days_between_releases
-      threshold: { op: "<=", value: 45 }   # PLACEHOLDER — confirm with team
+      threshold: { op: "<=", value: 45 }   # placeholder — confirm with team
       cadence: monthly
     source:
       adapter: oso

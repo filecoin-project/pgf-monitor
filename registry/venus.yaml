@@ -1,37 +1,18 @@
-# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
-# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
-# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
-#
 # Covers the ESSENTIAL Venus SP-side stack — pooled block production (sophon-miner) plus the
-# distributed sealing cluster (Damocles). No ProPGF Batch-3 application covers this function;
-# steward is IPAS / the Venus team (ipfs-force-community) under pre-existing arrangements.
-# The parent Venus node repo is actively maintained (filecoin-project/venus latest commit
-# 2026-07-14, probed 2026-07-15) and v1.20.0 shipped across venus + sophon-miner in May 2026,
-# so commit recency on the two named artifacts is the honest maintenance signal here.
+# distributed sealing cluster (Damocles). Steward is IPAS / the Venus team
+# (ipfs-force-community). The parent Venus node repo is actively maintained and release
+# cadence across venus + sophon-miner is lumpy, so commit recency on the two named
+# artifacts is the honest maintenance signal here.
 team: venus
 maintainers: ["@TODO-github-handle"]   # team fills in
-# x_draft (promotion note — annotations preserved as comments):
-#   slate_status: "pre-existing"
-#   slate_tier: "ESS"
-#   working_usd: "pre-existing agreement"
-#   app_ref: null
-#   prepared_by: "OSO, 2026-07-15"
-#   allowlist_additions: []
-#   unmeasured:
-#     - function: "Live pooled block-production share (blocks actually won by Venus SPs)"
-#       reason: "Attributing won blocks to the Venus/sophon-miner stack needs miner-agent attribution over chain data; no public no-auth JSON endpoint exposes it (Spacescope could, but requires a bearer token — see lily.yaml candidates)."
-#   candidates: []
 functions:
   # Maintenance signal for the pooled block-production component (sophon-miner, aka
-  # Venus-Miner) — the block-winning path for Venus SPs.
-  # PROBED 2026-07-15: curl https://api.github.com/repos/ipfs-force-community/sophon-miner/commits?per_page=30
-  #   -> 200, latest commit.committer.date = 2026-05-18T09:10:58Z (57 days ago); latest
-  #   release v1.20.0 (2026-05-18). Release cadence is lumpy (v1.19.0 was 2025-09-17), so
-  #   commit recency is the steadier signal.
+  # Venus-Miner) — the block-winning path for Venus SPs. Release cadence is lumpy, so
+  # commit recency is the steadier signal.
   # NOTE: dlt flattens the nested GitHub payload; commit.committer.date lands as column
   #   commit__committer__date.
-  # THRESHOLD: PLACEHOLDER — observed 57 days; <= 120 days flags an unstaffed release train
-  #   without flapping between network upgrades.
+  # THRESHOLD (placeholder, confirm with team): <= 120 days flags an unstaffed release
+  # train without flapping between network upgrades.
   - function_id: sophon-miner-maintenance
     kernel_function: "Pooled block production (sophon-miner) + distributed sealing cluster (Damocles)"
     origin: oso
@@ -54,10 +35,7 @@ functions:
 
   # Maintenance signal for the distributed sealing cluster (Damocles, ex venus-cluster) —
   # how Venus SPs onboard committed capacity and data.
-  # PROBED 2026-07-15: curl https://api.github.com/repos/ipfs-force-community/damocles/commits?per_page=30
-  #   -> 200, latest commit.committer.date = 2026-05-19T05:11:03Z (56 days ago); latest
-  #   release v0.14.0 (2026-05-19).
-  # THRESHOLD: PLACEHOLDER — observed 56 days; same 120-day stall detector as sophon-miner.
+  # THRESHOLD (placeholder, confirm with team): same 120-day stall detector as sophon-miner.
   - function_id: damocles-maintenance
     kernel_function: "Pooled block production (sophon-miner) + distributed sealing cluster (Damocles)"
     origin: oso

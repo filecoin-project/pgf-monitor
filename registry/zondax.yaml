@@ -1,96 +1,20 @@
-# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
-# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
-# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
-#
-# One team, TWO slate rows (both Re-scope) — see x_draft.slates:
-#   1. Beryx (explorer/API/traces, $36k): the Beryx DATA API is the surface to evidence, but it
-#      sits behind a free-but-required JWT (auth.zondax.ch); its KrakenD gateway answers 404 to
-#      any request without a valid token, so nothing there could be probe-verified. Kept as
-#      auth-flagged candidates, not functions. (Beryx's explorer-UI angle is already covered:
-#      kernel_demo monitors mainnet-block-explorer via filfox — not duplicated here.)
-#   2. Zondax Core Infra ($144-200k): the Ledger firmware line — the slate's "must-fund" — has
-#      NO catalogued kernel triple (hardware-wallet firmware was classed Important historically),
-#      so it cannot carry a promotable entry; see x_draft.unmeasured. What IS catalogued and
-#      probe-verifiable is Zondax's public archival node RPC at api.zondax.ch, which the same
-#      bid funds (the surface Ledger/Rosetta integrations depend on) — measured below under
-#      "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)".
+# Zondax builds Beryx (Filecoin explorer/API/traces) and Core Infra (archival RPC nodes,
+# Ledger firmware, Rosetta integrations). This manifest tracks what is currently
+# machine-checkable: the public archival RPC node's depth of served chain history, and the
+# Rosetta integration's release currency relative to Lotus. Beryx's own data API sits behind
+# a JWT and is not yet probeable without a provisioned token.
 team: zondax
 maintainers: ["@TODO-github-handle"]   # team fills in
-# x_draft (promotion note — annotations preserved as comments):
-#   prepared_by: "OSO, 2026-07-15"
-#   slates:
-#     - app_ref: "APP-ZGCSXHWL-8PJG01"
-#       label: "Beryx (Zondax)"
-#       slate_tier: "ESS"
-#       slate_status: "Re-scope"
-#       working_usd: "$36k"
-#     - app_ref: "APP-WVTOW236-LUGH7Y"
-#       label: "Zondax Core Infra"
-#       slate_tier: "ESS"
-#       slate_status: "Re-scope"
-#       working_usd: "$144-200k"
-#   allowlist_additions: [api.zondax.ch]
-#   unmeasured:
-#     - function: "Chain ETL and indexing"
-#       reason: >
-#         (Beryx row) The only machine-checkable surface for Beryx's indexing/traces work is the
-#         Beryx data API, which requires a JWT — free for any GitHub account older than 6 months
-#         (auth.zondax.ch), but the gateway 404s every unauthenticated request, so no endpoint
-#         could be verified live. Promotable the day the committee provisions the token secret;
-#         ready-made sources are in candidates below.
-#     - function: "Ledger hardware-wallet firmware (Zondax Core Infra's stated must-fund)"
-#       reason: >
-#         Not one of the 29 catalogued kernel triples (hardware-wallet firmware was classed
-#         Important historically), so no entry here can copy a valid tier/category/sub_category
-#         and it can never be promoted. The maintenance signal itself is verified and waiting in
-#         candidates (GitHub release cadence) should the kernel inventory add the function.
-#     - function: "Network-wide documentation along with source code availability and source control"
-#       reason: >
-#         Mapped from the Core Infra bid at LOW confidence: Zondax's docs are Ledger/Rosetta
-#         wallet-integration docs, not network-wide docs. No honest machine-checkable metric;
-#         flagged for committee review rather than stretched into one.
-#   candidates:
-#     - metric: beryx_tipset_head_freshness
-#       why_unverified: >
-#         Beryx data API, GET https://api.zondax.ch/fil/data/v3/mainnet/tipset/latest (base path
-#         confirmed from the open-source explorer's config: Zondax/web-beryx-explorer
-#         src/config/config.ts — {host}/fil/data/v3/mainnet). PROBED 2026-07-15: 404 both with no
-#         auth and with a dummy bearer; KrakenD gateway masks token-gated routes as 404, so the
-#         path could not be verified end-to-end. Needs source.auth.secret_ref (e.g.
-#         beryx_api_jwt) provisioned by the committee; tokens are free via auth.zondax.ch for
-#         GitHub accounts >6 months old.
-#     - metric: beryx_traces_available
-#       why_unverified: >
-#         Same auth wall. GET https://api.zondax.ch/fil/data/v3/mainnet/transactions/height/{h}
-#         (path from the same explorer source) would evidence the traces/indexed-transactions
-#         surface named in the Beryx bid — the strongest possible "Chain ETL and indexing"
-#         metric for this team once a JWT secret exists.
-#     - metric: ledger_filecoin_release_age_days
-#       why_unverified: >
-#         Source itself VERIFIED — PROBED 2026-07-15: curl
-#         https://api.github.com/repos/Zondax/ledger-filecoin/releases -> 200, latest v2.3.12
-#         published 2026-06-22 (23 days old), 6 releases since 2026-04-15. Unpromotable for a
-#         different reason: the kernel function it evidences is not catalogued (see unmeasured).
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  beryx_service_uptime (NEW: "Beryx Chain API availability"): needs a public status/uptime JSON; status.zondax.ch NXDOMAIN — ask team
 functions:
-  # (zondax-node-rpc-mainnet-head-lag removed 2026-07-22 — dropped by the ProPGF committee
-  #  review as redundant; the archival-depth check below covers the same RPC read surface.)
+  # The archival half of chain sync & state management: Zondax's public archival node RPC
+  # (deep chain history is what Rosetta/exchange integrations need; pruned nodes keep only
+  # recent state). Requesting a tipset from Sep 2020 (epoch 100000) proves the endpoint
+  # still serves genesis-deep history, not just the recent window.
   #
-  # Same kernel function, the ARCHIVAL half: the Core Infra bid specifically funds archival
-  # nodes (deep chain history is what Rosetta/exchange integrations need; pruned nodes keep
-  # only recent state). Requesting a tipset from Sep 2020 (epoch 100000) proves the endpoint
-  # still serves genesis-deep history, not just the recent window. Freshness above + depth
-  # here bracket the RPC read surface.
-  #
-  # PROBED 2026-07-15T02:32Z: curl -X POST https://api.zondax.ch/fil/node/mainnet/rpc/v1
-  #   '{"jsonrpc":"2.0","method":"Filecoin.ChainGetTipSetByHeight","params":[100000,null],"id":1}'
-  #   -> 200, no auth, error null; result.Height = 100000 exactly, 8 blocks in the tipset.
-  # Same flattening reasoning as above: height on the parent row; Blocks/Cids ->
-  #   child tables (do not set max_table_nesting: 0).
+  # height lands on the parent row; Blocks/Cids -> child tables (do not set
+  # max_table_nesting: 0).
   # THRESHOLD: not a placeholder — equality with the requested height is the definition of
-  #   success. Epoch 100000 is a non-null round (probed), so the returned Height is stable;
-  #   a pruned or degraded node errors out (failed fetch) or cannot answer at all.
+  #   success. A pruned or degraded node errors out (failed fetch) or cannot answer at all.
   - function_id: zondax-node-rpc-archival-depth
     kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
     origin: oso
@@ -112,21 +36,19 @@ functions:
       method: POST
       params: { jsonrpc: "2.0", method: "Filecoin.ChainGetTipSetByHeight", params: [100000, null], id: 1 }
       # result is the JSON-RPC payload object; without an explicit selector dlt
-      # auto-descends into the LONGEST nested list (Cids!) — found live 2026-07-15.
+      # auto-descends into the LONGEST nested list (Cids!).
       data_selector: result
     transform:
       # the Height the node actually returned for the archival lookup (parent row scalar)
       sql: "SELECT MAX(height) FROM raw"
 
-  # ---- From the team's own Karma application (3.2 Verification metrics) --------------
-  # Zondax proposed: "Rosetta release currency — days from a Lotus release to Rosetta
-  # compatibility, target < 7 days, no missed releases."
-  # PROBED 2026-07-15: api.github.com/repos/Zondax/rosetta-filecoin-proxy/releases -> 200,
-  #   latest v1.3600.2 published 2026-07-07 (~8d old).
+  # Zondax's own stated commitment: Rosetta release currency — days from a Lotus release to
+  # Rosetta compatibility, target < 7 days, no missed releases.
   # LIMITATION: the true metric is relative to Lotus releases (a two-table join the
   #   bounded transform cannot express). Proxy: days since the latest Rosetta release,
   #   <= 60 (Lotus ships ~monthly; a Rosetta release older than 2 Lotus cycles means a
-  #   missed window). PLACEHOLDER pending the cross-repo comparison.
+  #   missed window).
+  # THRESHOLD (placeholder, confirm with team): pending the cross-repo comparison above.
   - function_id: rosetta-release-currency
     kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
     origin: karma

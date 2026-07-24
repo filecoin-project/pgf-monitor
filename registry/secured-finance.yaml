@@ -1,87 +1,36 @@
-# DRAFT — pre-populated by OSO (2026-07-16) for ProPGF Batch 3, Secured Finance row.
-# Stages the USDFC DEX-pool metrics Secured Finance committed to in their Karma
-# application (APP-Z1L7URG7-TJ3G5D) that registry/secured-finance.yaml does not yet
-# carry: the USDFC–axlUSDC liquidity pool's TVL and 24h trading volume. The adopted
-# manifest already covers protocol collateral TVL (api.llama.fi) and peg stability
-# (stablecoins.llama.fi); this draft adds the pool-level liquidity signals from
-# GeckoTerminal. Do NOT hand-merge into registry/secured-finance.yaml — promote via PR.
+# Secured Finance's USDFC stablecoin: this manifest tracks the USDFC–axlUSDC liquidity
+# pool's TVL and 24h trading volume on GeckoTerminal.
 #
-# Promote by: (1) team adopts via PR, (2) confirm the pool ADDRESS below is the one they
-# committed to (see THRESHOLD/POOL note), (3) confirm PLACEHOLDER thresholds, (4) delete
-# or x-comment the x_draft block, (5) add api.geckoterminal.com to registry/_allowlist.txt.
-#
-# HONESTY NOTE — same as the adopted secured-finance manifest: _kernel.yaml catalogues no
-# stablecoin/DeFi/liquidity function. Both entries below borrow the ONE defensible
-# catalogued triple — essential / 'Coordination & Incentives' / 'Network data & monitoring'
-# (the chainsafe.yaml filecoin-tvl precedent, and the exact triple the adopted USDFC
-# entries already use). They evidence that USDFC has LIVE on-chain liquidity (depth + flow)
-# — they do NOT evidence a kernel function, because none is catalogued. Informational input
-# to the reject-vs-fund decision until the committee catalogues (or declines) a DeFi/
-# liquidity function, at which point these get re-homed under the real triple.
+# HONESTY NOTE: _kernel.yaml catalogues no stablecoin/DeFi/liquidity function. The entries
+# below borrow the ONE defensible catalogued triple — essential / 'Coordination &
+# Incentives' / 'Network data & monitoring'. They evidence that USDFC has LIVE on-chain
+# liquidity (depth + flow) — they do NOT evidence a kernel function, because none is
+# catalogued. Informational input to the reject-vs-fund decision until the committee
+# catalogues (or declines) a DeFi/liquidity function, at which point these get re-homed
+# under the real triple.
 team: secured-finance
 maintainers: ["@TODO-github-handle"]   # team fills in
-# x_draft (promotion note — annotations preserved as comments):
-#   slate_status: "Unresolved"
-#   slate_tier: "NTH"
-#   working_usd: "$0-150k"
-#   app_ref: "APP-Z1L7URG7-TJ3G5D"
-#   prepared_by: "OSO, 2026-07-16"
-#   # api.geckoterminal.com is NOT yet on registry/_allowlist.txt — add it in the promotion PR.
-#   allowlist_additions: [api.geckoterminal.com]
-#   unmeasured:
-#     - function: "Max trade size executable under a slippage bound (e.g. <= 1% for a $X swap)"
-#       reason: >-
-#         Derivable in principle from the pool's on-chain reserves (constant-product /
-#         concentrated-liquidity math), but GeckoTerminal exposes no direct max-trade-under-
-#         slippage feed, and reserves alone don't give slippage for a Uniswap-v3-style
-#         concentrated pool without the full tick/liquidity distribution. No public no-auth
-#         JSON endpoint carries it; would need an on-chain quoter call (eth_call against the
-#         pool/quoter contract), which the http-json extract vocab cannot decode. Flag for the
-#         committee if trade-execution quality becomes a funded deliverable.
-#   candidates:
-#     - metric: "usdfc_pool_tvl_usd — POOL ADDRESS needs team confirmation"
-#       why_unverified: >-
-#         PROBED LIVE 2026-07-16: GET https://api.geckoterminal.com/api/v2/networks/filecoin/pools
-#         -> 200, 16 pools under data[]. Exactly one is named "USDFC / axlUSDC" (0.01% fee,
-#         address 0x21ca72fe39095db9642ca9cc694fa056f906037f) with reserve_in_usd ~$21,149 and
-#         volume_usd.h24 ~$8,716. That is the address the two functions below filter on. BUT the
-#         team committed to pool TVL >= $170k (Phase 1) / $300k (Phase 2), roughly 10x the
-#         observed depth of the only USDFC/axlUSDC pool — the deeper Filecoin pools are
-#         WFIL/axlUSDC (~$285k) and USDFC/WFIL (~$122k). So EITHER the team means a different /
-#         future pool, or the committed magnitude is aspirational. The functions are staged with
-#         the resolvable USDFC/axlUSDC address, but the team must confirm the intended pool
-#         address on adoption before the PLACEHOLDER thresholds can be trusted.
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  (usdfc-axlusdc-pool-tvl/volume ARE now live below — pool address unconfirmed vs the team's $170k target; confirm on adoption)
-#  usdfc_circulating_supply   : nested-array source unreachable; NEW source app.usdfc.net/#/risky-troves (no-liquidation / safe-collateral %)
-#  usdfc_tvl (llama scalar)   : bare-scalar response unusable by the pipeline
-#  usdfc_max_trade_slippage   : ask team; needs a slippage calc over pool reserves
-#  FIL-collateralized settlement (USDFC's real function): UNCATALOGUED — needs a _kernel.yaml settlement/DeFi entry first
 functions:
   # ---------------------------------------------------------------------------
-  # USDFC–axlUSDC liquidity pool metrics (Karma app APP-Z1L7URG7-TJ3G5D).
-  # Borrowed triple — see HONESTY NOTE in the header. Source: GeckoTerminal Filecoin
-  # pools list. Same is-USDFC-alive-and-liquid family as the adopted collateral-TVL /
-  # peg-stability entries, one level lower (DEX pool depth + flow rather than protocol
-  # collateral + peg).
+  # USDFC–axlUSDC liquidity pool metrics. Borrowed triple — see HONESTY NOTE in the
+  # header. Source: GeckoTerminal Filecoin pools list. Same is-USDFC-alive-and-liquid
+  # family as the collateral-TVL / peg-stability entries, one level lower (DEX pool
+  # depth + flow rather than protocol collateral + peg).
   #
-  # PROBED LIVE 2026-07-16: GET https://api.geckoterminal.com/api/v2/networks/filecoin/pools
-  #   -> 200. Shape: {data: [ {id, type, attributes:{...}, relationships:{...}}, ... ]},
-  #   16 pools. data_selector: data lands ONE ROW PER POOL in the parent table; each pool's
-  #   `attributes` object flattens to attributes__<field> columns (nested OBJECTS, not arrays,
-  #   so no unreachable child table). The USDFC/axlUSDC pool is
+  # data_selector: data lands ONE ROW PER POOL in the parent table; each pool's
+  #   `attributes` object flattens to attributes__<field> columns (nested OBJECTS, not
+  #   arrays, so no unreachable child table). The USDFC/axlUSDC pool is
   #   attributes__address = '0x21ca72fe39095db9642ca9cc694fa056f906037f'
   #   (name "USDFC / axlUSDC 0.01%"). A transform filters to that one row by address — the
   #   extract vocab has no WHERE, so a transform (not extract) is required to isolate the pool.
-  #   Column-name assumption (attributes__reserve_in_usd, attributes__volume_usd__h24) follows
-  #   dlt's snake_case + __-nesting convention; flag for first-run verification.
   # ---------------------------------------------------------------------------
 
-  # THRESHOLD/POOL: PLACEHOLDER — the team committed pool TVL >= $170,000 (Phase 1); Phase 2
-  #   target is $300,000. Value below is set to the Phase 1 figure BUT is a placeholder: the
-  #   only pool literally named USDFC/axlUSDC currently holds ~$21k (10x below target), so the
-  #   team must confirm the intended pool address (see x_draft.candidates) before this
-  #   threshold is meaningful. reserve_in_usd is the pool's total value locked in USD.
+  # THRESHOLD/POOL (placeholder, confirm with team): the team committed pool TVL
+  #   >= $170,000 (Phase 1); Phase 2 target is $300,000. Value below is set to the Phase 1
+  #   figure BUT is a placeholder: the only pool literally named USDFC/axlUSDC has
+  #   observed depth well below that target, so the team must confirm the intended pool
+  #   address before this threshold is meaningful. reserve_in_usd is the pool's total
+  #   value locked in USD.
   - function_id: usdfc-axlusdc-pool-tvl
     kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
     origin: karma
@@ -105,10 +54,10 @@ functions:
       # total value locked (USD) of the one USDFC/axlUSDC pool, isolated by address; single parent row
       sql: "SELECT MAX(CAST(attributes__reserve_in_usd AS DOUBLE)) FROM raw WHERE attributes__address = '0x21ca72fe39095db9642ca9cc694fa056f906037f'"
 
-  # THRESHOLD: PLACEHOLDER — the team's application commits to pool liquidity/depth but does
-  #   not state a specific 24h-volume floor. 1,000 USD/24h is a placeholder is-it-trading floor
-  #   (observed ~$8,716 at probe time); confirm with the team. volume_usd.h24 is the rolling
-  #   24-hour trade volume in USD, which dlt flattens to attributes__volume_usd__h24.
+  # THRESHOLD (placeholder, confirm with team): the team's application commits to pool
+  #   liquidity/depth but does not state a specific 24h-volume floor. 1,000 USD/24h is a
+  #   placeholder is-it-trading floor. volume_usd.h24 is the rolling 24-hour trade volume
+  #   in USD, which dlt flattens to attributes__volume_usd__h24.
   - function_id: usdfc-axlusdc-pool-volume
     kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
     origin: karma
