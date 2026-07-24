@@ -1,0 +1,105 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+team: oif-ipni
+maintainers: ["@TODO-github-handle"]   # team fills in (Open Impact Foundation / github.com/ipni)
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "Re-scope"
+#   slate_tier: "ESS"
+#   working_usd: "$180k"
+#   app_ref: "APP-O66TN87V-3MDZFT"
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: []   # cid.contact already allowlisted
+#   notes: >-
+#     Sustainability dispute open on this bid ($180k working figure vs. salary/opex claims).
+#     Independent of how that resolves, these metrics track whether the cid.contact service the
+#     grant funds actually stays live and ingesting — which is exactly the evidence the dispute
+#     needs. Kernel note: function stays for Batch 3; to be revisited for Kernel Program 2027.
+#   unmeasured: []
+#   candidates:
+#     - metric: "total indexed records / index size (cid.contact/stats)"
+#       why_unverified: "PROBED 2026-07-15: curl https://cid.contact/stats -> 404 Not Found (also /v1/stats and /metrics -> 404). No public JSON stats endpoint found; team could expose one."
+#     - metric: "indexer readiness (cid.contact/health)"
+#       why_unverified: "PROBED 2026-07-15: curl https://cid.contact/health -> 200 but body is the plain string 'ready' (content-type claims application/json, body is not valid JSON) — the http-json pipeline cannot parse it."
+# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
+#  total_indexed_records / index_size    : no public scale/size endpoint — ask team
+#  indexer_readiness (cid.contact/health): probed candidate; needs a stable health JSON
+functions:
+  # NOTE: kernel_demo.yaml already monitors this function via /providers null_ratio of LastError
+  # (ipni_error_free_ratio >= 0.95). The two entries below extend coverage with DIFFERENT metrics
+  # from the same verified endpoint: breadth (provider count) and liveness (ad-chain ingestion).
+
+  # PROBED 2026-07-15: curl "https://cid.contact/providers" -> 200, JSON array of 133 provider
+  #   objects (top-level keys: AddrInfo, LastAdvertisement, LastAdvertisementTime, Publisher,
+  #   ExtendedProviders, FrozenAt).
+  # THRESHOLD: PLACEHOLDER — observed 133 providers; 100 flags a ~25% collapse of the indexed
+  #   provider set without flapping on routine churn.
+  - function_id: content-routing-ipni-provider-count
+    origin: oso
+    tier: essential
+    category: 'Storage Market Middleware'
+    sub_category: 'Content routing'
+    oso_project_slug: ipni
+    sla:
+      statement: "IPNI keeps a broad provider set indexed: >= 100 providers listed on cid.contact, measured daily"
+      metric: ipni_provider_count
+      threshold: { op: ">=", value: 100 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://cid.contact"
+      endpoint: "https://cid.contact/providers"
+      query: "/providers"
+    transform:
+      # one row per listed provider
+      sql: "SELECT CAST(COUNT(*) AS DOUBLE) FROM raw"
+
+  # PROBED 2026-07-15: same /providers payload; every provider carries LastAdvertisementTime
+  #   (ISO timestamp, dlt-parsed). Observed: 28/133 providers advertised within the last 24h
+  #   (34/133 within 7d, 42/133 within 30d) — most listed providers are long-dormant, so a
+  #   RATIO threshold would be dishonest and would flap whenever the registry is cleaned up.
+  #   An absolute count of actively-advertising providers directly evidences that ad-chain
+  #   ingestion (the indexer's core job) is running.
+  # THRESHOLD: PLACEHOLDER — observed 28 active in 24h; 15 (~half) catches an ingestion stall
+  #   or mass publisher outage while tolerating normal day-to-day variance.
+  - function_id: content-routing-ipni-ingest-liveness
+    origin: oso
+    tier: essential
+    category: 'Storage Market Middleware'
+    sub_category: 'Content routing'
+    oso_project_slug: ipni
+    sla:
+      statement: "Ad-chain ingestion is live: >= 15 providers show a LastAdvertisementTime within the past 24h, measured daily"
+      metric: ipni_providers_advertised_24h
+      threshold: { op: ">=", value: 15 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://cid.contact"
+      endpoint: "https://cid.contact/providers"
+      query: "/providers"
+    transform:
+      # LastAdvertisementTime is an ISO timestamptz column after dlt normalization
+      sql: "SELECT CAST(COUNT(*) AS DOUBLE) FROM raw WHERE last_advertisement_time >= :now_tz - INTERVAL '1' DAY"
+
+  # ---- Routed from registry/kernel_demo.yaml (dissolved 2026-07-15); OSO reference metric ----
+  - function_id: content-routing-ipni
+    origin: oso
+    tier: essential
+    category: 'Storage Market Middleware'
+    sub_category: 'Content routing'
+    oso_project_slug: ipni
+    sla:
+      statement: "IPNI providers error-free: >= 95% of providers report no LastError, measured daily"
+      metric: ipni_error_free_ratio
+      threshold: { op: ">=", value: 0.95 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://cid.contact"
+      endpoint: "https://cid.contact/providers"
+      query: "/providers"
+      extract: { column: last_error, reduce: null_ratio, derive: value, unit: ratio }

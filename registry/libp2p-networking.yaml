@@ -1,0 +1,94 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# Covers the IRREPLACEABLE networking function — GossipSub propagation, Kademlia DHT
+# peer/content discovery, transports (TCP/QUIC) + NAT traversal. No ProPGF Batch-3
+# application covers this; stewardship sits with the libp2p maintainers (Shipyard) and
+# ProbeLab under pre-existing arrangements.
+#
+# ProbeLab's Filecoin network measurements (probelab.io) would be the ideal evidence, but
+# the website is HTML-only and api.probelab.io requires an X-API-Key (both probed
+# 2026-07-15) — see x_draft.candidates. Until that is provisioned, we pair a maintenance
+# signal (go-libp2p release cadence) with a network-level propagation signal (mainnet
+# advancing on its 30s epoch cadence — blocks cannot arrive on cadence unless GossipSub
+# propagation, peer discovery and transports are working end-to-end).
+team: libp2p-networking
+maintainers: ["@TODO-github-handle"]   # team fills in
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "pre-existing"
+#   slate_tier: "IRR"
+#   working_usd: "pre-existing agreement"
+#   app_ref: null
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: []
+#   unmeasured:
+#     - function: "Kademlia DHT peer/content discovery health"
+#       reason: "DHT health (reachable peers, lookup latency) is only measured by ProbeLab's crawler, whose API needs a key (see candidates). No public no-auth JSON endpoint exposes it."
+#     - function: "NAT traversal / hole-punching success rates"
+#       reason: "Only observable via opt-in libp2p telemetry aggregated by ProbeLab; no public no-auth JSON surface."
+#   candidates:
+#     - metric: "ProbeLab Filecoin DHT / network health measurements"
+#       why_unverified: "PROBED 2026-07-15: https://api.probelab.io/ -> 401 {\"error\":{\"message\":\"please set the X-API-Key header\"}}; probelab.io serves HTML plots only (200 text/html). Committee could request a key from ProbeLab and use source.auth.secret_ref."
+functions:
+  # Maintenance-cadence signal for the network stack every Filecoin node embeds.
+  # PROBED 2026-07-15: curl https://api.github.com/repos/libp2p/go-libp2p/releases?per_page=30
+  #   -> 200, 30 releases spanning 2024-07-04 -> 2026-03-17 (latest v0.48.0), avg 21.4 days
+  #   between releases.
+  # THRESHOLD: PLACEHOLDER — observed 21.4-day average; <= 60 days flags a stalled release
+  #   train while tolerating a quiet quarter.
+  - function_id: libp2p-release-cadence
+    origin: oso
+    tier: irreplaceable
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Networking'
+    oso_project_slug: libp2p
+    sla:
+      statement: "go-libp2p ships a release every 60 days on average (active-maintenance signal), measured monthly — the transport/GossipSub/DHT stack must track upstream fixes"
+      metric: libp2p_avg_days_between_releases
+      threshold: { op: "<=", value: 60 }
+      cadence: monthly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.github.com"
+      endpoint: "https://api.github.com/repos/libp2p/go-libp2p/releases?per_page=30"
+      query: "/repos/libp2p/go-libp2p/releases?per_page=30"
+    transform:
+      # avg days between consecutive releases (same shape as kernel_demo forest-release-cadence)
+      sql: "SELECT date_diff('second', MIN(published_at), MAX(published_at)) / NULLIF(COUNT(*) - 1, 0) / 86400.0 FROM raw"
+
+  # Network-level propagation evidence: mainnet advances one tipset per ~30s epoch only if
+  # blocks propagate via GossipSub within the epoch — the exact "blocks must propagate within
+  # ~30s" property this kernel function protects. Indirect but live and unfakeable.
+  # DIFFERENT metric from kernel_demo.yaml: its filfox entry watches the EXPLORER's max
+  # indexing gap; this measures the CHAIN's mean epoch cadence on mainnet (kernel_demo
+  # applies this transform to calibnet only).
+  # PROBED 2026-07-15: curl https://filfox.info/api/v1/tipset/recent -> 200, 10 rows,
+  #   heights 6192538-6192547, avg 30.00 s/epoch. `blocks` (nested array) lands in a child
+  #   table; transform touches only top-level height/timestamp.
+  # THRESHOLD: nominal epoch is 30s; <= 45s matches the calibnet liveness threshold already
+  #   accepted in kernel_demo.yaml.
+  - function_id: mainnet-block-propagation-cadence
+    origin: oso
+    tier: irreplaceable
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Networking'
+    oso_project_slug: libp2p
+    sla:
+      statement: "Mainnet advances on the ~30s epoch cadence: avg seconds per epoch <= 45, measured daily — blocks only arrive on cadence if GossipSub propagation and peer discovery work"
+      metric: mainnet_avg_seconds_per_epoch
+      threshold: { op: "<=", value: 45 }
+      cadence: daily
+    source:
+      adapter: oso
+      # CAVEAT (probed 2026-07-15): mainnet filfox intermittently 403s the default
+      # python-requests UA under burst load (kernel_demo fetches this same endpoint
+      # successfully via OSO). Verify at dry-run time.
+      kind: http-json
+      base_url: "https://filfox.info"
+      endpoint: "https://filfox.info/api/v1/tipset/recent"
+      query: "/api/v1/tipset/recent"
+    transform:
+      # mean wall-clock seconds per chain epoch across the recent tipset series (nominal 30s)
+      sql: "SELECT CAST(MAX(timestamp) - MIN(timestamp) AS DOUBLE) / NULLIF(MAX(height) - MIN(height), 0) FROM raw"

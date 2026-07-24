@@ -1,0 +1,59 @@
+# filecoin-pgf-monitor — agent guide
+
+Monitoring system for Filecoin ProPGF kernel funding. Teams commit (function, SLA,
+source) manifests under `registry/`; the pipeline independently fetches, evaluates,
+and lands verdicts. Full picture: `README.md`. Role-specific playbooks:
+`docs/guide-projects.md` (teams) and `docs/guide-reviewers.md` (committee).
+
+## Commands
+
+```bash
+uv sync                                   # install (Python 3.11+, uv only — never pip)
+uv run pytest -q                          # full offline suite; MUST be green before any commit
+uv run python scripts/validate_draft.py --all          # drafts: schema+kernel+SQL+allowlist
+uv run python -m scripts.validate_pr registry/<team>.yaml   # the PR gate, locally
+uv run python scripts/promote_draft.py registry/drafts/<team>.yaml --add-allowlist
+uv run fpm review <team> [--store DIR] [--dev-auto-approve] [--live --live-oso --oso-org UUID]
+uv run fpm report <team> --link URL [--intent "..."] [--out FILE]   # draft an entry from a URL
+uv run fpm land --store DIR --oso-org UUID [--public-name N --private-name N]
+uv run fpm contract <team> [--facts FILE] [--out FILE]   # render a grant contract from manifest + contracts/<team>.facts.yaml
+scripts/demo_project_flow.sh / scripts/demo_reviewer_flow.sh        # offline end-to-end demos
+```
+
+Skills (if your harness loads `.claude/skills/`): `author-manifest`, `review-and-land`.
+
+## Hard rules
+
+- **Never hand-edit another team's `registry/<team>.yaml`** outside a PR; CODEOWNERS
+  and the static gate exist precisely to catch that.
+- Every `functions[]` entry's (tier, category, sub_category) must match
+  `registry/_kernel.yaml` character-for-character — `validate_draft` checks this. When that slot is
+  shared by several kernel functions, also set `kernel_function` to the exact inventory name (the
+  gate rejects a shared slot without it and lists the choices); it's optional when the slot is unique.
+- Exactly one of `source.extract` / `transform` per http-json function. Transform SQL:
+  single SELECT, single scalar, only the `raw` table (structural exfiltration guard).
+- New source hosts require a `registry/_allowlist.txt` addition in the same PR.
+- Thresholds are human commitments: the report drafter deliberately omits them; drafts
+  mark ours `PLACEHOLDER`. Don't invent tight thresholds without probe evidence.
+- Secrets never enter the repo; live smokes read `OSO_API_KEY` from the environment.
+- Tests are offline-deterministic; anything live goes in `scripts/live_*_smoke.py`
+  (quarantined, never imported by tests).
+
+## Authoring gotchas (cost real debugging time — believe them)
+
+- dlt auto-parses ISO strings to tz-aware timestamps → in transforms use the column
+  directly and compare against `:now_tz` (NOT `from_iso8601_timestamp`, NOT `:now`).
+- Unix-epoch integer columns pair with the naive binds (`:now` + `from_unixtime`).
+- Nested JSON arrays land in unreachable child tables; nested objects flatten to
+  `parent__field` columns. Never set `max_table_nesting: 0` with nested arrays.
+- Trino integer division truncates — CAST to DOUBLE.
+- `fpm review` team name = `registry/<name>.yaml` filename stem.
+- Trino timestamp literals: `'YYYY-MM-DD HH:MM:SS'` (space, no T, no offset).
+
+## Layout
+
+`src/fpm/` pipeline (manifest, provision, adapters, evaluate, detectors, synthesize,
+pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
+`tests/` mirrors it · `registry/` the trust anchor · `fixtures/` offline responses ·
+`dashboards/propgf-kernel-health.py` (marimo, `uv sync --extra dashboards`) ·
+`docs/` guides + grant-commitments appendix (per-plan design docs are gitignored, local only).

@@ -1,0 +1,64 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+team: fil-b
+maintainers: ["@TODO-github-handle"]   # team fills in (bid is from FIL-Builders)
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "Re-scope"
+#   slate_tier: "ESS"
+#   working_usd: "$100-150k"
+#   app_ref: "APP-OFZ5ILTO-QC1XCM"
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: []   # api.github.com already allowlisted
+#   unmeasured:
+#     - function: "Network-wide documentation along with source code availability and source control"
+#       reason: >-
+#         Docs QUALITY is largely unmeasurable by machine: accuracy, spec alignment, coverage of the
+#         proposed AI/MCP sections, and onboarding effectiveness have no credible JSON-fetchable
+#         metric. The commit metrics below evidence only that the canonical docs repo
+#         (filecoin-project/filecoin-docs, which publishes docs.filecoin.io) is actively maintained —
+#         a floor, not a ceiling. The re-scoped deliverables should be assessed by human review.
+#   candidates:
+#     - metric: "docs.filecoin.io site availability"
+#       why_unverified: >-
+#         PROBED 2026-07-15: curl https://docs.filecoin.io -> 200 but content-type text/html —
+#         the http-json pipeline cannot ingest HTML, so availability stays a candidate until a
+#         JSON status/health endpoint exists. Would need allowlist addition: docs.filecoin.io.
+# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
+#  docs_open_issues (NEW: "low # of outstanding GitHub issues"): BUILDABLE now from the GitHub issues API — candidate quick-win
+#  docs_llms_txt_present     : needs the team to publish llms.txt (AI-discoverability)
+#  docs_skill_registries     : ask team
+#  docs_changelog_pipeline   : ask team
+functions:
+  # Repo confirmed 2026-07-15: filecoin-project/filecoin-docs is the source of docs.filecoin.io
+  # (repo homepage field = https://docs.filecoin.io; not archived; default branch main).
+  # PROBED 2026-07-15: curl "https://api.github.com/repos/filecoin-project/filecoin-docs/commits?per_page=30"
+  #   -> 200, array of commits; latest commit.committer.date = 2026-06-26T20:43:30Z (18 days old).
+  #   Max gap between consecutive commits over the last 100 commits (back to 2025-08): 35 days.
+  # THRESHOLD: PLACEHOLDER — 60 days = observed worst gap (35d) plus headroom; docs work is bursty
+  #   and a monthly-scale silence is normal, but a 2-month silence on the canonical network docs
+  #   repo is a real abandonment signal.
+  - function_id: network-documentation-commit-recency
+    kernel_function: "Network-wide documentation along with source code availability and source control"
+    origin: oso
+    tier: essential
+    category: 'UX/DX'
+    sub_category: 'Explorers and Tooling'
+    oso_project_slug: fil-builders
+    sla:
+      statement: "Docs repo not abandoned: most recent commit on filecoin-project/filecoin-docs <= 60 days old, measured weekly"
+      metric: docs_last_commit_age_days
+      threshold: { op: "<=", value: 60 }
+      cadence: weekly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.github.com"
+      endpoint: "https://api.github.com/repos/filecoin-project/filecoin-docs/commits?per_page=30"
+      query: "/repos/filecoin-project/filecoin-docs/commits?per_page=30"
+    transform:
+      # age in days of the newest commit; dlt flattens commit.committer.date -> commit__committer__date
+      sql: "SELECT CAST(date_diff('day', MAX(commit__committer__date), :now_tz) AS DOUBLE) FROM raw"
+
+  # (network-documentation-commit-volume removed 2026-07-22 — dropped by the ProPGF committee
+  #  review as a duplicate of the commit-recency signal above.)

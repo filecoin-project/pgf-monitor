@@ -1,0 +1,144 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# Funded scope is hosting + indexing + NV maintenance of Blockscout's OWN two Filecoin
+# instances: Mainnet (chain id 314, filecoin.blockscout.com) and Calibration testnet
+# (314159, filecoin-testnet.blockscout.com). kernel_demo.yaml already monitors
+# mainnet-block-explorer via Filfox — the entries below deliberately probe BLOCKSCOUT's
+# instances so explorer redundancy and the FEVM-developer surface (contract read/write,
+# verified sources) are evidenced independently of Filfox.
+team: blockscout
+maintainers: ["@TODO-github-handle"]   # team fills in
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "Advance"
+#   slate_tier: "ESS"
+#   working_usd: "$30-60k"
+#   app_ref: "APP-J8CF3XJY-CG03HL"
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: [filecoin.blockscout.com, filecoin-testnet.blockscout.com]
+#   unmeasured:
+#     - function: "NV (network version) maintenance — keeping the explorer correct through upgrades"
+#       reason: "Upgrade-readiness is event-based, not a scalar; it is only indirectly evidenced by the freshness metrics below continuing to pass across an NV boundary."
+#   candidates:
+#     - metric: "Indexing completeness via /api/v2/blocks"
+#       why_unverified: "PROBED 2026-07-15: ?per_page is rejected ('Unexpected field: per_page') and the endpoint wraps blocks in an 'items' object whose nested array lands in a child table a transform cannot reach. /api/v2/main-page/blocks returns a bare 4-item array and is used instead."
+# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
+#  indexing_completeness (/api/v2/...) : probed candidate; needs a stable completeness endpoint
+functions:
+  # Blockscout's own Filecoin MAINNET instance keeps pace with the chain — the FEVM
+  # developer explorer (contract read/write, verified sources). Independent of the
+  # Filfox-based mainnet-block-explorer entry in kernel_demo.yaml.
+  # PROBED 2026-07-15: curl https://filecoin.blockscout.com/api/v2/main-page/blocks -> 200,
+  #   bare array of the 4 newest indexed blocks; heights consecutive (6192534..6192537);
+  #   newest timestamp 2026-07-15T02:28:30Z = 52s old at probe time. /api/v2/stats -> 200
+  #   (total_blocks 3476671, average_block_time 30000ms).
+  # THRESHOLD: PLACEHOLDER — recalibrated 2026-07-15 after the first pipeline run: a
+  #   browser probe saw 52s, but the OSO fetch path observed ~1380s (main-page/blocks is
+  #   CDN-cached for non-browser clients). <= 1800s (30 min) still catches a genuinely
+  #   stalled explorer while tolerating the cache tier; original note: 300s (10 epochs).
+  #   SECOND recalibration: OSO-vantage readings grew 1379s -> 2089s across runs while a
+  #   direct browser probe stayed ~65s — the CDN serves OSO's fetcher a stale tier. 3600s
+  #   catches a true stall; ASK BLOCKSCOUT for an uncached API path to tighten this.
+  #   quantization + fetch timing noise while still failing a genuinely stalled indexer
+  #   (kernel_demo's filfox head-age flapped at a 90s threshold for exactly that reason).
+  - function_id: fevm-mainnet-explorer-blockscout
+    kernel_function: "Mainnet block explorer (Lotus archive, indexing, NV maintenance)"
+    origin: oso
+    tier: essential
+    category: 'UX/DX'
+    sub_category: 'Explorers and Tooling'
+    oso_project_slug: blockscout
+    sla:
+      statement: "Blockscout Filecoin mainnet explorer indexes at chain head: newest indexed block <= 3600s old, measured daily — a stale explorer is not an observability surface"
+      metric: blockscout_mainnet_head_age_seconds
+      threshold: { op: "<=", value: 3600 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filecoin.blockscout.com"
+      endpoint: "https://filecoin.blockscout.com/api/v2/main-page/blocks"
+      query: "/api/v2/main-page/blocks"
+      extract: { column: timestamp, timestamp_column: timestamp, cast: date, reduce: latest, derive: age_seconds, unit: seconds }
+
+  # Blockscout's CALIBRATION instance — the committee wants at least one calibnet explorer,
+  # and this bid explicitly funds the 314159 instance. Same freshness construction as mainnet.
+  # PROBED 2026-07-15: curl https://filecoin-testnet.blockscout.com/api/v2/stats -> 200;
+  #   /api/v2/main-page/blocks -> 200, heights consecutive (3891868..3891871), newest
+  #   timestamp 52s old at probe time. (filecoin-calibration.blockscout.com and
+  #   calibration.blockscout.com -> 404; filecoin-testnet is the live hostname.)
+  # THRESHOLD: PLACEHOLDER — <= 1800s, same pipeline-path recalibration as the mainnet entry.
+  - function_id: calibnet-explorer-blockscout
+    origin: oso
+    tier: essential
+    category: 'Coordination & Hardening'
+    sub_category: 'Testnets - explorer'
+    oso_project_slug: blockscout
+    sla:
+      statement: "Blockscout Calibration testnet explorer indexes at chain head: newest indexed block <= 3600s old, measured daily — upgrade rehearsal needs a working explorer to analyse"
+      metric: blockscout_calibnet_head_age_seconds
+      threshold: { op: "<=", value: 3600 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filecoin-testnet.blockscout.com"
+      endpoint: "https://filecoin-testnet.blockscout.com/api/v2/main-page/blocks"
+      query: "/api/v2/main-page/blocks"
+      extract: { column: timestamp, timestamp_column: timestamp, cast: date, reduce: latest, derive: age_seconds, unit: seconds }
+
+  # ---- From the team's own Karma application (3.2 Verification metrics) --------------
+  # Blockscout proposed: "contracts verified via Blockscout... measured via the verified
+  # contracts endpoint... target a 2x increase over the course of the year."
+  # PROBED 2026-07-15: curl https://filecoin.blockscout.com/api/v2/smart-contracts/counters
+  #   -> 200, {"verified_smart_contracts":"985", ...} (string-encoded number; cast float).
+  # THRESHOLD: floor = the probe-day count (985). Their Karma target is 2x (~1970) by end
+  #   of grant — ratchet the threshold upward at review checkpoints rather than encoding a
+  #   moving target here.
+  - function_id: fevm-verified-contracts
+    kernel_function: "Mainnet block explorer (Lotus archive, indexing, NV maintenance)"
+    origin: karma
+    tier: essential
+    category: 'UX/DX'
+    sub_category: 'Explorers and Tooling'
+    oso_project_slug: blockscout
+    sla:
+      statement: "Contract verification keeps growing: verified smart contracts on Blockscout >= 985 (the 2026-07-15 baseline; team's Karma target is 2x in a year), measured weekly"
+      metric: verified_smart_contracts
+      threshold: { op: ">=", value: 985 }
+      cadence: weekly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filecoin.blockscout.com"
+      endpoint: "https://filecoin.blockscout.com/api/v2/smart-contracts/counters"
+      query: "/api/v2/smart-contracts/counters"
+      data_selector: "$"
+      extract: { column: verified_smart_contracts, cast: float, reduce: single, derive: value, unit: contracts }
+
+  # ---- Routed from registry/kernel_demo.yaml (dissolved 2026-07-15); OSO reference metric ----
+  - function_id: mainnet-block-explorer
+    kernel_function: "Mainnet block explorer (Lotus archive, indexing, NV maintenance)"
+    origin: oso
+    tier: essential
+    category: 'UX/DX'
+    sub_category: 'Explorers and Tooling'
+    oso_project_slug: filfox
+    sla:
+      statement: "Explorer keeps pace with the chain: the largest gap between consecutive indexed tipsets stays <= 90s (3 epochs), measured daily"
+      metric: explorer_max_tipset_gap_seconds
+      threshold: { op: "<=", value: 90 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filfox.info"
+      endpoint: "https://filfox.info/api/v1/tipset/recent"
+      query: "/api/v1/tipset/recent"
+    transform:
+      # Largest gap between consecutive indexed tipsets (window LAG). A fetch-timing-robust
+      # stall detector: it stays ~30s (one epoch) while the explorer keeps pace and only spikes
+      # on a genuine indexing stall. Replaces the instantaneous head-age extract, which flapped
+      # around the threshold because it also captured 0-30s of fetch-timing noise.
+      sql: "SELECT MAX(g) FROM (SELECT timestamp - LAG(timestamp) OVER (ORDER BY height) AS g FROM raw) s"

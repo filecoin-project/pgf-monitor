@@ -1,0 +1,41 @@
+[project]
+name = "filecoin-pgf-monitor"
+version = "0.1.0"
+description = "ProPGF kernel-function monitoring: deterministic evidence, bounded model judgment, human adjudication."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "jsonschema>=4.21",
+    "anyio>=4.0",
+    "claude-agent-sdk>=0.1.0",
+    "requests>=2.31",
+    "pyoso>=0.1",
+    "sqlglot>=30.12.0",
+]
+
+[project.optional-dependencies]
+# Extras for running the marimo dashboards under dashboards/ locally:
+#   uv sync --extra dashboards && uv run marimo run dashboards/propgf-kernel-health.py
+dashboards = ["marimo>=0.9", "plotly>=5", "pandas>=2", "polars>=1"]
+
+[project.scripts]
+fpm = "fpm.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fpm"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]

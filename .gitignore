@@ -1,0 +1,32 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.fpm_store/
+.env
+.DS_Store
+
+# planning / design docs — used to build this, kept locally, not published
+docs/plan*.md
+docs/*-design.md
+docs/real-sla-examples.md
+docs/grant-commitments-appendix.md
+docs/superpowers/
+
+# agent workflow scratch (subagent-driven-development ledger, task briefs, diffs)
+.superpowers/
+
+# local tooling + secrets (defensive — none committed today)
+token.json
+credentials.json
+.mcp.json
+.claude/settings.local.json
+
+# contract generation is local-only — the whole dir (facts files, generated
+# contracts, README, example) carries grant terms and stays private, not published.
+contracts/
+
+# marimo export cache
+__marimo__/

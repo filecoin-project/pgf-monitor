@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["team", "maintainers", "functions"],
+  "properties": {
+    "team": {"type": "string", "minLength": 1},
+    "maintainers": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "functions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["function_id", "tier", "category", "sub_category", "sla", "source"],
+        "properties": {
+          "function_id": {"type": "string", "minLength": 1},
+          "origin": {"enum": ["oso", "karma", "external-pr"]},
+          "kernel_function": {"type": "string", "minLength": 1},
+          "tier": {"enum": ["irreplaceable", "essential", "important", "nice-to-have"]},
+          "category": {"enum": ["Blockchain Core & Physical Storage", "Coordination & Hardening", "Coordination & Incentives", "UX/DX", "Storage Market Middleware"]},
+          "sub_category": {"type": "string", "minLength": 1},
+          "oso_project_slug": {"type": "string"},
+          "sla": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["statement", "metric", "threshold", "cadence"],
+            "properties": {
+              "statement": {"type": "string", "minLength": 1},
+              "metric": {"type": "string", "minLength": 1},
+              "threshold": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["op", "value"],
+                "properties": {
+                  "op": {"enum": [">=", "<=", ">", "<", "=="]},
+                  "value": {"type": "number"}
+                }
+              },
+              "cadence": {"enum": ["daily", "weekly", "monthly"]}
+            }
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["adapter"],
+            "properties": {
+              "adapter": {"type": "string", "minLength": 1},
+              "kind": {"enum": ["fixture", "http-json", "onchain-indexsupply"]},
+              "endpoint": {"type": "string"},
+              "query": {"type": "string"},
+              "base_url": {"type": "string"},
+              "method": {"enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]},
+              "params": {"type": "object"},
+              "paginator": {"type": "string"},
+              "data_selector": {"type": "string", "minLength": 1},
+              "max_table_nesting": {"type": "integer", "minimum": 0},
+              "auth": {"type": "object", "additionalProperties": false,
+                       "properties": {"secret_ref": {"type": "string"}}},
+              "fixture": {"type": "string"},
+              "extract": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["column"],
+                "properties": {
+                  "path": {"type": "string"},
+                  "column": {"type": "string", "minLength": 1},
+                  "cast": {"enum": ["float", "date"]},
+                  "unit": {"type": "string"},
+                  "reduce": {"enum": ["single", "latest", "avg", "min", "max", "null_ratio"]},
+                  "timestamp_column": {"type": "string"},
+                  "derive": {"enum": ["value", "diff", "age_seconds", "age_days"]},
+                  "column2": {"type": "string"}
+                }
+              }
+            },
+            "allOf": [
+              {
+                "if": {"properties": {"adapter": {"const": "fixture"}}, "required": ["adapter"]},
+                "then": {"required": ["fixture"]}
+              },
+              {
+                "if": {"properties": {"kind": {"const": "http-json"}}, "required": ["kind"]},
+                "then": {"required": ["base_url", "query"]}
+              }
+            ]
+          },
+          "transform": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["sql"],
+            "properties": {
+              "sql": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+team: kernel-demo
+maintainers: ["@filecoin-core"]
+functions:
+  - function_id: randomness-beacon
+    tier: irreplaceable
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Randomness'
+    oso_project_slug: drand
+    sla:
+      statement: "drand beacon relay not lagging: expected - current <= 1 round, measured daily"
+      metric: beacon_round_lag
+      threshold: { op: "<=", value: 1 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.drand.sh"
+      endpoint: "https://api.drand.sh/health"
+      query: "/health"
+      extract: { column: expected, column2: current, reduce: single, derive: diff, unit: rounds }
+
+  - function_id: mainnet-block-explorer
+    tier: essential
+    category: 'UX/DX'
+    sub_category: 'Explorers and Tooling'
+    oso_project_slug: filfox
+    sla:
+      statement: "Explorer indexed head fresh: latest tipset <= 90s stale, measured daily"
+      metric: explorer_head_age_seconds
+      threshold: { op: "<=", value: 90 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filfox.info"
+      endpoint: "https://filfox.info/api/v1/tipset/recent"
+      query: "/api/v1/tipset/recent"
+      extract: { column: timestamp, timestamp_column: height, reduce: latest, derive: age_seconds, unit: seconds }
+
+  - function_id: builtin-actors
+    tier: irreplaceable
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'VM & Programmability'
+    oso_project_slug: builtin-actors
+    sla:
+      statement: "A tagged builtin-actors release <= 90 days old, measured monthly"
+      metric: release_age_days
+      threshold: { op: "<=", value: 90 }
+      cadence: monthly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.github.com"
+      endpoint: "https://api.github.com/repos/filecoin-project/builtin-actors/releases"
+      query: "/repos/filecoin-project/builtin-actors/releases"
+      extract: { column: published_at, timestamp_column: published_at, cast: date, reduce: latest, derive: age_days, unit: days }
+
+  - function_id: content-routing-ipni
+    tier: essential
+    category: 'Storage Market Middleware'
+    sub_category: 'Content routing'
+    oso_project_slug: ipni
+    sla:
+      statement: "IPNI providers error-free: >= 95% of providers report no LastError, measured daily"
+      metric: ipni_error_free_ratio
+      threshold: { op: ">=", value: 0.95 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://cid.contact"
+      endpoint: "https://cid.contact/providers"
+      query: "/providers"
+      extract: { column: last_error, reduce: null_ratio, derive: value, unit: ratio }

@@ -1,0 +1,97 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# Re-scope direction is "fund public FEVM archive" — that archive does not exist yet, so
+# there is nothing team-published to probe. The entries below use a Goldsky-HOSTED public
+# Filecoin FEVM subgraph (Secured Finance's, the only no-auth public endpoint found) as a
+# CANARY for the shared Goldsky Filecoin indexing backend: if Goldsky's FEVM chain ETL
+# stalls or errors, every subgraph it hosts goes stale with it. When the funded public
+# FEVM archive ships, re-point both entries at the archive's own endpoint — that is the
+# real deliverable, and the team should treat these canaries as interim.
+team: goldsky
+maintainers: ["@TODO-github-handle"]   # team fills in
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "Re-scope"
+#   slate_tier: "ESS"
+#   working_usd: "$50-85k"
+#   app_ref: "APP-RRMZE7XC-XAVG4W"
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: [api.goldsky.com]
+#   unmeasured:
+#     - function: "Public FEVM archive (the Re-scope deliverable)"
+#       reason: "Not yet published; no endpoint exists to probe. Replace the canary subgraph metrics with the archive's own freshness/completeness endpoint as soon as it ships."
+#     - function: "Turbo real-time pipelines / Mirror streams"
+#       reason: "Project-scoped api.goldsky.com endpoints require per-customer API keys; nothing pipeline-side is publicly probe-able without the committee provisioning a secret."
+#   candidates:
+#     - metric: "Calibnet FEVM subgraph freshness"
+#       why_unverified: "PROBED 2026-07-15: .../subgraphs/sf-filecoin-testnet/latest/gn -> 404; no public Goldsky-hosted calibnet subgraph found. Team could publish one (or the archive) to cover testnet indexing."
+functions:
+  # Canary for Goldsky's Filecoin FEVM chain ETL: a Goldsky-hosted public subgraph stays at
+  # chain head. Freshness is computed against wall clock from the subgraph's own _meta
+  # block timestamp, so a stale backend cannot self-certify. Note: dlt flattens the GraphQL
+  # response {data:{meta:{block:{...}}}} into data__meta__block__* columns (the _meta field
+  # is aliased to "meta" in the query precisely to keep that name normalization-safe).
+  # PROBED 2026-07-15: POST {query: "{ meta: _meta { block { number timestamp } } }"} to
+  #   https://api.goldsky.com/api/public/project_cm8i6ca9k24d601wy45zzbsrq/subgraphs/sf-filecoin-mainnet/latest/gn
+  #   -> 200, block.number 6192542, block.timestamp 1784082660 = 43s behind wall clock —
+  #   and level with the chain head Blockscout reported (6192537) moments earlier.
+  # THRESHOLD: PLACEHOLDER — observed 43s; <= 600s (20 epochs) tolerates brief reorg/restart
+  #   catch-up while failing a genuinely stalled FEVM indexing backend. Public endpoints are
+  #   rate-limited (50 req / 10s) — a daily probe is far under that.
+  - function_id: fevm-chain-indexing-freshness
+    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    origin: oso
+    tier: essential
+    category: 'Coordination & Incentives'
+    sub_category: 'Network data & monitoring'
+    oso_project_slug: goldsky
+    sla:
+      statement: "Goldsky-hosted Filecoin FEVM subgraph indexes at chain head: wall clock minus indexed block timestamp <= 600s, measured daily — stale chain ETL breaks every downstream consumer at once"
+      metric: fevm_subgraph_indexing_lag_seconds
+      threshold: { op: "<=", value: 600 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.goldsky.com"
+      endpoint: "https://api.goldsky.com/api/public/project_cm8i6ca9k24d601wy45zzbsrq/subgraphs/sf-filecoin-mainnet/latest/gn"
+      query: "/api/public/project_cm8i6ca9k24d601wy45zzbsrq/subgraphs/sf-filecoin-mainnet/latest/gn"
+      method: POST
+      # NOTE: literal GraphQL braces are doubled ({{ }}) — dlt's rest_api treats single
+      # braces in param/json values as placeholder expressions (found live 2026-07-15).
+      params: { query: "{{ meta: _meta {{ block {{ number timestamp }} }} }}" }
+    transform:
+      # indexing lag in seconds: wall clock at run time minus the unix timestamp of the
+      # newest block the Goldsky backend has indexed (~0-60s when healthy)
+      sql: "SELECT to_unixtime(:now_tz) - MAX(CAST(data__meta__block__timestamp AS DOUBLE)) FROM raw"
+
+  # Same canary, correctness axis: the subgraph must report no indexing errors — a backend
+  # that keeps advancing while flagging hasIndexingErrors is silently serving bad data.
+  # PROBED 2026-07-15: same endpoint, query "{ meta: _meta { hasIndexingErrors } }" -> 200,
+  #   hasIndexingErrors = false. (dlt normalizes hasIndexingErrors -> has_indexing_errors,
+  #   same convention as kernel_demo's IPNI LastError -> last_error.)
+  # THRESHOLD: self-evident — any indexing error is a failure, so the boolean must be 0.
+  - function_id: fevm-chain-indexing-errors
+    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    origin: oso
+    tier: essential
+    category: 'Coordination & Incentives'
+    sub_category: 'Network data & monitoring'
+    oso_project_slug: goldsky
+    sla:
+      statement: "Goldsky-hosted Filecoin FEVM subgraph reports zero indexing errors (hasIndexingErrors == false), measured daily"
+      metric: fevm_subgraph_indexing_errors
+      threshold: { op: "==", value: 0 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.goldsky.com"
+      endpoint: "https://api.goldsky.com/api/public/project_cm8i6ca9k24d601wy45zzbsrq/subgraphs/sf-filecoin-mainnet/latest/gn"
+      query: "/api/public/project_cm8i6ca9k24d601wy45zzbsrq/subgraphs/sf-filecoin-mainnet/latest/gn"
+      method: POST
+      params: { query: "{{ meta: _meta {{ hasIndexingErrors }} }}" }
+    transform:
+      # 0 when the backend reports clean indexing, 1 on any reported indexing error
+      sql: "SELECT MAX(CASE WHEN data__meta__has_indexing_errors THEN 1.0 ELSE 0.0 END) FROM raw"

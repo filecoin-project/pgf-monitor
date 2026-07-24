@@ -1,0 +1,6 @@
+{
+  "value": null,
+  "unit": "attestation",
+  "source": "placeholder",
+  "note": "Vendor/access governance, runbooks and Slack/Workspace/GitHub stewardship is coordination work with no public machine-checkable surface. A committee attestation (manual, quarterly) is the honest measurement path. A null value keeps the evaluator indeterminate rather than faking a pass."
+}

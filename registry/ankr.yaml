@@ -1,0 +1,113 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# Slate open item (Re-scope): Ankr's node-operations stack is closed-source, so there is no
+# public repo to verify implementation against. These metrics deliberately measure the SERVICE
+# OUTPUT (public endpoint freshness) rather than the code — which is the honest thing a
+# machine check can attest for a closed-source operator.
+team: ankr
+maintainers: ["@TODO-github-handle"]   # team fills in
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "Re-scope"
+#   slate_tier: "ESS"
+#   working_usd: "~$50k"
+#   app_ref: "APP-ICVR43KL-H0P3K6"
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: [rpc.ankr.com]
+#   unmeasured: []
+#   candidates:
+#     - metric: fevm_eth_block_number
+#       why_unverified: >
+#         Probed OK 2026-07-15 (POST eth_blockNumber to rpc.ankr.com/filecoin -> 200,
+#         result "0x5e7d98" = 6192536, consistent with ChainHead Height). Not proposed because
+#         the result is a hex string the extract vocab cannot cast; a transform could decode it
+#         (from_base(substr(raw.result, 3), 16)) but Filecoin.ChainHead already covers head
+#         freshness with a native integer, so this adds nothing.
+# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
+#  rpc_p50_latency_ms : no public latency feed; needs a team endpoint or an active prober
+#  status_page_live   : ask team for a status JSON
+#  NEW (committee "most imp"): RPC latency, requests/mo, API availability — beyond head-lag; design an RPC-quality prober
+functions:
+  # Kernel function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)".
+  # Ankr's funded scope is the public RPC read surface of that function; a stalled or forked
+  # backing node shows up directly as a stale reported chain head.
+  #
+  # PROBED 2026-07-15T02:29Z: curl -X POST https://rpc.ankr.com/filecoin
+  #   '{"jsonrpc":"2.0","method":"Filecoin.ChainHead","params":[],"id":1}' -> 200, no auth/API
+  #   key required; result.Height = 6192538 vs wall-clock expected epoch 6192538 (lag 0).
+  # JSON shape: {"jsonrpc":..,"id":..,"result":{"Height":N,"Blocks":[...],"Cids":[...]}}.
+  #   The response is a single object -> one parent row. result is a nested OBJECT, so dlt
+  #   flattens result.Height to column height on that row. Blocks/Cids are nested
+  #   ARRAYS -> child tables the transform cannot reach (and why max_table_nesting: 0 must
+  #   NOT be set here) — but Height is all we need and it lives on the parent row.
+  # Expected epoch = floor((now - 1598306400) / 30): mainnet genesis 2020-08-24T22:00:00Z,
+  #   30s epochs. Assumes the pipeline session runs in UTC so to_unixtime(:now) is genesis-
+  #   comparable. Cross-checked against filfox head during drafting.
+  # THRESHOLD: PLACEHOLDER — observed lag 0; 5 epochs (150s) tolerates fetch-timing noise and
+  #   brief block-delivery delays while still catching a genuinely stalled backing node.
+  - function_id: chain-sync-rpc-mainnet-head-lag
+    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Ledger & Consensus'
+    oso_project_slug: ankr-network
+    sla:
+      statement: "Public mainnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily — a stale head means the endpoint's backing node has stopped syncing"
+      metric: rpc_head_lag_epochs
+      threshold: { op: "<=", value: 5 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://rpc.ankr.com"
+      endpoint: "https://rpc.ankr.com/filecoin"
+      query: "/filecoin"
+      method: POST
+      params: { jsonrpc: "2.0", method: "Filecoin.ChainHead", params: [], id: 1 }
+      # result is the JSON-RPC payload object; without an explicit selector dlt
+      # auto-descends into the LONGEST nested list (Cids!) — found live 2026-07-15.
+      data_selector: result
+    transform:
+      # expected epoch from wall clock minus the head Height the endpoint reports; single
+      # parent row, MAX() only for aggregate form. 1598306400 = mainnet genesis unix ts.
+      sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now) - 1598306400) / 30.0) - MAX(height)) FROM raw"
+
+  # Same kernel function, calibnet side: Ankr also operates a public calibration-testnet RPC,
+  # part of the same chain-sync/RPC read surface (used for upgrade rehearsal by developers).
+  # Distinct from kernel_demo's calibnet-chain-liveness (calibration.filfox.info measures the
+  # CHAIN advancing; this measures ANKR'S ENDPOINT keeping pace with it).
+  #
+  # PROBED 2026-07-15T02:29Z: curl -X POST https://rpc.ankr.com/filecoin_testnet
+  #   Filecoin.ChainHead -> 200 unauthenticated; result.Height = 3891872 vs wall-clock
+  #   expected epoch 3891872 (lag 0). Same JSON shape/flattening reasoning as mainnet above.
+  # Expected epoch = floor((now - 1667326380) / 30): calibnet genesis 2022-11-01T18:13:00Z,
+  #   30s epochs — constant verified against the probed Height (delta 0 at probe time).
+  # THRESHOLD: PLACEHOLDER — observed lag 0; 5 epochs, same rationale as mainnet.
+  - function_id: chain-sync-rpc-calibnet-head-lag
+    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Ledger & Consensus'
+    oso_project_slug: ankr-network
+    sla:
+      statement: "Public calibnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily"
+      metric: rpc_calibnet_head_lag_epochs
+      threshold: { op: "<=", value: 5 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://rpc.ankr.com"
+      endpoint: "https://rpc.ankr.com/filecoin_testnet"
+      query: "/filecoin_testnet"
+      method: POST
+      params: { jsonrpc: "2.0", method: "Filecoin.ChainHead", params: [], id: 1 }
+      # result is the JSON-RPC payload object; without an explicit selector dlt
+      # auto-descends into the LONGEST nested list (Cids!) — found live 2026-07-15.
+      data_selector: result
+    transform:
+      # 1667326380 = calibnet genesis unix ts (2022-11-01T18:13:00Z)
+      sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now) - 1667326380) / 30.0) - MAX(height)) FROM raw"

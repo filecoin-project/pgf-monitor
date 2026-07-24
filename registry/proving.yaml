@@ -1,0 +1,81 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# Covers the IRREPLACEABLE proving subsystem — PoRep (StackedDRG sealing), WinningPoSt /
+# WindowPoSt, and the crypto primitives underneath (BLST, bellperson, neptune). No ProPGF
+# Batch-3 application covers this function; stewardship sits with the rust-fil-proofs
+# maintainers / Filecoin core teams under pre-existing arrangements. Release cadence on
+# rust-fil-proofs is not a usable signal (last tagged GitHub release: 2019 — probed
+# 2026-07-15), so both metrics below are commit-recency maintenance signals.
+#
+# NETWORK-LEVEL EVIDENCE (not duplicated here): WindowPoSt is proven every day by the whole
+# network — a proving regression would halt liveness proofs and block production network-wide,
+# so the chain advancing on its ~30s cadence (filfox tipset metrics in kernel_demo.yaml and
+# drafts/libp2p-networking.yaml) already evidences the proving subsystem indirectly.
+team: proving
+maintainers: ["@TODO-github-handle"]   # team fills in
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "pre-existing"
+#   slate_tier: "IRR"
+#   working_usd: "pre-existing agreement"
+#   app_ref: null
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: []
+#   unmeasured:
+#     - function: "PoRep/PoSt proof correctness and performance regressions"
+#       reason: "No public endpoint publishes proof benchmark or verification-failure telemetry; a regression would surface indirectly via chain liveness, not via a probeable JSON API."
+#   candidates:
+#     - metric: "blstrs (BLS12-381 pairing primitive) commit recency"
+#       why_unverified: "PROBED 2026-07-15 OK (api.github.com/repos/filecoin-project/blstrs/commits -> latest 2026-03-09, 127 days). Verified but not included: one crypto-primitive maintenance metric (bellperson, below) is enough; blstrs changes rarely by design, so its age flaps against any honest threshold."
+functions:
+  # Maintenance signal for the proofs library every sealer/prover/verifier runs.
+  # PROBED 2026-07-15: curl https://api.github.com/repos/filecoin-project/rust-fil-proofs/commits?per_page=30
+  #   -> 200, latest commit.committer.date = 2026-06-04T05:30:30Z (40 days ago).
+  # NOTE: dlt flattens the nested GitHub payload; commit.committer.date lands as column
+  #   commit__committer__date. `parents` (nested array) lands in a child table — harmless here.
+  # THRESHOLD: PLACEHOLDER — observed 40 days; repo is in slow maintenance mode, so <= 120 days
+  #   flags a genuinely unstaffed quarter without flapping on normal quiet periods.
+  - function_id: rust-fil-proofs-maintenance
+    origin: oso
+    tier: irreplaceable
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Proving'
+    oso_project_slug: rust-fil-proofs   # TODO: confirm OSO/oss-directory slug
+    sla:
+      statement: "rust-fil-proofs has a commit <= 120 days old, measured monthly — the proving library must stay staffed; a regression here halts proving network-wide"
+      metric: proofs_days_since_last_commit
+      threshold: { op: "<=", value: 120 }
+      cadence: monthly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.github.com"
+      endpoint: "https://api.github.com/repos/filecoin-project/rust-fil-proofs/commits?per_page=30"
+      query: "/repos/filecoin-project/rust-fil-proofs/commits?per_page=30"
+      extract: { column: commit__committer__date, timestamp_column: commit__committer__date, cast: date, reduce: latest, derive: age_days, unit: days }
+
+  # Maintenance signal for the Groth16 prover (bellperson) under rust-fil-proofs.
+  # PROBED 2026-07-15: curl https://api.github.com/repos/filecoin-project/bellperson/commits?per_page=30
+  #   -> 200, latest commit.committer.date = 2026-07-01T13:23:16Z (13 days ago).
+  #   (blstrs also probed OK: 127 days — see x_draft.candidates for why it is not included.)
+  # THRESHOLD: PLACEHOLDER — observed 13 days; crypto primitives change rarely, so <= 180 days
+  #   is a stall detector, not an activity target.
+  - function_id: proving-crypto-primitives-maintenance
+    origin: oso
+    tier: irreplaceable
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Proving'
+    oso_project_slug: rust-fil-proofs   # TODO: confirm OSO/oss-directory slug
+    sla:
+      statement: "bellperson (Groth16 prover) has a commit <= 180 days old, measured monthly — the crypto primitives under PoRep/PoSt must remain maintained"
+      metric: bellperson_days_since_last_commit
+      threshold: { op: "<=", value: 180 }
+      cadence: monthly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.github.com"
+      endpoint: "https://api.github.com/repos/filecoin-project/bellperson/commits?per_page=30"
+      query: "/repos/filecoin-project/bellperson/commits?per_page=30"
+      extract: { column: commit__committer__date, timestamp_column: commit__committer__date, cast: date, reduce: latest, derive: age_days, unit: days }

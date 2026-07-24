@@ -1,0 +1,6 @@
+{
+  "value": null,
+  "unit": "ratio",
+  "source": "placeholder",
+  "note": "Awaiting a real machine-checkable source. proofs.filecoin.io is an IPFS gateway serving the Groth16 parameter files as raw bytes/HTML directory listings, not JSON (probed 2026-07-15: GET / -> 200 text/html; Accept: application/vnd.ipld.dag-json -> 406 codec dag-pb). A null value keeps the evaluator indeterminate rather than faking a pass."
+}

@@ -1,0 +1,60 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# Covers the ESSENTIAL chain ETL/indexing function (Lily: chain ETL, indexing, normalization
+# & parameter matching feeding the BigQuery public dataset and the Spacescope API). No ProPGF
+# Batch-3 application covers this; historical stewards are the Lily/Sentinel team and
+# Spacescope (Starboard) under pre-existing arrangements.
+#
+# HONEST STATUS NOTE: Lily was expected to be in maintenance mode, but the repo is NOT
+# dormant — probed 2026-07-15: latest commit 2026-07-13 (1 day old), latest release v0.24.4
+# (2026-05-18). The maintenance metric below reflects that observed activity. The live data
+# SURFACES (Spacescope API, BigQuery dataset) could not be probed without auth/BigQuery
+# tooling — see x_draft.candidates; the committee should prioritize provisioning one of them,
+# since repo activity alone does not evidence the pipeline actually producing fresh data.
+team: lily
+maintainers: ["@TODO-github-handle"]   # team fills in
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "pre-existing"
+#   slate_tier: "ESS"
+#   working_usd: "pre-existing agreement"
+#   app_ref: null
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: []
+#   unmeasured:
+#     - function: "Freshness of the Filecoin BigQuery public dataset"
+#       reason: "BigQuery datasets are queried via Google SQL clients, not a public no-auth HTTP-JSON endpoint, so the pipeline cannot probe max(height)/max(date) there. A steward-published freshness JSON (or an OSO warehouse mirror check) would close this gap."
+#   candidates:
+#     - metric: "Spacescope API chain-data freshness (e.g. latest power/onboarding datapoint age)"
+#       why_unverified: "api.spacescope.io requires a Bearer token (known from prior sessions; not probeable anonymously). If the committee provisions a token via source.auth.secret_ref, a freshness metric on any daily series is the strongest evidence this function is fulfilled — it tests the served data, not the repo."
+functions:
+  # Maintenance signal for the ETL codebase itself. This evidences the software function
+  # (indexing/normalization logic tracking network upgrades), not data freshness — see
+  # x_draft.candidates for the data-surface metric that needs auth.
+  # PROBED 2026-07-15: curl https://api.github.com/repos/filecoin-project/lily/commits?per_page=30
+  #   -> 200, latest commit.committer.date = 2026-07-13T09:12:24Z (1 day ago); latest release
+  #   v0.24.4 (2026-05-18).
+  # NOTE: dlt flattens the nested GitHub payload; commit.committer.date lands as column
+  #   commit__committer__date.
+  # THRESHOLD: PLACEHOLDER — observed 1 day; <= 90 days flags an abandoned indexer (which
+  #   breaks on the next network upgrade) while tolerating quiet inter-upgrade periods.
+  - function_id: lily-etl-maintenance
+    kernel_function: "Chain ETL, indexing, normalization & parameter matching (BigQuery, Spacescope API)"
+    origin: oso
+    tier: essential
+    category: 'Coordination & Incentives'
+    sub_category: 'Network data & monitoring'
+    oso_project_slug: starboard-ventures   # TODO: confirm — funding model lists Starboard as Lily steward
+    sla:
+      statement: "Lily has a commit <= 90 days old, measured monthly — the chain ETL/indexer must track network upgrades or the open datasets it feeds go stale"
+      metric: lily_days_since_last_commit
+      threshold: { op: "<=", value: 90 }
+      cadence: monthly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.github.com"
+      endpoint: "https://api.github.com/repos/filecoin-project/lily/commits?per_page=30"
+      query: "/repos/filecoin-project/lily/commits?per_page=30"
+      extract: { column: commit__committer__date, timestamp_column: commit__committer__date, cast: date, reduce: latest, derive: age_days, unit: days }

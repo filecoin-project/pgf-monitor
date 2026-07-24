@@ -1,0 +1,33 @@
+team: chainsafe
+maintainers: ["@lemmih", "@dignifiedquire"]
+functions:
+  - function_id: network-uptime
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Ledger & Consensus'
+    oso_project_slug: forest
+    sla:
+      statement: "Forest node reachable >= 99.9%, measured monthly"
+      metric: uptime_ratio
+      threshold: { op: ">=", value: 0.999 }
+      cadence: monthly
+    source:
+      adapter: fixture
+      endpoint: "grafana://forest/uptime"
+      query: 'avg_over_time(up{job="forest"}[30d])'
+      fixture: forest_uptime.json
+  - function_id: forest-snapshots
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Mainnet Infrastructure'
+    oso_project_slug: forest
+    sla:
+      statement: "Snapshots <= 6h stale, measured daily"
+      metric: snapshot_freshness_hours
+      threshold: { op: "<=", value: 6 }
+      cadence: daily
+    source:
+      adapter: fixture
+      endpoint: "explorer://forest/snapshots"
+      query: "latest_snapshot_age_hours"
+      fixture: forest_snapshots.json

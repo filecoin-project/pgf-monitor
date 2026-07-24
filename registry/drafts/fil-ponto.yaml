@@ -1,0 +1,70 @@
+# DRAFT — pre-populated by OSO (2026-07-16) for ProPGF re-scope. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# HONESTY NOTE — FIL Ponto (filponto.io, nucleated from PL Outercore in 2024) is an
+# Important-tier COORDINATION team: ecosystem integration advisory (~50 teams/yr), grants
+# distribution (Drips), UCAN tooling (under committee review), and coordination of open
+# chain infrastructure operated by OTHER teams. Most of those application commitments are
+# NOT machine-checkable — coordination fulfilment shows up in partners shipping, not in any
+# JSON endpoint FIL Ponto operates — so they live in x_draft.unmeasured, deliberately, not
+# for lack of effort. This file therefore stages the ONE FIL Ponto commitment that turned
+# out to have a real, live public source: the Cuzk SP-software work merged upstream into
+# Lotus/Curio, observable via a GitHub search count. That is the whole manifest.
+team: fil-ponto
+maintainers: ["@TODO-github-handle"]   # team fills in
+x_draft:
+  slate_status: "Re-scope"
+  slate_tier: "IMP"
+  app_ref: "APP-9PTCWEQL-HVKGV8"
+  prepared_by: "OSO, 2026-07-16"
+  allowlist_additions: []   # api.github.com already allowlisted — no NEW hosts
+  unmeasured:
+    - function: "Ecosystem integration support & grants advisory (~50 teams/yr navigating dapps, infra providers, explorers, exchanges)"
+      reason: "Coordination work with no public machine-checkable output; fulfilment shows up in partner integrations shipping, not in any JSON endpoint FIL Ponto operates. Evidence is testimonial/case-study, which this pipeline cannot attest."
+    - function: "Drips-based funding distribution for Filecoin public goods (filponto-drips)"
+      reason: "Onchain Drips streams could in principle be observed via the onchain-indexsupply adapter, but no catalogued kernel triple covers funding-distribution tooling; kept out rather than force-mapped."
+    - function: "UCAN authorization tooling milestone (under committee review; may be re-scoped)"
+      reason: "No catalogued kernel function covers UCAN authorization tooling, and the milestone itself is under review — proposing an SLA before the scope is settled would be premature. Revisit after the re-scope decision."
+    - function: "Coordination of open chain infrastructure (public RPC, indexers) as a public good"
+      reason: "The operated services belong to OTHER teams (e.g. Ankr's public RPC is monitored in registry/ankr.yaml). FIL Ponto's coordinating role in getting them stood up and kept public is real but not separable via any endpoint."
+  candidates:
+    - metric: "sector/deal oracle repo activity (SP-facing oracle FIL Ponto references)"
+      why_unverified: "The application references a sector/deal oracle deliverable but no repository URL was provided. Ask the team for the canonical repo; if it is a public GitHub repo, a commit-cadence or release-cadence metric (mirroring lily-etl-maintenance) becomes expressible."
+# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
+#  sector_deal_oracle_repo : NEW asks — # ecosystem collabs supported + seconds-behind-mainnet; needs a source
+#  ecosystem collabs actively supported       : UNCATALOGUED — no _kernel.yaml coordination function
+#  infra-provider availability (RPC/subgraphs): UNCATALOGUED — needs a kernel entry + a source
+functions:
+  # FIL Ponto committed to shipping SP software improvements (Cuzk) merged UPSTREAM into the
+  # canonical node/SP stacks (Lotus, Curio) rather than kept in a private fork. The GitHub
+  # search API counts PRs mentioning "cuzk" across both upstream repos — a direct fulfilment
+  # signal for that commitment. Closest catalogued kernel area is Block Production (mining)
+  # under Blockchain Core & Physical Storage (SP sealing/block-production software); verified
+  # against registry/_kernel.yaml character-for-character.
+  # PROBED 2026-07-16: curl 'https://api.github.com/search/issues?q=cuzk+repo:filecoin-project/lotus+repo:filecoin-project/curio'
+  #   -> 200, resolves; total_count of matching PRs = 3. Search payload is a single top-level
+  #   object {total_count, incomplete_results, items:[...]}; data_selector "$" lands it as one
+  #   row, so extract reads total_count directly (same idiom as blockscout counters).
+  # THRESHOLD: PLACEHOLDER — >= 1 holds the floor (at least the merged work stays visible);
+  #   confirm the real committed count/cadence with the team.
+  - function_id: cuzk-upstream-prs
+    kernel_function: "Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)"
+    origin: karma
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Block Production (mining)'
+    oso_project_slug: filponto
+    sla:
+      statement: "Cuzk SP improvements merged into upstream Lotus/Curio: count of matching PRs on GitHub search >= 1, measured monthly"
+      metric: cuzk_upstream_prs
+      threshold: { op: ">=", value: 1 }   # PLACEHOLDER — confirm with team
+      cadence: monthly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.github.com"
+      endpoint: "https://api.github.com/search/issues?q=cuzk+repo:filecoin-project/lotus+repo:filecoin-project/curio"
+      query: "/search/issues?q=cuzk+repo:filecoin-project/lotus+repo:filecoin-project/curio"
+      data_selector: "$"
+      extract: { column: total_count, cast: float, reduce: single, derive: value, unit: prs }

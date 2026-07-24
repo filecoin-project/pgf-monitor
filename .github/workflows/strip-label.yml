@@ -1,0 +1,20 @@
+name: strip-dry-run-label
+on:
+  pull_request_target:
+    types: [synchronize]
+permissions:
+  pull-requests: write
+jobs:
+  strip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove dry-run-ok on new push
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number, name: 'dry-run-ok'
+              });
+            } catch (e) { /* label absent is fine */ }

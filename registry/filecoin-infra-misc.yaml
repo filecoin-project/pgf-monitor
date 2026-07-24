@@ -1,0 +1,106 @@
+# DRAFT — pre-populated by OSO (2026-07-15) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# Grab-bag of three ESSENTIAL kernel functions with NO ProPGF Batch-3 application, each
+# covered by pre-existing arrangements and each hard to machine-check:
+#   1. Trusted-setup parameter hosting (go-paramfetch / proofs.filecoin.io) — stewards per
+#      the funding model: forest-chainsafe + ipfs-force-community-venus-hub. Fixture
+#      placeholder: the gateway is not JSON-probeable (see comment on the entry).
+#   2. Shared infra stewardship (SEAD) — genuinely unmeasurable coordination work. Fixture
+#      placeholder + unmeasured note.
+#   3. Monitoring & incident response — internal Grafana/OpsGenie are private, but the
+#      public status page (status.filecoin.io, Atlassian Statuspage) IS live and
+#      JSON-probeable, so that entry gets a real metric.
+team: filecoin-infra-misc
+maintainers: ["@TODO-github-handle"]   # per-function stewards differ; committee assigns
+# x_draft (promotion note — annotations preserved as comments):
+#   slate_status: "pre-existing"
+#   slate_tier: "ESS"
+#   working_usd: "pre-existing agreement"
+#   app_ref: null
+#   prepared_by: "OSO, 2026-07-15"
+#   allowlist_additions: [status.filecoin.io]
+#   unmeasured:
+#     - function: "Vendor/access governance, runbooks, Slack/Workspace/GitHub stewardship"
+#       reason: "Coordination work with no public machine-checkable surface (vendor accounts, access reviews, runbooks and workspace administration are all private). Honest path is a manual committee attestation; the fixture below keeps the evaluator indeterminate meanwhile."
+#     - function: "Monitoring, archival access and incident response (Grafana, OpsGenie, IR coordination)"
+#       reason: "PARTIALLY measured: Grafana dashboards and OpsGenie rotations are private, so only the public status-page surface is machine-checkable (entry below). Mean-time-to-acknowledge / archival-access metrics would need the operator to publish JSON telemetry."
+#   candidates:
+#     - metric: "Groth16 parameter availability on proofs.filecoin.io"
+#       why_unverified: "PROBED 2026-07-15: GET https://proofs.filecoin.io/ -> 200 but text/html (IPFS gateway directory listing, 320KB); Accept: application/vnd.ipld.dag-json -> 406 ('block has codec dag-pb'). No JSON index exists. A pipeline `http-head` adapter, or a steward-published JSON manifest of served params + sizes, would make this properly measurable. The expected-params manifest exists as JSON at raw.githubusercontent.com/filecoin-project/go-paramfetch/master/parameters.json but only lists what SHOULD be served — it does not evidence the gateway serving them."
+functions:
+  # Serving Groth16 trusted-setup parameters to every node and SP (go-paramfetch).
+  # PROBED 2026-07-15: proofs.filecoin.io is reachable (200) but serves HTML/raw blocks, not
+  # JSON — see x_draft.candidates. Fixture placeholder with value null (indeterminate) until
+  # a probeable source exists; do NOT promote this entry as-is.
+  # THRESHOLD: PLACEHOLDER — availability ratio semantics chosen so a future real source
+  #   (e.g. an uptime checker on a known param CID URL) can drop in without renaming the metric.
+  - function_id: trusted-setup-param-hosting
+    kernel_function: "Serving Groth16 trusted-setup parameters to every node and SP (go-paramfetch)"
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Mainnet Infrastructure'
+    sla:
+      statement: "Groth16 parameter gateway (proofs.filecoin.io) availability >= 0.99, measured monthly — nodes and SPs cannot verify or generate proofs without these files (AWAITING REAL SOURCE; fixture placeholder)"
+      metric: param_gateway_availability_ratio
+      threshold: { op: ">=", value: 0.99 }
+      cadence: monthly
+    source:
+      adapter: fixture
+      endpoint: "https://proofs.filecoin.io/"
+      query: "manual: verify the gateway serves the params listed in go-paramfetch parameters.json"
+      fixture: trusted_setup_params_placeholder.json
+
+  # Vendor/access governance, runbooks, Slack/Workspace/GitHub stewardship (SEAD).
+  # Genuinely unmeasurable coordination work — see x_draft.unmeasured. Fixture placeholder
+  # with value null (indeterminate); the honest cadence is a manual committee attestation.
+  # THRESHOLD: PLACEHOLDER — == 1 means "committee attests stewardship was performed this
+  #   period"; there is nothing to probe.
+  - function_id: shared-infra-stewardship
+    origin: oso
+    tier: essential
+    category: 'Coordination & Hardening'
+    sub_category: 'Shared infra stewardship'
+    oso_project_slug: sead-ai
+    sla:
+      statement: "Committee attests vendor/access governance, runbooks and workspace stewardship were performed, measured monthly (UNMEASURABLE BY MACHINE; fixture placeholder)"
+      metric: stewardship_attestation
+      threshold: { op: "==", value: 1 }
+      cadence: monthly
+    source:
+      adapter: fixture
+      endpoint: "manual://committee-attestation/shared-infra-stewardship"
+      query: "quarterly attestation recorded by the ProPGF committee"
+      fixture: sead_stewardship_placeholder.json
+
+  # Monitoring, archival access and incident response — the public slice: the Filecoin
+  # status page (Atlassian Statuspage) with automated component checks (Chain Height,
+  # Faucet, DRAND relays...). A stale page evidences the monitoring function being
+  # abandoned; internal Grafana/OpsGenie remain unmeasured (see x_draft.unmeasured).
+  # PROBED 2026-07-15: curl https://status.filecoin.io/api/v2/status.json -> 200,
+  #   page.updated_at = 2026-07-15T01:59:02Z (age 0 days), status.indicator = "none"
+  #   ("All Systems Operational"); /api/v2/summary.json lists 8+ monitored components,
+  #   0 open incidents. Single JSON object -> one row; nested page/status objects flatten
+  #   to columns page__updated_at, status__indicator.
+  # THRESHOLD: PLACEHOLDER — observed age 0 days (automated checks update it frequently);
+  #   <= 45 days catches an abandoned page while tolerating a long incident-free stretch.
+  - function_id: network-monitoring-status-page
+    origin: oso
+    tier: essential
+    category: 'Coordination & Hardening'
+    sub_category: 'Network data & monitoring'
+    oso_project_slug: starboard-ventures   # TODO: confirm operator — funding model lists Starboard as monitoring steward; page itself is Statuspage-hosted
+    sla:
+      statement: "The public Filecoin status page was updated <= 45 days ago, measured weekly — a live status/monitoring surface is the public face of incident response"
+      metric: status_page_updated_age_days
+      threshold: { op: "<=", value: 45 }
+      cadence: weekly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://status.filecoin.io"
+      endpoint: "https://status.filecoin.io/api/v2/status.json"
+      query: "/api/v2/status.json"
+      extract: { column: page__updated_at, cast: date, reduce: single, derive: age_days, unit: days }

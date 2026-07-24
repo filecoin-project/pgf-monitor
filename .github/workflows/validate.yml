@@ -1,0 +1,30 @@
+name: validate
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  static-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                      # full history for base diff + git_manifest_sha
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Validate changed manifests against BASE allowlist
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ github.base_ref }}" --depth=1 || true
+          # allowlist ALWAYS from base, never the PR head
+          git show "origin/${{ github.base_ref }}:registry/_allowlist.txt" > /tmp/base_allowlist.txt
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- 'registry/*.yaml' | grep -v '/_' || true)
+          rc=0
+          for head in $changed; do
+            base_content=$(git show "origin/${{ github.base_ref }}:$head" 2>/dev/null || true)
+            base_arg=""
+            if [ -n "$base_content" ]; then echo "$base_content" > /tmp/base.yaml; base_arg="--base /tmp/base.yaml"; fi
+            uv run python -m scripts.validate_pr "$head" $base_arg \
+              --allowlist /tmp/base_allowlist.txt --summary "$GITHUB_STEP_SUMMARY" || rc=1
+          done
+          exit $rc

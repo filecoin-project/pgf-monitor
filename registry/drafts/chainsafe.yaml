@@ -1,0 +1,138 @@
+# DRAFT — pre-populated by OSO (2026-07-16) for ProPGF Batch 3. Not yet adopted by the team.
+# Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
+# (3) confirm the PLACEHOLDER thresholds, (4) add any new hosts to registry/_allowlist.txt.
+#
+# ADDITIONAL to registry/chainsafe.yaml (already promoted). That file already carries
+# Forest CI/snapshot/bootstrap/calibnet-snapshot/calibnet-miner-power functions. This
+# draft closes FOUR remaining gaps between ChainSafe's Karma ProPGF application and the
+# live registry: the diff + lite snapshot lanes (Forest bid), the calibnet faucet wallet,
+# and the calibnet rehearsal miner's WindowPoSt reliability (Infra Services bid).
+# All four were probed live 2026-07-16 and resolve. Do NOT edit registry/chainsafe.yaml
+# from here — these are new rows only.
+team: chainsafe
+maintainers: ["@lemmih", "@dignifiedquire"]
+x_draft:
+  # This draft spans BOTH promoted ChainSafe slate rows:
+  slates:
+    - app_ref: "APP-P0UD8I92-78VVRM"   # Forest — an efficient and lightweight Filecoin Node
+      slate_status: "Unresolved"
+      slate_tier: "ESS"
+      functions: [mainnet-diff-snapshot-freshness, mainnet-lite-snapshot-freshness]
+    - app_ref: "APP-VQC3PIBY-G2UDZJ"   # Filecoin Infrastructure Services
+      slate_status: "Advance"
+      slate_tier: "ESS"
+      functions: [calibnet-faucet-wallet-activity, calibnet-rehearsal-miner-reliability]
+  prepared_by: "OSO, 2026-07-16"
+  # Both source hosts (forest-archive.chainsafe.dev, calibration.filfox.info) are already
+  # on registry/_allowlist.txt from the promoted chainsafe.yaml — no new hosts needed.
+  allowlist_additions: []
+  candidates:
+    - metric: calibnet faucet health page uptime (Infra Services claimed 99% uptime)
+      why_unverified: >
+        faucet.calibnet.chainsafe-fil.io serves an HTML SPA only; no public JSON
+        health/API endpoint (re-probed 2026-07-16: / -> 200 text/html, /api/health -> 404),
+        same finding as the promoted chainsafe.yaml x_draft.unmeasured note. The
+        faucet-wallet on-chain activity metric below is the machine-checkable proxy for
+        "the faucet is still dispensing" — it needs no ChainSafe-hosted endpoint.
+    - metric: calibnet miner recent-block-production RATE (blocks per epoch window)
+      why_unverified: >
+        filfox exposes miner.blocksMined as a cumulative counter (162968 at probe);
+        a rate needs a delta over two fetches, which extract/transform cannot express
+        within one response. Faulty-sector count (below) is the expressible reliability proxy.
+functions:
+  # ---- Forest bid (APP-P0UD8I92-78VVRM): the remaining snapshot lanes ----------------
+  # Kernel: "Validated snapshot generation & hosting (~2h cadence)".
+  # registry/chainsafe.yaml already covers the mainnet latest-v2 lane
+  # (mainnet-snapshot-freshness). ChainSafe's archive also publishes DIFF snapshots
+  # (incremental, for nodes catching up) and LITE snapshots (headers-only, smaller). Both
+  # are part of the Forest snapshot-hosting commitment; this mirrors the latest-v2
+  # transform exactly (items[] newest `uploaded` -> age_seconds).
+  # PROBED 2026-07-16: curl 'https://forest-archive.chainsafe.dev/list/mainnet/diff?format=json&limit=20'
+  #   -> 200 application/json, total=2043, items[0].uploaded=2026-07-16T14:32:25.188Z (fresh);
+  #   items[1]=2026-07-15T10:49:09Z, items[2]=2026-07-14T10:06:14Z -> observed cadence ~24-28h
+  #   (diffs are published roughly daily). items[] is nested -> extract.path selects it.
+  # THRESHOLD: PLACEHOLDER — 172800s (48h) = roughly two missed daily cycles given the
+  #   observed ~24-28h cadence. Confirm with team.
+  - function_id: mainnet-diff-snapshot-freshness
+    kernel_function: "Validated snapshot generation & hosting (~2h cadence)"
+    origin: karma
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Mainnet Infrastructure'
+    oso_project_slug: forest
+    sla:
+      statement: "Fresh mainnet DIFF snapshots keep publishing: newest diff snapshot in the archive listing is <= 172800s (48h) old, measured daily"
+      metric: diff_snapshot_age_seconds
+      threshold: { op: "<=", value: 172800 }   # THRESHOLD: PLACEHOLDER — confirm with team
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://forest-archive.chainsafe.dev"
+      endpoint: "https://forest-archive.chainsafe.dev/list/mainnet/diff?format=json&limit=20"
+      query: "/list/mainnet/diff?format=json&limit=20"
+      extract: { path: items, column: uploaded, timestamp_column: uploaded, cast: date, reduce: latest, derive: age_seconds, unit: seconds }
+
+  # Kernel: "Validated snapshot generation & hosting (~2h cadence)".
+  # LITE (headers-only) snapshots — a low-bandwidth bootstrap path. Same transform shape.
+  # PROBED 2026-07-16: curl 'https://forest-archive.chainsafe.dev/list/mainnet/lite?format=json&limit=20'
+  #   -> 200 application/json, total=207, items[0].uploaded=2026-07-12T01:18:30.705Z (~4.5d old);
+  #   items[1]=2026-06-30T18:08:39Z, items[2]=2026-06-19T05:07:44Z -> cadence ~11-12 days
+  #   (lite snapshots publish far less often than latest-v2/diff).
+  # THRESHOLD: PLACEHOLDER — 2592000s (30 days) ~= 2-3 missed cycles at the observed
+  #   ~11-12 day cadence. Lite is a convenience lane, so wide headroom is intentional. Confirm with team.
+  - function_id: mainnet-lite-snapshot-freshness
+    kernel_function: "Validated snapshot generation & hosting (~2h cadence)"
+    origin: karma
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Mainnet Infrastructure'
+    oso_project_slug: forest
+    sla:
+      statement: "Fresh mainnet LITE snapshots keep publishing: newest lite snapshot in the archive listing is <= 2592000s (30 days) old, measured daily"
+      metric: lite_snapshot_age_seconds
+      threshold: { op: "<=", value: 2592000 }   # THRESHOLD: PLACEHOLDER — confirm with team
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://forest-archive.chainsafe.dev"
+      endpoint: "https://forest-archive.chainsafe.dev/list/mainnet/lite?format=json&limit=20"
+      query: "/list/mainnet/lite?format=json&limit=20"
+      extract: { path: items, column: uploaded, timestamp_column: uploaded, cast: date, reduce: latest, derive: age_seconds, unit: seconds }
+
+  # ---- Infra Services bid (APP-VQC3PIBY-G2UDZJ): calibnet operations -----------------
+  # Kernel: calibnet is the upgrade-rehearsal testnet; the faucet keeps rehearsal
+  # participants funded. The faucet's HEALTH PAGE is HTML-only (see x_draft.candidates),
+  # but the faucet's on-chain WALLET is observable on filfox — "still dispensing testnet
+  # FIL" = "still transacting recently". Mirrors calibnet-miner-power's single-scalar read
+  # of a filfox address JSON (data_selector "$" pins the root object).
+  # PROBED 2026-07-16: curl 'https://calibration.filfox.info/api/v1/address/t1lo4ajjyeygqn3lkrw6izwz6aft5chshngs6gjxa'
+  #   -> 200, actor=account, messageCount=297293, lastSeenTimestamp=1784198730 (~2026-07-16 07:25Z,
+  #   ~7h before probe). lastSeenTimestamp is a UNIX-EPOCH integer at the root object -> flattens
+  #   to column `last_seen_timestamp`; derive age_days reads it directly (_to_epoch passes a
+  #   numeric epoch through). tokens/ownedMiners are empty arrays -> data_selector "$" pins root.
+  # THRESHOLD: PLACEHOLDER — <= 7 days since the wallet last transacted. An actively-serving
+  #   faucet transacts many times per day, so 7 days is a generous "clearly stalled" floor. Confirm with team.
+  - function_id: calibnet-faucet-wallet-activity
+    origin: karma
+    tier: essential
+    category: 'Coordination & Hardening'
+    sub_category: 'Testnets - miners'
+    oso_project_slug: forest
+    sla:
+      statement: "ChainSafe's calibnet faucet wallet t1lo4ajjyeygqn3lkrw6izwz6aft5chshngs6gjxa keeps dispensing: days since its last on-chain message <= 7, measured daily"
+      metric: faucet_days_since_last_message
+      threshold: { op: "<=", value: 7 }   # THRESHOLD: PLACEHOLDER — confirm with team
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://calibration.filfox.info"
+      endpoint: "https://calibration.filfox.info/api/v1/address/t1lo4ajjyeygqn3lkrw6izwz6aft5chshngs6gjxa"
+      query: "/api/v1/address/t1lo4ajjyeygqn3lkrw6izwz6aft5chshngs6gjxa"
+      data_selector: "$"
+      extract: { column: last_seen_timestamp, cast: float, reduce: single, derive: age_days, unit: days }
+
+  # (calibnet-rehearsal-miner-reliability removed 2026-07-22 — dropped by the ProPGF
+  #  committee review.)

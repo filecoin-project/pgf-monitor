@@ -1,0 +1,12 @@
+# Prototype ownership: @ccerv1 owns all governed paths, so CODEOWNERS is
+# functional today. Swap to the committee/maintainer teams
+# (filecoin-propgf-committee owns commitments + allowlist + this file;
+# filecoin-pgf-monitor-maintainers owns governance logic + gate scripts +
+# workflows) once those teams exist in the org.
+/registry/            @ccerv1
+/registry/_allowlist.txt   @ccerv1
+/adapters/            @ccerv1
+/src/fpm/governance/  @ccerv1
+/scripts/             @ccerv1
+/.github/             @ccerv1
+/.github/CODEOWNERS    @ccerv1

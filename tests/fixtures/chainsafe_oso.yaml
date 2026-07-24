@@ -1,0 +1,21 @@
+team: chainsafe
+maintainers: ["@lemmih"]
+functions:
+  - function_id: filecoin-tvl
+    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    tier: essential
+    category: 'Coordination & Incentives'
+    sub_category: 'Network data & monitoring'
+    oso_project_slug: forest
+    sla:
+      statement: "Filecoin chain TVL >= 1,000,000 USD, measured monthly"
+      metric: chain_tvl_usd
+      threshold: { op: ">=", value: 1000000 }
+      cadence: monthly
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.llama.fi"
+      endpoint: "https://api.llama.fi/v2/historicalChainTvl/Filecoin"
+      query: "/v2/historicalChainTvl/Filecoin"
+      extract: { path: "$", column: tvl, cast: float, unit: usd, reduce: latest, timestamp_column: date }

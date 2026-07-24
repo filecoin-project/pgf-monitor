@@ -1,0 +1,24 @@
+# Committee-maintained allowlist of permitted source hosts.
+# Adding a host is a committee decision (CODEOWNERS-guarded). One host per line.
+api.llama.fi
+api.drand.sh
+filfox.info
+api.github.com
+calibration.filfox.info
+cid.contact
+rpc.ankr.com
+filecoin.blockscout.com
+filecoin-testnet.blockscout.com
+api.chain.love
+status.filecoin.io
+api.goldsky.com
+api.calibration.node.glif.io
+hermes.pyth.network
+drand.cloudflare.com
+api3.drand.sh
+stablecoins.llama.fi
+api.zondax.ch
+forest-archive.chainsafe.dev
+dns.google
+drand.statuspage.io
+api.geckoterminal.com
