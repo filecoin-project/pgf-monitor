@@ -2,44 +2,43 @@
 
 # The Filecoin Kernel Monitor
 
-**A public, machine-verifiable health check on the functions Filecoin can't live without.**
+Machine-verifiable health monitoring for the Filecoin kernel functions, from public sources.
 
-[**Live dashboard →**](https://www.oso.xyz/filecoin/propgf-kernel-health)
+[Live dashboard →](https://www.oso.xyz/filecoin/propgf-kernel-health)
 
-<!-- BADGES-START (regenerate: uv run python scripts/kernel_coverage.py --badges) -->
+<!-- counts read live from badges.json via shields.io; regenerate it with: uv run python scripts/kernel_coverage.py --badges -->
 <p>
-  <img src="https://img.shields.io/badge/kernel_functions-29-0D9488" alt="29 kernel functions">
-  <img src="https://img.shields.io/badge/monitored_metrics-47-0D9488" alt="47 monitored metrics">
-  <img src="https://img.shields.io/badge/teams-18-0D9488" alt="18 teams">
-  <img src="https://img.shields.io/badge/coverage-29%2F29-16A34A" alt="29/29 functions covered">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.kernel_functions&label=kernel%20functions&color=0D9488" alt="kernel functions">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.monitored_metrics&label=monitored%20metrics&color=0D9488" alt="monitored metrics">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.teams&label=teams&color=0D9488" alt="teams">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.coverage&label=coverage&color=16A34A" alt="coverage">
   <a href="https://github.com/filecoin-project/pgf-monitor/actions/workflows/validate.yml"><img src="https://github.com/filecoin-project/pgf-monitor/actions/workflows/validate.yml/badge.svg" alt="Validate"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 </p>
-<!-- BADGES-END -->
 
 </div>
 
 ---
 
-Filecoin's ProPGF program funds the teams that keep the network's core running — roughly
-$2M every six months. This repo tracks whether that money is buying a healthy network.
+The Filecoin ProPGF program funds teams that maintain the network's core functions. This
+repo tracks the health of those functions from public sources.
 
-The **Filecoin kernel** is the set of functions the network genuinely can't do without —
-29 of them, split into irreplaceable and essential tiers, catalogued in
-[`registry/_kernel.yaml`](registry/_kernel.yaml). Every funded team declares, in a public
-manifest, which kernel functions they sustain and how to check each one is holding up:
-a **metric**, a **public source** for it, and an **SLA** (the threshold they commit to).
-A pipeline then fetches each source itself, evaluates the SLA, and publishes the result.
-Nobody self-reports a green light — the number comes from a source anyone can check.
+The **Filecoin kernel** is the set of functions the network cannot operate without, split
+into irreplaceable and essential tiers and catalogued in
+[`registry/_kernel.yaml`](registry/_kernel.yaml). Each funded team declares, in a public
+manifest, which kernel functions it maintains and how to check each one: a **metric**, a
+**public source** for it, and an **SLA** (the threshold it commits to). The pipeline fetches
+each source, evaluates the SLA, and publishes the result. Every value comes from the source,
+not from self-reporting.
 
 ```
 FUNCTION → SLA → SOURCE → READING → EVALUATION → RECOMMENDATION → VERDICT
         (the repo: what was promised)   (the pipeline: what was measured)   (a human: the call)
 ```
 
-The [live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health) shows the whole
-kernel at a glance — every function lit green (OK), red (a recent interruption), or amber
-(can't tell) — and the ProPGF funding behind the teams keeping it running.
+The [live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health) shows each kernel
+function's current status — green (OK), red (a recent interruption), or amber
+(indeterminate) — alongside the ProPGF funding for each team.
 
 ## Start here
 
@@ -47,7 +46,6 @@ kernel at a glance — every function lit green (OK), red (a recent interruption
 |---|---|
 | A funded team writing or editing your manifest | [docs/guide-projects.md](docs/guide-projects.md) |
 | A ProPGF reviewer or committee member | [docs/guide-reviewers.md](docs/guide-reviewers.md) |
-| Reading the grant obligations | [docs/grant-commitments-appendix.md](docs/grant-commitments-appendix.md) |
 | Using a coding agent (Claude Code, Cursor, …) | [CLAUDE.md](CLAUDE.md) — both guides are agent-ready too |
 
 ## How a team commits to a metric
@@ -113,14 +111,14 @@ Live modes (real fetches, real dashboard data) need an `OSO_API_KEY` — see the
 
 ```
 registry/            the trust anchor (PR-governed, CI-gated)
-  _kernel.yaml         the 29-function kernel taxonomy (tier / category / sub_category)
+  _kernel.yaml         the kernel taxonomy (tier / category / sub_category)
   _schema.json         manifest schema      _allowlist.txt   approved source hosts
   <team>.yaml          adopted team manifests, running live
   drafts/<team>.yaml   staging for new proposals, created on demand
 src/fpm/             the pipeline: manifest → fetch → evaluate → recommend → adjudicate → land
 scripts/             validate_pr (the PR gate), validate_draft / promote_draft, offline demos
 dashboards/          propgf-kernel-health.py (marimo; uv sync --extra dashboards)
-docs/                guides + the grant-commitments appendix
+docs/                guides (project · reviewer · governance · coverage)
 .github/workflows/   static gate on every PR + label-gated live dry-run + tests
 ```
 
@@ -135,4 +133,4 @@ CODEOWNERS keeps each team's file under its own maintainers, and the kernel taxo
 evolves by reviewed PR.
 
 What a funded team owes, and how an SLA is structured, is spelled out in the
-[grant-commitments appendix](docs/grant-commitments-appendix.md).
+[project guide](docs/guide-projects.md).

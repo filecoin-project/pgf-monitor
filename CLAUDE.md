@@ -56,4 +56,4 @@ Skills (if your harness loads `.claude/skills/`): `author-manifest`, `review-and
 pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
 `tests/` mirrors it · `registry/` the trust anchor · `fixtures/` offline responses ·
 `dashboards/propgf-kernel-health.py` (marimo, `uv sync --extra dashboards`) ·
-`docs/` guides + grant-commitments appendix (per-plan design docs are gitignored, local only).
+`docs/` guides (the grant-commitments appendix + per-plan design docs are gitignored, local only).

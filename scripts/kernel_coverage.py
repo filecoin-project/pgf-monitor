@@ -7,12 +7,12 @@ Usage:
   uv run python scripts/kernel_coverage.py [--write]   # docs/kernel-coverage.md
   uv run python scripts/kernel_coverage.py --embed     # refresh the COVERAGE literal
                                                        # in dashboards/propgf-kernel-health.py
+  uv run python scripts/kernel_coverage.py --badges    # write badges.json (README shields read it)
 """
 
 from __future__ import annotations
 
 import argparse
-import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -111,7 +111,6 @@ EMBED_END = "    # COVERAGE-EMBED-END"
 
 def coverage_json() -> dict:
     """The dashboard's embedded coverage payload: 29 functions x monitoring entries."""
-    import json as _json
 
     kernel = load_kernel()
     entries, _ = collect()
@@ -172,43 +171,34 @@ def embed() -> None:
     print(f"embedded coverage into {DASHBOARD} ({len(payload)} bytes)")
 
 
-README = Path("README.md")
-BADGES_START = "<!-- BADGES-START (regenerate: uv run python scripts/kernel_coverage.py --badges) -->"
-BADGES_END = "<!-- BADGES-END -->"
+BADGES_JSON = Path("badges.json")
 
 
 def badges() -> None:
-    """Refresh the shields.io count badges in README between the BADGES markers."""
+    """Write badges.json — the counts shields.io reads at render time, so no numbers are
+    hardcoded in README.md (the README's shields URLs point at this file on the main branch)."""
+    import json as _json
+
     kernel = load_kernel()
     n_fn = len(kernel.entries)
     teams = [p for p in sorted(Path("registry").glob("*.yaml")) if not p.name.startswith("_")]
     n_metrics = sum(len(load_manifest(p).functions) for p in teams)
     n_cov = sum(1 for f in coverage_json()["functions"] if f["entries"])
-    _wf = "https://github.com/filecoin-project/pgf-monitor/actions/workflows/validate.yml"
-    block = (
-        f"{BADGES_START}\n"
-        "<p>\n"
-        f'  <img src="https://img.shields.io/badge/kernel_functions-{n_fn}-0D9488" alt="{n_fn} kernel functions">\n'
-        f'  <img src="https://img.shields.io/badge/monitored_metrics-{n_metrics}-0D9488" alt="{n_metrics} monitored metrics">\n'
-        f'  <img src="https://img.shields.io/badge/teams-{len(teams)}-0D9488" alt="{len(teams)} teams">\n'
-        f'  <img src="https://img.shields.io/badge/coverage-{n_cov}%2F{n_fn}-16A34A" alt="{n_cov}/{n_fn} functions covered">\n'
-        f'  <a href="{_wf}"><img src="{_wf}/badge.svg" alt="Validate"></a>\n'
-        '  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>\n'
-        "</p>\n"
-        f"{BADGES_END}"
-    )
-    text = README.read_text()
-    start = text.index(BADGES_START)
-    end = text.index(BADGES_END) + len(BADGES_END)
-    README.write_text(text[:start] + block + text[end:])
-    print(f"updated README badges: {n_fn} functions, {n_metrics} metrics, {len(teams)} teams, {n_cov}/{n_fn} covered")
+    data = {
+        "kernel_functions": n_fn,
+        "monitored_metrics": n_metrics,
+        "teams": len(teams),
+        "coverage": f"{n_cov}/{n_fn}",
+    }
+    BADGES_JSON.write_text(_json.dumps(data, indent=2) + "\n")
+    print(f"wrote {BADGES_JSON}: {data}")
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help=f"write {OUT} instead of stdout")
     ap.add_argument("--embed", action="store_true", help="refresh the dashboard COVERAGE literal")
-    ap.add_argument("--badges", action="store_true", help="refresh the README count badges")
+    ap.add_argument("--badges", action="store_true", help="write badges.json (shields.io reads it for the README count badges)")
     args = ap.parse_args(argv)
     if args.embed:
         embed()
