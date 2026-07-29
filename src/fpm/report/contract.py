@@ -117,20 +117,22 @@ def _metric_block(metric: str, source: str, threshold: str, statement: str) -> s
 def _sla_block(fn: FunctionSpec, to_confirm: bool = False) -> str:
     url = fn.source.endpoint or fn.source.base_url or "(no public source yet)"
     confirm = " (to confirm)" if to_confirm else ""
-    thr = (f"`{fn.sla.metric} {fn.sla.threshold_op} {_num(fn.sla.threshold_value)}`, "
-           f"cadence {fn.sla.cadence}{confirm}")
+    thr = (
+        f"`{fn.sla.metric} {fn.sla.threshold_op} {_num(fn.sla.threshold_value)}`, "
+        f"cadence {fn.sla.cadence}{confirm}"
+    )
     return _metric_block(fn.sla.metric, url, thr, fn.sla.statement)
 
 
 def _table(rows: list[dict] | None, keys: list[str]) -> list[str]:
     """Markdown body rows for a numbered table: '| i | row[k1] | ... |' per row."""
-    return [f"| {i} | " + " | ".join(str(r.get(k, "")) for k in keys) + " |"
-            for i, r in enumerate(rows or [], 1)]
+    return [
+        f"| {i} | " + " | ".join(str(r.get(k, "")) for k in keys) + " |"
+        for i, r in enumerate(rows or [], 1)
+    ]
 
 
-def build_contract(
-    facts: dict, functions: list[FunctionSpec], kernel: Kernel
-) -> str:
+def build_contract(facts: dict, functions: list[FunctionSpec], kernel: Kernel) -> str:
     """Render the §1–§5 grant-recipient appendix. Pure: no file or network I/O.
 
     ``kernel`` is currently unused by this function; it is kept in the signature for
@@ -156,9 +158,12 @@ def build_contract(
     L.append(f"| **Scope** | {facts['scope'].strip()} |")
     req = facts.get("total_requested_usd")
     requested = f" (of ${req:,} requested)" if req else ""
-    L.append(f"| **Committed (through {facts['committed_through']})** | "
-             f"${facts['committed_usd']:,}{requested} |")
-    L.append(f"| **Term** | {facts['term'].strip()} |")
+    # Non-kernel-track teams have no "committed through December" figure — their amount is
+    # tracked in the non-kernel review, so render TODO rather than a misleading $0.
+    usd = facts.get("committed_usd")
+    amount = f"${usd:,}{requested}" if usd is not None else "TODO"
+    L.append(f"| **Committed (through {facts.get('committed_through', 'TODO')})** | {amount} |")
+    L.append(f"| **Term** | {facts.get('term', 'TODO').strip()} |")
     L.append("")
     if facts.get("verification_metrics"):
         L.append("**Verification metrics in application**\n")
@@ -200,11 +205,14 @@ def build_contract(
     L += _table(facts.get("dependents"), ["name", "how", "contact"])
     L.append("")
     L.append("### Top dependencies — what this work relies on\n")
-    L.append("| # | Dependency | What breaks without it | Owner / maintainer | "
-             "ProPGF funded? | Substitutable? |")
+    L.append(
+        "| # | Dependency | What breaks without it | Owner / maintainer | "
+        "ProPGF funded? | Substitutable? |"
+    )
     L.append("| :--- | :--- | :--- | :--- | :--- | :--- |")
-    L += _table(facts.get("dependencies"),
-                ["name", "breaks", "owner", "propgf_funded", "substitutable"])
+    L += _table(
+        facts.get("dependencies"), ["name", "breaks", "owner", "propgf_funded", "substitutable"]
+    )
     L.append("")
 
     L.append("## 5. Reporting\n")
@@ -213,9 +221,14 @@ def build_contract(
 
 
 def load_team_functions(team: str, registry: str = "registry") -> list[FunctionSpec]:
-    """Adopted manifest functions + draft functions (drafts render with the same fields)."""
+    """Adopted manifest functions + draft functions (drafts render with the same fields).
+
+    A team may have no adopted manifest yet (draft-only, or nothing machine-checkable at all);
+    in that case only the drafts — possibly none — contribute SLAs.
+    """
     reg = Path(registry)
-    functions = list(load_manifest(reg / f"{team}.yaml").functions)
+    adopted = reg / f"{team}.yaml"
+    functions = list(load_manifest(adopted).functions) if adopted.exists() else []
     draft_path = reg / "drafts" / f"{team}.yaml"
     if draft_path.exists():
         functions += list(split_draft(draft_path)[0].functions)
