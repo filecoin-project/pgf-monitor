@@ -70,7 +70,9 @@ def _outcome(value: float | None, op: str, threshold: float) -> str:
 
 def _row(observed_at, team, fid, metric, value, op, threshold, method, note=""):
     return {
-        "observed_at": observed_at.strftime("%Y-%m-%d") if hasattr(observed_at, "strftime") else observed_at,
+        "observed_at": observed_at.strftime("%Y-%m-%d")
+        if hasattr(observed_at, "strftime")
+        else observed_at,
         "team": team,
         "function_id": fid,
         "metric": metric,
@@ -99,9 +101,17 @@ def _daily_series_usdfc_tvl(cutoff: datetime) -> list[dict]:
         d = datetime.fromtimestamp(p["date"], tz=timezone.utc)
         if d >= cutoff:
             out.append(
-                _row(d, "secured-finance", "usdfc-collateral-tvl-floor", "usdfc_tvl_usd",
-                     p.get("totalLiquidityUSD"), ">=", 100_000,
-                     "backfill:api.llama.fi", "daily protocol TVL history")
+                _row(
+                    d,
+                    "secured-finance",
+                    "usdfc-collateral-tvl-floor",
+                    "usdfc_tvl_usd",
+                    p.get("totalLiquidityUSD"),
+                    ">=",
+                    100_000,
+                    "backfill:api.llama.fi",
+                    "daily protocol TVL history",
+                )
             )
     return out
 
@@ -121,22 +131,69 @@ def _daily_series_blockscout(cutoff: datetime) -> list[dict]:
             d = _parse_dt(p["date"]).replace(tzinfo=timezone.utc)
             if d >= cutoff:
                 out.append(
-                    _row(d, "blockscout", fid, "daily_indexed_transactions",
-                         float(p["value"]), ">", 0,
-                         f"backfill:{host}",
-                         "reconstructed operational history (explorer indexed the day); "
-                         "live SLA metric is head-block age")
+                    _row(
+                        d,
+                        "blockscout",
+                        fid,
+                        "daily_indexed_transactions",
+                        float(p["value"]),
+                        ">",
+                        0,
+                        f"backfill:{host}",
+                        "reconstructed operational history (explorer indexed the day); "
+                        "live SLA metric is head-block age",
+                    )
                 )
     return out
 
 
 _RELEASE_REPOS = [
     # (team, function_id, repo, metric, op, threshold, stable_filter)
-    ("chainsafe", "forest-release-cadence", "ChainSafe/forest", "days_between_releases", "<=", 45, False),
-    ("filoz", "curio-sealing-release-cadence", "filecoin-project/curio", "days_between_releases", "<=", 45, False),
-    ("filoz", "lotus-consensus-client-release-cadence", "filecoin-project/lotus", "days_between_stable_releases", "<=", 60, True),
-    ("filoz", "evm-eam-actor-maintenance", "filecoin-project/builtin-actors", "days_between_releases", "<=", 60, False),
-    ("libp2p-networking", "libp2p-release-cadence", "libp2p/go-libp2p", "days_between_releases", "<=", 60, False),
+    (
+        "chainsafe",
+        "forest-release-cadence",
+        "ChainSafe/forest",
+        "days_between_releases",
+        "<=",
+        45,
+        False,
+    ),
+    (
+        "filoz",
+        "curio-sealing-release-cadence",
+        "filecoin-project/curio",
+        "days_between_releases",
+        "<=",
+        45,
+        False,
+    ),
+    (
+        "filoz",
+        "lotus-consensus-client-release-cadence",
+        "filecoin-project/lotus",
+        "days_between_stable_releases",
+        "<=",
+        60,
+        True,
+    ),
+    (
+        "filoz",
+        "evm-eam-actor-maintenance",
+        "filecoin-project/builtin-actors",
+        "days_between_releases",
+        "<=",
+        60,
+        False,
+    ),
+    (
+        "libp2p-networking",
+        "libp2p-release-cadence",
+        "libp2p/go-libp2p",
+        "days_between_releases",
+        "<=",
+        60,
+        False,
+    ),
 ]
 
 
@@ -148,25 +205,98 @@ def _release_series(cutoff: datetime) -> list[dict]:
             _parse_dt(r["published_at"])
             for r in rels
             if r.get("published_at")
-            and not (stable and ("rc" in (r.get("tag_name") or "").lower() or (r.get("tag_name") or "").startswith("miner/")))
+            and not (
+                stable
+                and (
+                    "rc" in (r.get("tag_name") or "").lower()
+                    or (r.get("tag_name") or "").startswith("miner/")
+                )
+            )
         )
         for prev, cur in zip(dates, dates[1:]):
             if cur >= cutoff:
                 gap = (cur - prev).total_seconds() / 86400.0
-                out.append(_row(cur, team, fid, metric, gap, op, thr,
-                                "backfill:api.github.com", f"gap since previous release of {repo}"))
+                out.append(
+                    _row(
+                        cur,
+                        team,
+                        fid,
+                        metric,
+                        gap,
+                        op,
+                        thr,
+                        "backfill:api.github.com",
+                        f"gap since previous release of {repo}",
+                    )
+                )
     return out
 
 
 _AGE_REPOS = [
     # weekly samples of days-since-latest-event as-of the sample date
-    ("filoz", "builtin-actors", "filecoin-project/builtin-actors", "releases", "release_age_days", "<=", 90),
-    ("proving", "rust-fil-proofs-maintenance", "filecoin-project/rust-fil-proofs", "commits", "proofs_days_since_last_commit", "<=", 120),
-    ("proving", "proving-crypto-primitives-maintenance", "filecoin-project/bellperson", "commits", "bellperson_days_since_last_commit", "<=", 180),
-    ("venus", "sophon-miner-maintenance", "ipfs-force-community/sophon-miner", "commits", "sophon_miner_days_since_last_commit", "<=", 120),
-    ("venus", "damocles-maintenance", "ipfs-force-community/damocles", "commits", "damocles_days_since_last_commit", "<=", 120),
-    ("lily", "lily-etl-maintenance", "filecoin-project/lily", "commits", "lily_days_since_last_commit", "<=", 90),
-    ("fil-b", "network-documentation-commit-recency", "filecoin-project/filecoin-docs", "commits", "docs_last_commit_age_days", "<=", 60),
+    (
+        "filoz",
+        "builtin-actors",
+        "filecoin-project/builtin-actors",
+        "releases",
+        "release_age_days",
+        "<=",
+        90,
+    ),
+    (
+        "proving",
+        "rust-fil-proofs-maintenance",
+        "filecoin-project/rust-fil-proofs",
+        "commits",
+        "proofs_days_since_last_commit",
+        "<=",
+        120,
+    ),
+    (
+        "proving",
+        "proving-crypto-primitives-maintenance",
+        "filecoin-project/bellperson",
+        "commits",
+        "bellperson_days_since_last_commit",
+        "<=",
+        180,
+    ),
+    (
+        "venus",
+        "sophon-miner-maintenance",
+        "ipfs-force-community/sophon-miner",
+        "commits",
+        "sophon_miner_days_since_last_commit",
+        "<=",
+        120,
+    ),
+    (
+        "venus",
+        "damocles-maintenance",
+        "ipfs-force-community/damocles",
+        "commits",
+        "damocles_days_since_last_commit",
+        "<=",
+        120,
+    ),
+    (
+        "lily",
+        "lily-etl-maintenance",
+        "filecoin-project/lily",
+        "commits",
+        "lily_days_since_last_commit",
+        "<=",
+        90,
+    ),
+    (
+        "fil-b",
+        "network-documentation-commit-recency",
+        "filecoin-project/filecoin-docs",
+        "commits",
+        "docs_last_commit_age_days",
+        "<=",
+        60,
+    ),
 ]
 
 
@@ -178,7 +308,9 @@ def _age_series(cutoff: datetime, now: datetime) -> list[dict]:
             dates = sorted(_parse_dt(r["published_at"]) for r in items if r.get("published_at"))
         else:
             items = _get(f"https://api.github.com/repos/{repo}/commits?per_page=100")
-            dates = sorted(_parse_dt(c["commit"]["committer"]["date"]) for c in items if c.get("commit"))
+            dates = sorted(
+                _parse_dt(c["commit"]["committer"]["date"]) for c in items if c.get("commit")
+            )
         if not dates:
             continue
         # weekly samples; only where the fetched event window can answer honestly
@@ -188,8 +320,19 @@ def _age_series(cutoff: datetime, now: datetime) -> list[dict]:
             past = [d for d in dates if d <= sample]
             if past:
                 age = (sample - past[-1]).total_seconds() / 86400.0
-                out.append(_row(sample, team, fid, metric, age, op, thr,
-                                "backfill:api.github.com", f"weekly sample from {repo} {kind} history"))
+                out.append(
+                    _row(
+                        sample,
+                        team,
+                        fid,
+                        metric,
+                        age,
+                        op,
+                        thr,
+                        "backfill:api.github.com",
+                        f"weekly sample from {repo} {kind} history",
+                    )
+                )
             sample += timedelta(days=7)
     return out
 
@@ -200,7 +343,9 @@ def _snapshot_series(cutoff: datetime) -> list[dict]:
         ("mainnet", "mainnet-snapshot-freshness", "snapshot_age_seconds"),
         ("calibnet", "calibnet-snapshot-freshness", "calibnet_snapshot_age_seconds"),
     ):
-        data = _get(f"https://forest-archive.chainsafe.dev/list/{net}/latest-v2?format=json&limit=250")
+        data = _get(
+            f"https://forest-archive.chainsafe.dev/list/{net}/latest-v2?format=json&limit=250"
+        )
         dates = sorted(_parse_dt(i["uploaded"]) for i in data.get("items", []))
         by_day: dict[str, float] = {}
         for prev, cur in zip(dates, dates[1:]):
@@ -209,9 +354,19 @@ def _snapshot_series(cutoff: datetime) -> list[dict]:
             by_day[day] = max(by_day.get(day, 0.0), gap)
         for day, gap in sorted(by_day.items()):
             if _parse_dt(day + "T00:00:00+00:00") >= cutoff:
-                out.append(_row(day, "chainsafe", fid, metric + "_daily_max_gap", gap, "<=", 21600,
-                                "backfill:forest-archive.chainsafe.dev",
-                                f"max inter-snapshot gap that day ({net}, archive retention window)"))
+                out.append(
+                    _row(
+                        day,
+                        "chainsafe",
+                        fid,
+                        metric + "_daily_max_gap",
+                        gap,
+                        "<=",
+                        21600,
+                        "backfill:forest-archive.chainsafe.dev",
+                        f"max inter-snapshot gap that day ({net}, archive retention window)",
+                    )
+                )
     return out
 
 
@@ -228,9 +383,19 @@ def _status_series(cutoff: datetime) -> list[dict]:
     out = []
     while cur <= now:
         key = cur.strftime("%Y-%m-01")
-        out.append(_row(key, "filecoin-infra-misc", "network-monitoring-status-page",
-                        "incidents_in_month", by_month.get(key, 0), "", 0,
-                        "backfill:status.filecoin.io", "incident history (informational, no SLA threshold)"))
+        out.append(
+            _row(
+                key,
+                "filecoin-infra-misc",
+                "network-monitoring-status-page",
+                "incidents_in_month",
+                by_month.get(key, 0),
+                "",
+                0,
+                "backfill:status.filecoin.io",
+                "incident history (informational, no SLA threshold)",
+            )
+        )
         cur = (cur + timedelta(days=32)).replace(day=1)
     return out
 
@@ -238,8 +403,12 @@ def _status_series(cutoff: datetime) -> list[dict]:
 # Teams that publish an Atlassian/statuspage.io page. Generalizable: add a row per team as
 # more funded projects agree to surface a status page. Backfilled to per-day pass/fail bars.
 STATUSPAGES = [
-    ("randamu", "drand-relay-statuspage", "statuspage_impact_level",
-     "https://drand.statuspage.io/api/v2/incidents.json"),
+    (
+        "randamu",
+        "drand-relay-statuspage",
+        "statuspage_impact_level",
+        "https://drand.statuspage.io/api/v2/incidents.json",
+    ),
 ]
 
 
@@ -261,9 +430,19 @@ def _statuspage_daily_series(cutoff: datetime) -> list[dict]:
         day = cutoff.date()
         while day <= now.date():
             down = 1 if any(s <= day <= e for s, e in windows) else 0
-            out.append(_row(day.isoformat() + "T12:00:00+00:00", team, fid, metric,
-                            down, "<=", 0, "backfill:" + url.split("/")[2],
-                            "operator status page (self-reported): 1 = active incident that day"))
+            out.append(
+                _row(
+                    day.isoformat() + "T12:00:00+00:00",
+                    team,
+                    fid,
+                    metric,
+                    down,
+                    "<=",
+                    0,
+                    "backfill:" + url.split("/")[2],
+                    "operator status page (self-reported): 1 = active incident that day",
+                )
+            )
             day += timedelta(days=1)
     return out
 
@@ -302,9 +481,17 @@ def live_rows(store_dir: str) -> list[dict]:
     for b in JsonlRecordStore(Path(store_dir)).all_bundles():
         r, sla, reading = b.recommendation, b.dossier.sla_result, b.dossier.reading
         out.append(
-            _row(reading.claim.fetched_at, r.team, r.function_id, reading.metric,
-                 sla.observed, sla.op, sla.threshold if sla.threshold is not None else 0,
-                 "live-review", "scheduled review reading")
+            _row(
+                reading.claim.fetched_at,
+                r.team,
+                r.function_id,
+                reading.metric,
+                sla.observed,
+                sla.op,
+                sla.threshold if sla.threshold is not None else 0,
+                "live-review",
+                "scheduled review reading",
+            )
         )
     return out
 

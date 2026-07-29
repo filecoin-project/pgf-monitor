@@ -39,3 +39,6 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]
+# marimo owns the formatting of dashboards/ — it rewrites those files on every save,
+# so linting them just means CI goes red the next time someone opens a notebook.
+extend-exclude = ["dashboards/"]

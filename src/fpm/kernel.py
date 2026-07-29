@@ -65,7 +65,9 @@ def conformance_error(
     must actually live in the declared slot.
     """
     matches = [
-        e for e in kernel.entries if (e.tier, e.category, e.sub_category) == (tier, category, sub_category)
+        e
+        for e in kernel.entries
+        if (e.tier, e.category, e.sub_category) == (tier, category, sub_category)
     ]
     if not matches:
         return f"({tier}, {category}, {sub_category}) is not a catalogued kernel slot"

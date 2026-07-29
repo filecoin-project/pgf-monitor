@@ -117,20 +117,22 @@ def _metric_block(metric: str, source: str, threshold: str, statement: str) -> s
 def _sla_block(fn: FunctionSpec, to_confirm: bool = False) -> str:
     url = fn.source.endpoint or fn.source.base_url or "(no public source yet)"
     confirm = " (to confirm)" if to_confirm else ""
-    thr = (f"`{fn.sla.metric} {fn.sla.threshold_op} {_num(fn.sla.threshold_value)}`, "
-           f"cadence {fn.sla.cadence}{confirm}")
+    thr = (
+        f"`{fn.sla.metric} {fn.sla.threshold_op} {_num(fn.sla.threshold_value)}`, "
+        f"cadence {fn.sla.cadence}{confirm}"
+    )
     return _metric_block(fn.sla.metric, url, thr, fn.sla.statement)
 
 
 def _table(rows: list[dict] | None, keys: list[str]) -> list[str]:
     """Markdown body rows for a numbered table: '| i | row[k1] | ... |' per row."""
-    return [f"| {i} | " + " | ".join(str(r.get(k, "")) for k in keys) + " |"
-            for i, r in enumerate(rows or [], 1)]
+    return [
+        f"| {i} | " + " | ".join(str(r.get(k, "")) for k in keys) + " |"
+        for i, r in enumerate(rows or [], 1)
+    ]
 
 
-def build_contract(
-    facts: dict, functions: list[FunctionSpec], kernel: Kernel
-) -> str:
+def build_contract(facts: dict, functions: list[FunctionSpec], kernel: Kernel) -> str:
     """Render the §1–§5 grant-recipient appendix. Pure: no file or network I/O.
 
     ``kernel`` is currently unused by this function; it is kept in the signature for
@@ -203,11 +205,14 @@ def build_contract(
     L += _table(facts.get("dependents"), ["name", "how", "contact"])
     L.append("")
     L.append("### Top dependencies — what this work relies on\n")
-    L.append("| # | Dependency | What breaks without it | Owner / maintainer | "
-             "ProPGF funded? | Substitutable? |")
+    L.append(
+        "| # | Dependency | What breaks without it | Owner / maintainer | "
+        "ProPGF funded? | Substitutable? |"
+    )
     L.append("| :--- | :--- | :--- | :--- | :--- | :--- |")
-    L += _table(facts.get("dependencies"),
-                ["name", "breaks", "owner", "propgf_funded", "substitutable"])
+    L += _table(
+        facts.get("dependencies"), ["name", "breaks", "owner", "propgf_funded", "substitutable"]
+    )
     L.append("")
 
     L.append("## 5. Reporting\n")

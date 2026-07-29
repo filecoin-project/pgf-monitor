@@ -13,7 +13,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 from fpm.drafts import promotion_problems, split_draft
@@ -37,7 +36,9 @@ def main(argv: list[str] | None = None) -> int:
         paths += sorted(Path("registry/drafts").glob("*.yaml"))
     if not paths:
         if args.all:
-            print("no drafts in registry/drafts/ — nothing to validate (all promoted to registry/).")
+            print(
+                "no drafts in registry/drafts/ — nothing to validate (all promoted to registry/)."
+            )
             return 0
         ap.error("no drafts given (pass paths or --all)")
 
