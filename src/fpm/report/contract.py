@@ -156,9 +156,12 @@ def build_contract(
     L.append(f"| **Scope** | {facts['scope'].strip()} |")
     req = facts.get("total_requested_usd")
     requested = f" (of ${req:,} requested)" if req else ""
-    L.append(f"| **Committed (through {facts['committed_through']})** | "
-             f"${facts['committed_usd']:,}{requested} |")
-    L.append(f"| **Term** | {facts['term'].strip()} |")
+    # Non-kernel-track teams have no "committed through December" figure — their amount is
+    # tracked in the non-kernel review, so render TODO rather than a misleading $0.
+    usd = facts.get("committed_usd")
+    amount = f"${usd:,}{requested}" if usd is not None else "TODO"
+    L.append(f"| **Committed (through {facts.get('committed_through', 'TODO')})** | {amount} |")
+    L.append(f"| **Term** | {facts.get('term', 'TODO').strip()} |")
     L.append("")
     if facts.get("verification_metrics"):
         L.append("**Verification metrics in application**\n")
@@ -213,9 +216,14 @@ def build_contract(
 
 
 def load_team_functions(team: str, registry: str = "registry") -> list[FunctionSpec]:
-    """Adopted manifest functions + draft functions (drafts render with the same fields)."""
+    """Adopted manifest functions + draft functions (drafts render with the same fields).
+
+    A team may have no adopted manifest yet (draft-only, or nothing machine-checkable at all);
+    in that case only the drafts — possibly none — contribute SLAs.
+    """
     reg = Path(registry)
-    functions = list(load_manifest(reg / f"{team}.yaml").functions)
+    adopted = reg / f"{team}.yaml"
+    functions = list(load_manifest(adopted).functions) if adopted.exists() else []
     draft_path = reg / "drafts" / f"{team}.yaml"
     if draft_path.exists():
         functions += list(split_draft(draft_path)[0].functions)

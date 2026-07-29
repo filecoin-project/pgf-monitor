@@ -1,5 +1,7 @@
 """fpm contract: render §1–§5 appendix template from manifest + facts."""
 
+import yaml
+
 from fpm.kernel import load_kernel
 from fpm.manifest import manifest_from_raw
 from fpm.report.contract import build_contract
@@ -119,3 +121,16 @@ def test_reporting_has_slack_channel():
     s5 = md.split("## 5.")[1]
     assert "#filecoin-kernel updates" in s5
     assert "every two months" in s5
+
+
+def test_load_team_functions_tolerates_missing_adopted_manifest(tmp_path):
+    """A draft-only team (no registry/<team>.yaml yet) still renders its staged SLAs."""
+    from fpm.report.contract import load_team_functions
+
+    (tmp_path / "drafts").mkdir()
+    (tmp_path / "drafts" / "t.yaml").write_text(
+        yaml.safe_dump({"team": "t", "maintainers": ["@m"], "x_draft": {"slate_tier": "IMP"},
+                        "functions": [_fn("staged", "essential", "Randomness", "staged_metric")]})
+    )
+    fns = load_team_functions("t", str(tmp_path))
+    assert [f.function_id for f in fns] == ["staged"]
