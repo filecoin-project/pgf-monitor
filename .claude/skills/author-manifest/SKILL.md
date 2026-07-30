@@ -18,22 +18,49 @@ You are acting for ONE team. Never touch another team's file.
    copied character-for-character from `registry/_kernel.yaml`. Read the matching
    entry's `value:` text — your metric must evidence THAT, not general popularity.
 
-3. **Choose/verify the source**: public HTTP JSON. `curl` it NOW and confirm the exact
+3. **Ground the source choice (optional)**: before settling for a GitHub-activity proxy,
+   check whether the project documents a real liveness surface. Filoscope indexes Filecoin
+   docs, FIPs, specs and ecosystem code:
+
+   ```bash
+   npx -y --allow-remote=all filoscope pull                 # one-time ~479 MB
+   npx -y --allow-remote=all -p filoscope qmd --index filoscope \
+     search '<project> prometheus metrics endpoint port' -n 10
+   npx -y --allow-remote=all -p filoscope qmd --index filoscope get '<docid>'
+   rm -rf ~/.cache/qmd && npm cache clean --force           # ALWAYS purge when done
+   ```
+
+   Use `search`, never `query` — `query` pulls 2.2 GB of local models and stalls on CPU.
+   `-c <collection>` is broken in the shipped index; filter `qmd://<namespace>/` with grep.
+   A hit only counts if it is public, unauthenticated and HTTP-reachable: a Prometheus port
+   on a self-hosted node is not monitorable. Filoscope suggests; the `curl` probe in the next
+   step remains the only evidence. Skip this step entirely if the index is unavailable — it
+   must never block authoring.
+
+   Expect a low hit rate: a five-team probe of GitHub-proxy metrics turned up exactly one
+   usable candidate. A null result is the normal outcome, not evidence you searched badly.
+
+   It indexes repos, not deployments: Filoscope crawls repo contents, so it's blind to how
+   a project is actually hosted. One probed team came back empty for this reason — its docs
+   repo holds legacy static-site config while the live site is hosted elsewhere entirely.
+   For a hosted surface, check the live site's headers directly rather than trusting the repo.
+
+4. **Choose/verify the source**: public HTTP JSON. `curl` it NOW and confirm the exact
    fields. Record the probe (date, status, observed value) as a comment above the
    entry. Prefer the service's own surface over GitHub-activity proxies; GitHub
    release/commit cadence is an acceptable maintenance signal, not a liveness signal.
 
-4. **Extract vs transform**: single field → `extract` (reduce/derive vocab in
+5. **Extract vs transform**: single field → `extract` (reduce/derive vocab in
    `registry/_schema.json`). Computation (lags vs wall clock, cadences, ratios) →
    `transform` (single SELECT, single scalar, table `raw` only; tz-aware ISO columns
    pair with `:now_tz`, unix-epoch columns with `:now` + `from_unixtime`). Nested JSON
    arrays are unreachable child tables — top-level fields only.
 
-5. **Thresholds are commitments**: derive from the probe (observed 30s cadence →
+6. **Thresholds are commitments**: derive from the probe (observed 30s cadence →
    threshold 45s), state the rationale in a `# THRESHOLD:` comment. If uncertain, mark
    `PLACEHOLDER` and flag for the team/committee.
 
-6. **Validate** (must be clean before any commit):
+7. **Validate** (must be clean before any commit):
    ```bash
    uv run python scripts/validate_draft.py registry/drafts/<team>.yaml
    uv run pytest tests/test_drafts_conformance.py -q
@@ -41,7 +68,7 @@ You are acting for ONE team. Never touch another team's file.
    Allowlist `note` lines are fine IF the host is listed in
    `x_draft.allowlist_additions`; `FAIL` lines are not.
 
-7. **Promote** (only when the team confirms thresholds + maintainers):
+8. **Promote** (only when the team confirms thresholds + maintainers):
    ```bash
    uv run python scripts/promote_draft.py registry/drafts/<team>.yaml --add-allowlist
    git rm registry/drafts/<team>.yaml
