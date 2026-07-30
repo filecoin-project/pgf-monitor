@@ -27,11 +27,12 @@ You are acting for ONE team. Never touch another team's file.
    npx -y --allow-remote=all -p filoscope qmd --index filoscope \
      search '<project> prometheus metrics endpoint port' -n 10
    npx -y --allow-remote=all -p filoscope qmd --index filoscope get '<docid>'
-   rm -rf ~/.cache/qmd && npm cache clean --force           # ALWAYS purge when done
+   rm -rf ~/.cache/qmd ~/.config/qmd ~/.npm/_npx             # ALWAYS purge when done
    ```
 
    Use `search`, never `query` — `query` pulls 2.2 GB of local models and stalls on CPU.
-   `-c <collection>` is broken in the shipped index; filter `qmd://<namespace>/` with grep.
+   `-c <collection>` is broken — the shipped `filoscope.yml` ships with `collections: {}`,
+   so every name is rejected; filter `qmd://<namespace>/` with grep instead.
    A hit only counts if it is public, unauthenticated and HTTP-reachable: a Prometheus port
    on a self-hosted node is not monitorable. Filoscope suggests; the `curl` probe in the next
    step remains the only evidence. Skip this step entirely if the index is unavailable — it
