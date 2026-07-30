@@ -50,7 +50,8 @@ holds proposals that have not been adopted yet.
 
 ## Reading a manifest
 
-Each entry in a team's `functions[]` list is one commitment:
+Each entry in a team's `functions[]` list is one commitment (abridged — see a real manifest
+for the full shape):
 
 ```yaml
 - function_id: mainnet-block-explorer      # stable id for this commitment
@@ -74,7 +75,7 @@ Each entry in a team's `functions[]` list is one commitment:
 - `(tier, category, sub_category)` → which kernel function this monitors. Cross-reference
   `_kernel.yaml` for that function's `value` — why the network needs it.
 - `sla.threshold` → the commitment. `sla.statement` → it in prose.
-- `source.extract` **or** `source.transform` (exactly one) → how the number is derived.
+- `source.extract` **or** the sibling `transform:` block (exactly one) → how the number is derived.
 - `kernel_function` → present when several kernel functions share one taxonomy slot; it names
   the specific one.
 
@@ -88,7 +89,8 @@ Its table lists every team, metric, source host, and whether the entry is adopte
 
 **Is it currently green?** Fetch `$BASE/dashboards/data/kernel_fallback.json` and look in
 `verdicts` for `{team, function_id, metric, sla_outcome, observed_value, threshold_op,
-threshold_value}`. State the snapshot's age and link the
+threshold_value}`. State the snapshot's age — `max(observations[].observed_at)`, since
+`verdicts` entries carry no timestamp of their own — and link the
 [live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health) for current status.
 
 **How much ProPGF funding is attached?** Same file, `slate` array: `team_name`,
@@ -100,8 +102,10 @@ These exist because the registry is a governance artifact — overstating it mis
 funding decision.
 
 - `kernel_fallback.json` is a **snapshot** committed for offline dashboard use, not a live
-  feed. Always give its date and defer to the live dashboard.
-- A `PLACEHOLDER` threshold or a `@TODO-github-handle` maintainer means **the team has not
+  feed. Always give its age — derive it from `max(observations[].observed_at)`; `verdicts`
+  entries carry no timestamp of their own — and defer to the live dashboard.
+- A threshold marked `PLACEHOLDER`, **or** any `# THRESHOLD … (placeholder, confirm with
+  team)` comment above it, or a `@TODO-github-handle` maintainer, means **the team has not
   confirmed it yet**. Do not report these as commitments.
 - A `fixture` source is a stand-in awaiting a real feed, not a measurement.
 - Some metrics are deliberately *maintenance* proxies (commit or release recency), not

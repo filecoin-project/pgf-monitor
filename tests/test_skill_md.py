@@ -1,6 +1,7 @@
 """The root SKILL.md is the zero-setup agent entry point: agents fetch it by raw URL and
-follow its links without cloning. That only works if every path it cites still exists, so
-this guards against silent link rot when a doc moves. Path existence only — no network."""
+follow its links without cloning. That only works if every raw-URL path it cites still
+exists, so this guards against silent link rot when a doc moves. Path existence only — no
+network."""
 
 import re
 from pathlib import Path
@@ -40,3 +41,13 @@ def test_cited_path_exists(rel):
 
 def test_readme_points_at_skill_md():
     assert "SKILL.md" in README.read_text()
+
+
+def test_raw_base_pinned_in_skill_md_and_readme():
+    # Every citation in SKILL.md uses the $BASE shorthand, so _PATH_RE's fully-qualified
+    # RAW_BASE branch never actually matches anything there. If the repo slug on SKILL.md's
+    # `BASE=` line ever drifted (or the line were deleted), every $BASE/... citation would
+    # 404 while this whole test module stayed green. Pin the literal string in both files so
+    # that drift fails loudly instead.
+    assert RAW_BASE in SKILL.read_text(), f"SKILL.md no longer defines BASE as {RAW_BASE!r}"
+    assert RAW_BASE in README.read_text(), f"README.md no longer links the raw repo at {RAW_BASE!r}"
