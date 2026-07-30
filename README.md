@@ -47,6 +47,7 @@ function's current status — green (OK), red (a recent interruption), or amber
 | A funded team writing or editing your manifest | [docs/guide-projects.md](docs/guide-projects.md) |
 | A ProPGF reviewer or committee member | [docs/guide-reviewers.md](docs/guide-reviewers.md) |
 | Using a coding agent (Claude Code, Cursor, …) | [CLAUDE.md](CLAUDE.md) — both guides are agent-ready too |
+| An agent answering questions without cloning | [SKILL.md](SKILL.md) — point yours at the [raw URL](https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/SKILL.md) |
 
 ## How a team commits to a metric
 
