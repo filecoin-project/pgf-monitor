@@ -1,53 +1,68 @@
-# DRAFT — pre-populated by OSO (2026-07-16) for ProPGF re-scope. Not yet adopted by the team.
+# DRAFT — pre-populated by OSO (2026-07-16), audited against the Karma application 2026-07-31.
 # Promote to registry/ by: (1) team adopts via PR, (2) delete the x_draft block,
 # (3) confirm thresholds, (4) add any new hosts to registry/_allowlist.txt.
 #
-# HONESTY NOTE — FIL Ponto (filponto.io, nucleated from PL Outercore in 2024) is an
-# Important-tier COORDINATION team: ecosystem integration advisory (~50 teams/yr), grants
-# distribution (Drips), UCAN tooling (under committee review), and coordination of open
-# chain infrastructure operated by OTHER teams. Most of those application commitments are
-# NOT machine-checkable — coordination fulfilment shows up in partners shipping, not in any
-# JSON endpoint FIL Ponto operates — so they live in x_draft.unmeasured, deliberately, not
-# for lack of effort. This file therefore stages the ONE FIL Ponto commitment that turned
-# out to have a real, live public source: the Cuzk SP-software work merged upstream into
-# Lotus/Curio, observable via a GitHub search count. That is the whole manifest.
+# HONESTY NOTE — FilPonto (filponto.io) is an Important-tier COORDINATION cell. Its Batch-3
+# application (APP-9PTCWEQL-HVKGV8, Oct 2026 - Mar 2027) funds five workstreams: TPM
+# coordination, a Technical Support Engineer, chain-data monitoring Part 2 (dashboard
+# inventory + resilient sources + a sector/deal oracle replacing pre-DDO pipelines), porting
+# Curio's cuzk into Lotus Miner, and a discretionary grants pool (grants administration, DeFi
+# due-diligence, contractor engagements).
+#
+# Five of the six metrics the team proposed in application §3.2 are attested by their own
+# records, review reports, or a not-yet-built artifact — none has a public machine-readable
+# source, so they live in x_draft.unmeasured with the specific unlock named. That is
+# deliberate, not lack of effort. Only the cuzk -> Lotus Miner port has a public source, so
+# this file stages exactly one function.
 team: fil-ponto
 maintainers: ["@TODO-github-handle"]   # team fills in
 x_draft:
   slate_status: "Re-scope"
   slate_tier: "IMP"
   app_ref: "APP-9PTCWEQL-HVKGV8"
-  prepared_by: "OSO, 2026-07-16"
+  prepared_by: "OSO, 2026-07-16; audited against application §3.2 on 2026-07-31"
   allowlist_additions: []   # api.github.com already allowlisted — no NEW hosts
+  # Each entry below is a verbatim application §3.2 metric that has no public source.
   unmeasured:
-    - function: "Ecosystem integration support & grants advisory (~50 teams/yr navigating dapps, infra providers, explorers, exchanges)"
-      reason: "Coordination work with no public machine-checkable output; fulfilment shows up in partner integrations shipping, not in any JSON endpoint FIL Ponto operates. Evidence is testimonial/case-study, which this pipeline cannot attest."
-    - function: "Drips-based funding distribution for Filecoin public goods (filponto-drips)"
-      reason: "Onchain Drips streams could in principle be observed via the onchain-indexsupply adapter, but no catalogued kernel triple covers funding-distribution tooling; kept out rather than force-mapped."
-    - function: "UCAN authorization tooling milestone (under committee review; may be re-scoped)"
-      reason: "No catalogued kernel function covers UCAN authorization tooling, and the milestone itself is under review — proposing an SLA before the scope is settled would be premature. Revisit after the re-scope decision."
-    - function: "Coordination of open chain infrastructure (public RPC, indexers) as a public good"
-      reason: "The operated services belong to OTHER teams (e.g. Ankr's public RPC is monitored in registry/ankr.yaml). FIL Ponto's coordinating role in getting them stood up and kept public is real but not separable via any endpoint."
+    - function: "§3.2 'Discretionary grants administered' — count and $ of grants issued; target: pool fully allocated by end of grant"
+      reason: "The application names the data source as 'FilPonto grant records', which are private. No public register exists and no registry/_kernel.yaml function covers grants administration. UNLOCK: FilPonto publishes a machine-readable grants register (JSON or CSV at a stable URL) with issue date and amount per grant, plus a kernel-inventory entry for funding distribution."
+    - function: "§3.2 'DeFi due-diligence reviews completed' — # of Filecoin DeFi/stablecoin projects reviewed; target: reviews completed for all projects in scope"
+      reason: "The application names the data source as 'Review reports'. Reviews are documents, not a countable endpoint, and no catalogued kernel function covers due-diligence review processes. UNLOCK: publish a review index (one row per completed review, with date and subject) at a stable public URL."
+    - function: "§3.2 'Contractor engagements' — number of teams supported / % of ecosystem impacted; target: engagements executed as needed"
+      reason: "Attested by FilPonto's own engagement records; 'as needed' is also not a fixed target a threshold can encode. Shares the same unlock as the grants register — one published register of engagements would make both countable."
+    - function: "§3.2 'Monitoring data sources hardened' — # critical dashboards on resilient sources; target: inventory complete + alt sources identified"
+      reason: "The application names the data source as the 'FilOz dashboard inventory', which FilOz holds and which is not public. This is also a milestone-shaped deliverable (an inventory either exists or does not) rather than a continuously measurable series. UNLOCK: publish the inventory with a per-dashboard resilient-source flag; the count of hardened dashboards then becomes a real metric."
   candidates:
-    - metric: "sector/deal oracle repo activity (SP-facing oracle FIL Ponto references)"
-      why_unverified: "The application references a sector/deal oracle deliverable but no repository URL was provided. Ask the team for the canonical repo; if it is a public GitHub repo, a commit-cadence or release-cadence metric (mirroring lily-etl-maintenance) becomes expressible."
-# --- COMMITTEE GAPS (Batch 3, 2026-07-22) — kept in the committee sheet, not yet monitored ---
-#  sector_deal_oracle_repo : NEW asks — # ecosystem collabs supported + seconds-behind-mainnet; needs a source
-#  ecosystem collabs actively supported       : UNCATALOGUED — no _kernel.yaml coordination function
-#  infra-provider availability (RPC/subgraphs): UNCATALOGUED — needs a kernel entry + a source
+    - metric: "§3.2 'Oracle coverage & uptime vs. legacy pre-DDO sources' (target: oracle replaces >= 1 pre-DDO source)"
+      why_unverified: "The application names the data source as 'Public oracle repo + infra', but the oracle is a Batch-3 BUILD deliverable and does not exist yet — github.com/filponto holds only filponto-drips (last push 2026-01-14) and filponto-grants (2024-04-30), neither of which is the oracle. UNLOCK: once the oracle repo is published and serving, coverage becomes expressible against its own endpoint, and uptime via a health path. Ask the team for the repo URL at the M1 check-in. NOTE: commit cadence on the repo would measure that a build is happening, NOT the committed 'coverage & uptime' — do not substitute one for the other."
 functions:
-  # FIL Ponto committed to shipping SP software improvements (Cuzk) merged UPSTREAM into the
-  # canonical node/SP stacks (Lotus, Curio) rather than kept in a private fork. The GitHub
-  # search API counts PRs mentioning "cuzk" across both upstream repos — a direct fulfilment
-  # signal for that commitment. Closest catalogued kernel area is Block Production (mining)
-  # under Blockchain Core & Physical Storage (SP sealing/block-production software); verified
-  # against registry/_kernel.yaml character-for-character.
-  # PROBED 2026-07-16: curl 'https://api.github.com/search/issues?q=cuzk+repo:filecoin-project/lotus+repo:filecoin-project/curio'
-  #   -> 200, resolves; total_count of matching PRs = 3. Search payload is a single top-level
-  #   object {total_count, incomplete_results, items:[...]}; data_selector "$" lands it as one
-  #   row, so extract reads total_count directly (same idiom as blockscout counters).
-  # THRESHOLD: PLACEHOLDER — >= 1 holds the floor (at least the merged work stays visible);
-  #   confirm the real committed count/cadence with the team.
+  # Application §3.2 'SP software improvements shipped' (data source: Lotus Miner / Curio repos;
+  # measured: merged PRs porting Cuzk improvements; target: improvements merged & released).
+  # The funded deliverable is specifically porting Curio's cuzk 10x-Snark API improvements INTO
+  # LOTUS MINER (Milestone 1 Phase 1/2, Milestone 2 Phase 2/2), so the search is scoped to
+  # filecoin-project/lotus (where Lotus Miner lives) and bounded to the grant term.
+  #
+  # AUDIT 2026-07-31 — the previous version of this entry searched
+  #   q=cuzk+repo:filecoin-project/lotus+repo:filecoin-project/curio  (no is:pr, no date bound)
+  # and returned total_count=4 against a >=1 threshold. All 4 were in CURIO, none in lotus; all
+  # predated the Oct-2026 grant term; and 2 were not cuzk work at all ('fix: CI tests',
+  # 'chore(deps): bump google.golang.org/grpc'). It therefore passed on day one and would have
+  # kept passing regardless of whether the funded port ever happened. Repointed and date-bounded.
+  #
+  # PROBED 2026-07-31:
+  #   curl 'https://api.github.com/search/issues?q=cuzk+repo:filecoin-project/lotus+is:pr+is:merged+merged:2026-10-01..2027-03-31'
+  #     -> 200, total_count = 0  (correct: the grant term has not started)
+  #   Cross-check, unbounded on lotus: q=cuzk+repo:filecoin-project/lotus -> total_count = 0
+  #   Range form 'merged:START..END' is used deliberately instead of 'merged:>=START' — it needs
+  #   no percent-encoding, so it cannot be double-encoded on the way through dlt.
+  #   Search payload is a single top-level object {total_count, incomplete_results, items:[...]};
+  #   data_selector "$" lands it as one row, so extract reads total_count directly.
+  #
+  # THRESHOLD: PLACEHOLDER — >= 1 means "at least one cuzk PR merged into Lotus Miner during the
+  #   grant term". This is a DELIVERY GATE, not an uptime SLA: it reads as breaching every month
+  #   until the port lands, then passes permanently. Confirm with the team and the committee
+  #   whether that is the intended shape, or whether it should only be evaluated from the M1
+  #   due date (2026-12-31) onward.
   - function_id: cuzk-upstream-prs
     kernel_function: "Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)"
     origin: karma
@@ -56,7 +71,7 @@ functions:
     sub_category: 'Block Production (mining)'
     oso_project_slug: filponto
     sla:
-      statement: "Cuzk SP improvements merged into upstream Lotus/Curio: count of matching PRs on GitHub search >= 1, measured monthly"
+      statement: "Cuzk SP improvements ported into Lotus Miner: count of cuzk PRs merged into filecoin-project/lotus during the grant term (2026-10-01 to 2027-03-31) >= 1, measured monthly"
       metric: cuzk_upstream_prs
       threshold: { op: ">=", value: 1 }   # PLACEHOLDER — confirm with team
       cadence: monthly
@@ -64,7 +79,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
-      endpoint: "https://api.github.com/search/issues?q=cuzk+repo:filecoin-project/lotus+repo:filecoin-project/curio"
-      query: "/search/issues?q=cuzk+repo:filecoin-project/lotus+repo:filecoin-project/curio"
+      endpoint: "https://api.github.com/search/issues?q=cuzk+repo:filecoin-project/lotus+is:pr+is:merged+merged:2026-10-01..2027-03-31"
+      query: "/search/issues?q=cuzk+repo:filecoin-project/lotus+is:pr+is:merged+merged:2026-10-01..2027-03-31"
       data_selector: "$"
       extract: { column: total_count, cast: float, reduce: single, derive: value, unit: prs }
