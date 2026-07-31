@@ -1,5 +1,7 @@
 """fpm contract: render §1–§5 appendix template from manifest + facts."""
 
+import yaml
+
 from fpm.kernel import load_kernel
 from fpm.manifest import manifest_from_raw
 from fpm.report.contract import build_contract
@@ -17,9 +19,14 @@ def _fn(fid, tier, sub, metric, *, kernel_function=""):
             "threshold": {"op": "<=", "value": 1},
             "cadence": "daily",
         },
-        "source": {"adapter": "oso", "kind": "http-json", "base_url": "https://x.test",
-                   "query": "/q", "endpoint": "https://x.test/q",
-                   "extract": {"column": "c"}},
+        "source": {
+            "adapter": "oso",
+            "kind": "http-json",
+            "base_url": "https://x.test",
+            "query": "/q",
+            "endpoint": "https://x.test/q",
+            "extract": {"column": "c"},
+        },
     }
     if kernel_function:
         fn["kernel_function"] = kernel_function
@@ -38,21 +45,34 @@ _RAW = {
 }
 
 _FACTS = {
-    "recipient": "Test Team", "contact": "c", "app_ref": "APP-T", "scope": "s",
-    "committed_usd": 1000, "committed_through": "2026-12-31", "total_requested_usd": 2000,
-    "term": "term", "repo_url": "https://github.com/filecoin-project/pgf-monitor",
+    "recipient": "Test Team",
+    "contact": "c",
+    "app_ref": "APP-T",
+    "scope": "s",
+    "committed_usd": 1000,
+    "committed_through": "2026-12-31",
+    "total_requested_usd": 2000,
+    "term": "term",
+    "repo_url": "https://github.com/filecoin-project/pgf-monitor",
     "incident_response": {"slas": ["statuspage"], "lead_in": "Sourced as follows:"},
     "placeholder_thresholds": ["relay-liveness"],
     "requested_additions": [
-        {"metric": "threshold_signers_per_round",
-         "statement": "How many nodes contribute to each signing round"},
+        {
+            "metric": "threshold_signers_per_round",
+            "statement": "How many nodes contribute to each signing round",
+        },
     ],
     "dependents": [
         {"name": "Lotus", "how": "reads the beacon", "contact": "FilOz"},
     ],
     "dependencies": [
-        {"name": "League of Entropy", "breaks": "no randomness", "owner": "LoE",
-         "propgf_funded": "unknown", "substitutable": "No"},
+        {
+            "name": "League of Entropy",
+            "breaks": "no randomness",
+            "owner": "LoE",
+            "propgf_funded": "unknown",
+            "substitutable": "No",
+        },
     ],
 }
 
@@ -63,13 +83,15 @@ def _contract():
 
 def test_sections_present_and_ordered():
     md = _contract()
-    for i, header in enumerate([
-        "## 1. Ecosystem Alignment",
-        "## 2. Public Sources",
-        "## 3. Monitored Commitments",
-        "## 4. Dependents and dependencies",
-        "## 5. Reporting",
-    ]):
+    for i, header in enumerate(
+        [
+            "## 1. Ecosystem Alignment",
+            "## 2. Public Sources",
+            "## 3. Monitored Commitments",
+            "## 4. Dependents and dependencies",
+            "## 5. Reporting",
+        ]
+    ):
         assert header in md, f"missing {header}"
     # order
     idx = [md.index(h) for h in ["## 1.", "## 2.", "## 3.", "## 4.", "## 5."]]
@@ -119,3 +141,22 @@ def test_reporting_has_slack_channel():
     s5 = md.split("## 5.")[1]
     assert "#filecoin-kernel updates" in s5
     assert "every two months" in s5
+
+
+def test_load_team_functions_tolerates_missing_adopted_manifest(tmp_path):
+    """A draft-only team (no registry/<team>.yaml yet) still renders its staged SLAs."""
+    from fpm.report.contract import load_team_functions
+
+    (tmp_path / "drafts").mkdir()
+    (tmp_path / "drafts" / "t.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "team": "t",
+                "maintainers": ["@m"],
+                "x_draft": {"slate_tier": "IMP"},
+                "functions": [_fn("staged", "essential", "Randomness", "staged_metric")],
+            }
+        )
+    )
+    fns = load_team_functions("t", str(tmp_path))
+    assert [f.function_id for f in fns] == ["staged"]

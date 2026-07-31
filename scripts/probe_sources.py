@@ -42,7 +42,9 @@ def probe(fn, timeout: float) -> tuple[bool, str]:
         if src.method == "POST":
             r = requests.post(src.endpoint, json=src.params or {}, headers=HEADERS, timeout=timeout)
         else:
-            r = requests.get(src.endpoint, params=src.params or None, headers=HEADERS, timeout=timeout)
+            r = requests.get(
+                src.endpoint, params=src.params or None, headers=HEADERS, timeout=timeout
+            )
         if r.status_code != 200:
             return False, f"HTTP {r.status_code}"
         json.loads(r.text)

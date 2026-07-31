@@ -26,7 +26,11 @@ def test_conformance_error_message_for_uncatalogued():
     assert err is not None and "not a catalogued" in err
 
 
-_LC = ("essential", "Blockchain Core & Physical Storage", "Ledger & Consensus")  # shared slot (3 fns)
+_LC = (
+    "essential",
+    "Blockchain Core & Physical Storage",
+    "Ledger & Consensus",
+)  # shared slot (3 fns)
 _CHAIN_SYNC = "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
 
 
@@ -45,7 +49,10 @@ def test_kernel_function_in_wrong_slot_is_rejected():
     k = load_kernel()
     # a real function name, but not the one in the declared (beacon) slot
     err = conformance_error(
-        "irreplaceable", "Blockchain Core & Physical Storage", "Randomness", k,
+        "irreplaceable",
+        "Blockchain Core & Physical Storage",
+        "Randomness",
+        k,
         kernel_function=_CHAIN_SYNC,
     )
     assert err is not None and "is in slot" in err

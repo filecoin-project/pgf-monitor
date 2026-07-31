@@ -103,7 +103,7 @@ def test_strip_x_draft_text_noop_without_block():
 def test_strip_x_draft_text_comment_mode_preserves_annotations():
     stripped = strip_x_draft_text(DRAFT, comment=True)
     assert "\nx_draft:" not in stripped and not stripped.startswith("x_draft:")
-    assert "#   slate_status" in stripped.replace('# ', '#  ', 0) or "# " in stripped
+    assert "#   slate_status" in stripped.replace("# ", "#  ", 0) or "# " in stripped
     # annotations survive as comments; yaml still parses without the block
     import yaml
 

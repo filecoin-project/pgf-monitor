@@ -105,7 +105,9 @@ def render() -> str:
 
 
 DASHBOARD = Path("dashboards/propgf-kernel-health.py")
-EMBED_START = "    # COVERAGE-EMBED-START (regenerate: uv run python scripts/kernel_coverage.py --embed)"
+EMBED_START = (
+    "    # COVERAGE-EMBED-START (regenerate: uv run python scripts/kernel_coverage.py --embed)"
+)
 EMBED_END = "    # COVERAGE-EMBED-END"
 
 
@@ -131,8 +133,14 @@ def coverage_json() -> dict:
                 "sub_category": e.sub_category,
                 "function": e.function,
                 "entries": [
-                    {"team": t, "function_id": f, "metric": m, "host": h, "state": s,
-                     "origin": origins.get((t, f), "oso")}
+                    {
+                        "team": t,
+                        "function_id": f,
+                        "metric": m,
+                        "host": h,
+                        "state": s,
+                        "origin": origins.get((t, f), "oso"),
+                    }
                     for t, f, m, h, s in entries.get((e.tier, e.category, e.sub_category), [])
                 ],
             }
@@ -198,7 +206,11 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help=f"write {OUT} instead of stdout")
     ap.add_argument("--embed", action="store_true", help="refresh the dashboard COVERAGE literal")
-    ap.add_argument("--badges", action="store_true", help="write badges.json (shields.io reads it for the README count badges)")
+    ap.add_argument(
+        "--badges",
+        action="store_true",
+        help="write badges.json (shields.io reads it for the README count badges)",
+    )
     args = ap.parse_args(argv)
     if args.embed:
         embed()
