@@ -112,9 +112,6 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
 | venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (curio-core-release-cadence) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (lantern-release-cadence) | api.github.com | draft |
-| filoz | `latest_ci_success_age_days` (curio-core-ci-health) | api.github.com | draft |
 
 ### 🟢 Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)
 
@@ -130,9 +127,6 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
 | venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (curio-core-release-cadence) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (lantern-release-cadence) | api.github.com | draft |
-| filoz | `latest_ci_success_age_days` (curio-core-ci-health) | api.github.com | draft |
 
 ### 🟢 Block production - WindowPoSt + WinningPoSt scheduler
 
@@ -148,9 +142,6 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
 | venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (curio-core-release-cadence) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (lantern-release-cadence) | api.github.com | draft |
-| filoz | `latest_ci_success_age_days` (curio-core-ci-health) | api.github.com | draft |
 
 ### 🟢 Pooled block production (sophon-miner) + distributed sealing cluster (Damocles)
 
@@ -166,9 +157,6 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
 | venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (curio-core-release-cadence) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (lantern-release-cadence) | api.github.com | draft |
-| filoz | `latest_ci_success_age_days` (curio-core-ci-health) | api.github.com | draft |
 
 ### 🟢 EVM + EAM actor
 
@@ -187,7 +175,7 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | randamu | `relay_mirror_round_lag` (drand-relay-mirror-liveness) | drand.cloudflare.com | adopted |
 | randamu | `relay_quicknet_round_lag` (drand-relay-quicknet-freshness) | api3.drand.sh | adopted |
 | randamu | `statuspage_impact_level` (drand-relay-statuspage) | drand.statuspage.io | adopted |
-| randamu | `avg_days_between_releases` (drand-release-cadence) | api.github.com | draft |
+| randamu | `avg_days_between_releases` (drand-release-cadence) | api.github.com | adopted |
 
 ### 🟢 Validated snapshot generation & hosting (~2h cadence)
 
@@ -311,7 +299,6 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | team | metric | source | state |
 |---|---|---|---|
 | blockscout | `blockscout_mainnet_head_age_seconds` (fevm-mainnet-explorer-blockscout) | filecoin.blockscout.com | adopted |
-| blockscout | `verified_smart_contracts` (fevm-verified-contracts) | filecoin.blockscout.com | adopted |
 | blockscout | `explorer_max_tipset_gap_seconds` (mainnet-block-explorer) | filfox.info | adopted |
 | fil-b | `docs_last_commit_age_days` (network-documentation-commit-recency) | api.github.com | adopted |
 
@@ -322,7 +309,6 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | team | metric | source | state |
 |---|---|---|---|
 | blockscout | `blockscout_mainnet_head_age_seconds` (fevm-mainnet-explorer-blockscout) | filecoin.blockscout.com | adopted |
-| blockscout | `verified_smart_contracts` (fevm-verified-contracts) | filecoin.blockscout.com | adopted |
 | blockscout | `explorer_max_tipset_gap_seconds` (mainnet-block-explorer) | filfox.info | adopted |
 | fil-b | `docs_last_commit_age_days` (network-documentation-commit-recency) | api.github.com | adopted |
 
@@ -350,9 +336,6 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
 | venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (curio-core-release-cadence) | api.github.com | draft |
-| filoz | `avg_days_between_releases` (lantern-release-cadence) | api.github.com | draft |
-| filoz | `latest_ci_success_age_days` (curio-core-ci-health) | api.github.com | draft |
 
 ## Declared unmeasurable / candidate gaps
 
