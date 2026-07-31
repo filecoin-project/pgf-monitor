@@ -18,7 +18,11 @@ jobs:
           git fetch origin "${{ github.base_ref }}" --depth=1 || true
           # allowlist ALWAYS from base, never the PR head
           git show "origin/${{ github.base_ref }}:registry/_allowlist.txt" > /tmp/base_allowlist.txt
-          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- 'registry/*.yaml' | grep -v '/_' || true)
+          # :(glob) confines '*' to ONE path segment. Without it git's default pathspec lets
+          # '*' cross '/', so registry/drafts/<team>.yaml gets handed to validate_pr — which
+          # validates against the adopted-manifest schema and rejects the draft's x_draft block.
+          # Drafts are validated by scripts/validate_draft.py + tests/test_drafts_conformance.py.
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- ':(glob)registry/*.yaml' | grep -v '/_' || true)
           rc=0
           for head in $changed; do
             base_content=$(git show "origin/${{ github.base_ref }}:$head" 2>/dev/null || true)
