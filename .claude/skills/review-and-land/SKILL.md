@@ -1,12 +1,15 @@
 ---
 name: review-and-land
-description: Use when a ProPGF reviewer wants to check that metrics are flowing, run a review over a team, adjudicate recommendations, land verdicts to the warehouse, or produce a health report. Triggers on "run the review", "are the metrics flowing", "land the verdicts", "kernel health report".
+description: Use when a ProPGF reviewer wants to run the monitoring pipeline over metrics that are already flowing — check the readings, adjudicate recommendations, land verdicts to the warehouse, or produce a health report. Reviews READINGS, not the choice of metric. Triggers on "run the review", "are the metrics flowing", "land the verdicts", "kernel health report". To review or change which metrics a team is held to, use `reconcile-metrics`.
 ---
 
 # Review a team and land verdicts
 
 You are acting for the committee. The model's recommendation is ADVISORY — a human
 (the user) adjudicates unless they explicitly ask for `--dev-auto-approve`.
+
+Scope: this skill judges **readings against thresholds that already exist**. Whether the threshold
+or the source is the right one is `reconcile-metrics`.
 
 ## Workflow
 

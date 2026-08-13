@@ -20,7 +20,10 @@ uv run fpm contract <team> [--facts FILE] [--out FILE]   # render a grant contra
 scripts/demo_project_flow.sh / scripts/demo_reviewer_flow.sh        # offline end-to-end demos
 ```
 
-Skills (if your harness loads `.claude/skills/`): `author-manifest`, `review-and-land`.
+Skills (if your harness loads `.claude/skills/`), in program order:
+`draft-application` (Karma form, pre-award) · `reconcile-metrics` (decide what a team is measured
+on; keep agreement §3, registry, facts and dashboard in agreement) · `author-manifest` (a team
+encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readings, land verdicts).
 
 ## Hard rules
 
