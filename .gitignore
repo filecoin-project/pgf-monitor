@@ -19,6 +19,9 @@ docs/drive-audit-*.md
 docs/superpowers/
 .superpowers/
 
+# Playwright MCP session artefacts (page snapshots, console logs, screenshots)
+.playwright-mcp/
+
 # local tooling + secrets
 token.json
 credentials.json
