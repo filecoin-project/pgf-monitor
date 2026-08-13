@@ -1,11 +1,30 @@
 ---
 name: author-manifest
-description: Use when a team wants to create, adopt, or edit their kernel-monitoring manifest — covers finding the pre-populated draft, choosing metrics/sources, validating offline, promoting, and opening the PR. Triggers on "adopt our manifest", "add a metric", "change our SLA", "update our draft".
+description: Use when a team encodes an already-agreed metric set into its own kernel-monitoring manifest — covers finding or starting the draft, choosing metrics/sources, validating offline, promoting, and opening the PR. Acting FOR one team, editing only their file. Triggers on "adopt our manifest", "add a metric", "change our SLA", "update our draft". For deciding what a team should be measured on in the first place, or making the agreement and registry agree, use `reconcile-metrics` instead.
 ---
 
 # Author a kernel-monitoring manifest
 
 You are acting for ONE team. Never touch another team's file.
+
+This skill assumes the commitment is already agreed and your job is to encode it. If you are still
+deciding *what* to measure, or the signed agreement and the manifest disagree, that is
+`reconcile-metrics`.
+
+## New here? Read this first
+
+**`docs/guide-projects.md` is the long-form version of this skill, written for teams** — read it
+first if anything below is unfamiliar; `README.md` covers the program in five minutes.
+
+A **manifest** is `registry/<team>.yaml`: your public declaration of which **kernel functions**
+(from the catalogue in `registry/_kernel.yaml`) you maintain, and for each one a **metric**, a
+**public source** to read it from, and an **SLA** — the threshold you commit to. The pipeline
+fetches your source on a schedule, judges it against that threshold, and publishes the verdict.
+A **draft** under `registry/drafts/` is the same file before the team has confirmed it; promoting
+turns it into an adopted manifest.
+
+Prerequisites: `uv sync` once. **Everything here runs offline** except the final pull request —
+you need no credentials to author and validate a manifest.
 
 ## Workflow
 
