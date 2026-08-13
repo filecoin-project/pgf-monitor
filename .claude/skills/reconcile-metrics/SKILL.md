@@ -10,6 +10,24 @@ Every metric in §3 is something a grantee signs up to and a reviewer will later
 are three places the same commitment is written down; this skill is how they stay honest and how
 they stay in agreement.
 
+## New here? Read this first
+
+`README.md` explains the program and the kernel in five minutes; `docs/guide-reviewers.md` is the
+committee-side playbook this skill sits inside. The words below appear constantly and are assumed
+everywhere after this point:
+
+| Term | What it is |
+|---|---|
+| **the kernel** | The functions the network cannot operate without, catalogued in `registry/_kernel.yaml`. A team is funded to maintain one or more of them. |
+| **manifest** | `registry/<team>.yaml` — one team's public declaration: which kernel functions it maintains, the metric for each, the public source, and the threshold it commits to. |
+| **the registry** | All of `registry/` together. The trust anchor: what actually gets measured. CODEOWNERS-guarded. |
+| **Appendix 1** | The "ProPGF Grant Recipient Commitments" section of a signed grant agreement. **§1** alignment · **§2** keeping sources public · **§3** the monitored commitments · **§4** dependents/dependencies · **§5** reporting. §3 is the one that must match the manifest. |
+| **facts file** | `contracts/<team>.facts.yaml` — recipient, scope, money and §4 content used to render the appendix. Gitignored; local only. |
+| **the payload** | The registry snapshot embedded in the dashboard notebook, gzip+base64 on one line. Hand-built, so it drifts (see *Drift*). |
+
+Prerequisites: `uv sync` once. Reading the agreements needs Google Drive access. Nothing in this
+skill writes to the registry without a pull request.
+
 ## Which direction are you going?
 
 The two jobs share all the discipline below but invert the ground truth. Decide first.
@@ -35,7 +53,7 @@ Reconciling order — **inverted at the top**:
 
 1. **The signed agreement's Appendix 1 §3** on the Drive. If a team rewrote it, that is the
    commitment; the registry is now stale, not the document.
-2. `[MasterSheet] ProPGF Batch 3` — authoritative for money (see below)
+2. `ProPGF Batch 3 Funded list` — authoritative for money (see step 8)
 3. `registry/<team>.yaml` — what we are currently measuring
 4. `contracts/<team>.facts.yaml`
 5. The dashboard payload — a snapshot, and the most likely to be wrong
@@ -112,14 +130,25 @@ Goldsky and Zondax had no Batch 3 agreement on the Drive at all as of 2026-08-13
    name` row explaining what you looked for. An honest gap beats invented rows.
 
 8. **Money: never guess.** `committed_usd` means *amount due by `committed_through`* (2026-12-31 for
-   batch 3), not the grant total. The authoritative source is the **`[MasterSheet] ProPGF Batch 3`**
-   column literally headed **"Amount committed till December"** — that is exactly this field's
-   semantics. Neighbouring columns are traps: *Current $ Projection* is the award total and
-   *Initial Request* is the ask, and reading the wrong one put a team's request on the dashboard as
-   though it were their award. Cross-check against Exhibit B milestone dates; where they disagree
-   (Ankr: $28k on signature in the agreement, $14k till December in the sheet) surface it rather
-   than picking. Omit the field to render "TODO" rather than a misleading `$0` — and note that `0`
-   is falsy, so a real `$0` renders as "no award", which is how a funded team came to look unfunded.
+   batch 3), **not the grant total**. That distinction is the whole game — most money errors here
+   are a total written into a committed-through field.
+
+   Authoritative source, in order:
+
+   1. **`ProPGF Batch 3 Funded list`** — column **"Committed (thru Dec)"** is exactly this field.
+      Its **"Total Contract value"** column is the whole grant; never put that in `committed_usd`.
+   2. Exhibit B in the signed agreement — sum the milestones dated on or before `committed_through`
+      and check it matches.
+   3. `[MasterSheet] ProPGF Batch 3` — **superseded**, and wrong for 4 of 16 teams when the Funded
+      list arrived. Use only if the Funded list has no row. Its neighbouring columns are traps:
+      *Current $ Projection* is the award total, *Initial Request* is the ask.
+
+   Where two sources disagree, check whether they are answering different questions before picking.
+   Ankr looked like a contradiction ($28k in the agreement, $14k in the sheet) and was not: $14k is
+   due by December, $28k is the contract. Both were right.
+
+   Omit the field to render "TODO" rather than a misleading `$0` — and note `0` is falsy, so a real
+   `$0` renders as "no award this batch", which is how a funded team came to look unfunded.
 
 9. **Render.**
    ```bash

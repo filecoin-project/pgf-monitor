@@ -13,6 +13,18 @@ Two audiences, same output: a real team drafting its own submission, or ProPGF d
 speculative one to show what a good application looks like. The second must be marked FICTIONAL
 everywhere, including the reference number.
 
+## New here? Read this first
+
+`README.md` explains the program and the kernel in five minutes. **ProPGF** funds teams that
+maintain the **kernel** — the functions the Filecoin network cannot operate without, catalogued in
+`registry/_kernel.yaml`. Applications are submitted through **Karma** (`app.filpgf.io`) and get a
+reference like `APP-XXXXXXXX-XXXXXX`. Field **3.2** is where an applicant proposes the metrics
+they'll be held to; those become §3 of the grant agreement's Appendix 1 and then a **manifest**
+(`registry/<team>.yaml`) if the grant lands — which is why 3.2 gets a disproportionate share of
+this skill.
+
+Prerequisites: `uv sync` once, and network access for the probes in step 3. No credentials needed.
+
 ## Ground truth, in priority order
 
 1. **What the team tells you** — scope, budget, term, people, what they will commit to. Never
