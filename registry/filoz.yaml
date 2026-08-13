@@ -44,7 +44,7 @@ functions:
   # elected winners are failing to submit blocks (WinningPoSt/scheduler trouble across the SP
   # fleet).
   - function_id: curio-windowpost-winningpost-scheduler
-    kernel_function: "Block production - WindowPoSt + WinningPoSt scheduler"
+    kernel_function: "Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility"
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'

@@ -128,7 +128,7 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
 
-### 🟢 Block production - WindowPoSt + WinningPoSt scheduler
+### 🟢 Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility
 
 > Recurring liveness proofs and block production; missed windows mean fault penalties and power loss.
 

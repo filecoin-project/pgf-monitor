@@ -75,7 +75,7 @@
    "priority": "essential",
    "category": "Blockchain Core & Physical Storage",
    "subcategory": "Block Production (mining)",
-   "title": "Block production - WindowPoSt + WinningPoSt scheduler",
+   "title": "Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility",
    "steward": "Curio Storage / FilOz"
   },
   {
@@ -956,7 +956,7 @@
    "app_ref": "APP-P3NAPR7O-TSQ67Q",
    "team_name": "Reiersen",
    "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $$250k + 67.2k FIL, committed $300,000. Open: PoRep research milestone; PDP (M1) possibly a Pods expense",
-   "functions": "Block production - WindowPoSt + WinningPoSt scheduler | Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC) | Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)",
+   "functions": "Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility | Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC) | Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)",
    "committed_usd": 300000.0
   },
   {

@@ -13,8 +13,14 @@ docs/plan*.md
 docs/*-design.md
 docs/real-sla-examples.md
 docs/grant-commitments-appendix.md
+docs/batch3-appendix-review.md
+docs/appendix-1-edits-by-project.md
+docs/drive-audit-*.md
 docs/superpowers/
 .superpowers/
+
+# Playwright MCP session artefacts (page snapshots, console logs, screenshots)
+.playwright-mcp/
 
 # local tooling + secrets
 token.json
