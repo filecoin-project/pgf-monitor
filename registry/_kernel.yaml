@@ -55,7 +55,7 @@ entries:
   - tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Block Production (mining)"
-    function: "Block production - WindowPoSt + WinningPoSt scheduler"
+    function: "Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility"
     value: "Recurring liveness proofs and block production; missed windows mean fault penalties and power loss."
   - tier: essential
     category: "Blockchain Core & Physical Storage"
