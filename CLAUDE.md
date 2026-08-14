@@ -14,6 +14,7 @@ uv run python scripts/validate_draft.py --all          # drafts: schema+kernel+S
 uv run python -m scripts.validate_pr registry/<team>.yaml   # the PR gate, locally
 uv run python scripts/promote_draft.py registry/drafts/<team>.yaml --add-allowlist
 uv run fpm review <team> [--store DIR] [--dev-auto-approve] [--live --live-oso --oso-org UUID]
+uv run fpm observe [teams...] [--as-of DATE] [--dry-run] [--live-oso --oso-org UUID]  # readings only -> data/observations.csv
 uv run fpm report <team> --link URL [--intent "..."] [--out FILE]   # draft an entry from a URL
 uv run fpm land --store DIR --oso-org UUID [--public-name N --private-name N]
 uv run fpm contract <team> [--facts FILE] [--out FILE]   # render a grant contract from manifest + contracts/<team>.facts.yaml
@@ -39,6 +40,11 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 - Thresholds are human commitments: the report drafter deliberately omits them; drafts
   mark ours `PLACEHOLDER`. Don't invent tight thresholds without probe evidence.
 - Secrets never enter the repo; live smokes read `OSO_API_KEY` from the environment.
+- `data/observations.csv` is the system of record for the time series (OSO's
+  `filpgf_sla_observations` is a full-table republish of it) — never hand-edit it, and never
+  write it except through `fpm.observations`, which normalizes the date and dedupes the day.
+- Nothing unattended may write a verdict. `.github/workflows/observe.yml` runs `fpm observe`
+  (fetch + evaluate, no model); adjudication stays `fpm review` with a human.
 - Tests are offline-deterministic; anything live goes in `scripts/live_*_smoke.py`
   (quarantined, never imported by tests).
 
@@ -55,8 +61,8 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 
 ## Layout
 
-`src/fpm/` pipeline (manifest, provision, adapters, evaluate, detectors, synthesize,
-pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
+`src/fpm/` pipeline (manifest, provision, adapters, evaluate, observe, observations,
+detectors, synthesize, pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
 `tests/` mirrors it · `registry/` the trust anchor · `fixtures/` offline responses ·
 `dashboards/propgf-kernel-health.py` (marimo, `uv sync --extra dashboards`) ·
 `docs/` guides (the grant-commitments appendix + per-plan design docs are gitignored, local only).

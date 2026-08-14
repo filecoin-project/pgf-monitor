@@ -1,0 +1,75 @@
+name: observe
+
+# The nightly reading of every adopted metric. Without this, a metric only has a value on days a
+# human happened to run `fpm review` — which is why 34 of 47 metrics currently hold exactly one
+# observation. Point-in-time sources (RPC head lag, IPNI counts, explorer head age) carry no
+# history of their own, so a day missed here is a day lost permanently.
+#
+# Readings only: no synthesizer, no adjudication. Verdicts stay a human act via `fpm review`.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"            # 06:17 UTC daily, off the hour to dodge the cron stampede
+  workflow_dispatch:
+    inputs:
+      as_of:
+        description: "Observation date (YYYY-MM-DD, default today UTC)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Measure and report without writing the CSV"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write                   # the job commits data/observations.csv back to main
+
+concurrency:
+  group: observe
+  cancel-in-progress: false         # never interrupt a run mid-write; the CSV is the record
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90             # ~47 metrics, each an OSO ingestion run polled to terminal
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+
+      - name: Check credentials
+        env:
+          OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
+          OSO_ORG_ID: ${{ secrets.OSO_ORG_ID }}
+        run: |
+          set -euo pipefail
+          # Fail loudly rather than silently recording a night of indeterminate readings.
+          [ -n "$OSO_API_KEY" ] || { echo "::error::OSO_API_KEY secret is not set"; exit 1; }
+          [ -n "$OSO_ORG_ID" ] || { echo "::error::OSO_ORG_ID secret is not set"; exit 1; }
+
+      - name: Observe every adopted metric
+        env:
+          OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
+        run: |
+          set -euo pipefail
+          uv run fpm observe \
+            --live-oso --oso-org "${{ secrets.OSO_ORG_ID }}" \
+            ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }} \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the day's readings
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- data/observations.csv; then
+            echo "no change to data/observations.csv"
+            exit 0
+          fi
+          git add data/observations.csv
+          git commit -m "chore(observations): readings for $(date -u +%F)"
+          # A concurrent merge to main between checkout and push is normal, not an error.
+          git pull --rebase --autostash origin "${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"

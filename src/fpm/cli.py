@@ -45,6 +45,91 @@ def run_land_cli(
     return 0
 
 
+def manifest_paths(registry_dir: str, teams: list[str]) -> list[Path]:
+    """Named teams, or every adopted manifest. `_`-prefixed files are registry infrastructure
+    (_kernel.yaml, _schema.json, _allowlist.txt) and drafts/ is staging, not a commitment."""
+    if teams:
+        return [Path(registry_dir) / f"{t}.yaml" for t in teams]
+    return sorted(p for p in Path(registry_dir).glob("*.yaml") if not p.name.startswith("_"))
+
+
+def run_observe_cli(
+    teams: list[str],
+    registry_dir: str,
+    fixtures: str,
+    as_of: datetime,
+    method: str,
+    csv_path: str,
+    live_oso: bool,
+    oso_org: str,
+    dry_run: bool,
+) -> int:
+    """Measure every function in every named manifest and append the readings to the CSV.
+
+    Deliberately no synthesizer and no adjudication: this runs unattended. A single team's failure
+    is contained the same way a single function's is — recorded, then the batch continues.
+    """
+    import os
+    from collections import Counter
+
+    from fpm.governance.allowlist import load_allowlist
+    from fpm.observations import append_observations
+    from fpm.observe import observe
+
+    oso_client = None
+    allowlist: set[str] | None = None
+    if live_oso:
+        from fpm.oso.graphql_client import GraphqlOsoClient
+
+        oso_client = GraphqlOsoClient(api_key=os.environ["OSO_API_KEY"], org_id=oso_org)
+        # The committee-maintained allowlist, not one derived from the manifest being run: a
+        # scheduled job must not be able to reach a host the committee never approved.
+        allowlist = load_allowlist(Path(registry_dir) / "_allowlist.txt")
+
+    observations, failed = [], []
+    for path in manifest_paths(registry_dir, teams):
+        try:
+            got = observe(
+                manifest_path=path,
+                fixtures_dir=Path(fixtures),
+                as_of=as_of,
+                method=method,
+                oso_client=oso_client,
+                org_id=oso_org,
+                allowlist=allowlist,
+                poll_sleep=10.0 if live_oso else 0.0,
+            )
+        except Exception as exc:
+            failed.append(path.stem)
+            print(f"{path.stem}\tMANIFEST FAILED\t{exc}", file=sys.stderr)
+            continue
+        counts = Counter(o.sla_outcome for o in got)
+        print(
+            f"{path.stem}\t{len(got)} metrics\t"
+            f"pass={counts['pass']} fail={counts['fail']} indeterminate={counts['indeterminate']}"
+        )
+        observations.extend(got)
+
+    totals = Counter(o.sla_outcome for o in observations)
+    print(
+        f"\n{len(observations)} observations at {as_of.date().isoformat()} "
+        f"(pass={totals['pass']} fail={totals['fail']} indeterminate={totals['indeterminate']})"
+    )
+    if dry_run:
+        print("dry run: nothing written")
+    elif observations:
+        rows = append_observations(observations, Path(csv_path))
+        print(f"{csv_path}: {len(rows)} rows")
+
+    if failed:
+        print(f"manifests that failed to run: {', '.join(failed)}", file=sys.stderr)
+        return 1
+    if not observations:
+        print("no observations produced", file=sys.stderr)
+        return 1
+    return 0
+
+
 def _interactive_decide(rec: ReviewRecommendation) -> ApprovalDecision:
     ans = input(
         f"Adjudicate {rec.team}/{rec.function_id} [{rec.review_status}] (a/revise/reject/defer): "
@@ -80,6 +165,19 @@ def main(argv: list[str] | None = None) -> int:
     review.add_argument("--live-oso", action="store_true", help="use the live GraphqlOsoClient")
     review.add_argument("--oso-org", default="", help="OSO org id for --live-oso")
 
+    obs = sub.add_parser(
+        "observe", help="measure every adopted metric and append the readings to the time series"
+    )
+    obs.add_argument("teams", nargs="*", help="team names (default: every adopted manifest)")
+    obs.add_argument("--registry", default="registry")
+    obs.add_argument("--fixtures", default="fixtures/responses")
+    obs.add_argument("--as-of", default="", help="observation date (default: today, UTC)")
+    obs.add_argument("--method", default="nightly", help="provenance label for the rows written")
+    obs.add_argument("--csv", default="data/observations.csv")
+    obs.add_argument("--live-oso", action="store_true", help="fetch for real via the OSO adapter")
+    obs.add_argument("--oso-org", default="", help="OSO org id for --live-oso")
+    obs.add_argument("--dry-run", action="store_true", help="measure and report, write nothing")
+
     report = sub.add_parser("report", help="draft a manifest entry from intent + a source link")
     report.add_argument("team")
     report.add_argument("--link", required=True)
@@ -106,6 +204,24 @@ def main(argv: list[str] | None = None) -> int:
     land_cmd.add_argument("--private-name", default="", help="private dataset/table name override")
 
     args = parser.parse_args(argv)
+
+    if args.command == "observe":
+        as_of = (
+            datetime.fromisoformat(args.as_of).replace(tzinfo=timezone.utc)
+            if args.as_of
+            else datetime.now(timezone.utc)
+        )
+        return run_observe_cli(
+            teams=args.teams,
+            registry_dir=args.registry,
+            fixtures=args.fixtures,
+            as_of=as_of,
+            method=args.method,
+            csv_path=args.csv,
+            live_oso=args.live_oso,
+            oso_org=args.oso_org,
+            dry_run=args.dry_run,
+        )
 
     if args.command == "report":
         from fpm.report.cli_report import run_report_cli

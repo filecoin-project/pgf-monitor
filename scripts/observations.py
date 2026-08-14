@@ -26,12 +26,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import csv
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
+
+from fpm import observations as fpm_observations
 
 CSV_PATH = Path("data/observations.csv")
 COLUMNS = [
@@ -497,27 +498,19 @@ def live_rows(store_dir: str) -> list[dict]:
 
 
 def load_csv() -> list[dict]:
-    if not CSV_PATH.exists():
-        return []
-    with CSV_PATH.open() as f:
-        return list(csv.DictReader(f))
+    return fpm_observations.load_rows(CSV_PATH)
 
 
 def save_csv(rows: list[dict]) -> None:
-    seen = set()
-    unique = []
-    for r in rows:
-        key = (r["observed_at"], r["team"], r["function_id"], r["metric"], r["method"])
-        if key not in seen:
-            seen.add(key)
-            unique.append(r)
-    unique.sort(key=lambda r: (r["team"], r["function_id"], str(r["observed_at"])))
-    CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with CSV_PATH.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=COLUMNS)
-        w.writeheader()
-        w.writerows(unique)
-    print(f"{CSV_PATH}: {len(unique)} rows")
+    """Delegates to fpm.observations so this script and `fpm observe` write one identical table.
+
+    That module normalizes `observed_at` to a UTC date before deduping — without it the same
+    metric-day lands twice as `2026-07-19` and `2026-07-19T12:00:00+00:00`, which is what the
+    shipped CSV used to carry.
+    """
+    merged = fpm_observations.merge([], rows)
+    fpm_observations.save_rows(merged, CSV_PATH)
+    print(f"{CSV_PATH}: {len(merged)} rows")
 
 
 def upload(org_id: str) -> None:

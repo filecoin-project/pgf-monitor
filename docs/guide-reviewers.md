@@ -75,11 +75,29 @@ ORDER BY team, function_id;
 ## 4b. Keep the time series accruing
 
 Verdicts are snapshots; the dashboard's per-function history comes from the append-only
-observations table (`filecoin.filpgf_sla_observations`). After landing, append the
-run's readings and re-upload:
+observations table (`filecoin.filpgf_sla_observations`).
+
+**This is automatic now.** `.github/workflows/observe.yml` runs nightly at 06:17 UTC, measures
+every adopted metric, and commits the readings to `data/observations.csv`. It runs
+`fpm observe` — the deterministic half of the pipeline, fetch and evaluate only. No model, no
+adjudication: a verdict stays a human act, and nothing unattended ever writes one. A red run in
+the Actions tab means the readings did not land that night; re-run it by hand from the same tab
+(`Run workflow`), optionally with an `as_of` date to fill a specific gap.
+
+To take a reading yourself — after a review, or to check a source before merging:
 
 ```bash
-uv run python scripts/observations.py append --store .fpm_store
+uv run fpm observe                                   # every adopted manifest, today
+uv run fpm observe chainsafe --dry-run               # one team, write nothing
+uv run fpm observe --live-oso --oso-org <org-uuid>   # fetch for real (needs OSO_API_KEY)
+```
+
+`fpm observe` is idempotent per day: re-running it replaces that day's rows rather than
+appending duplicates, so a re-run after fixing a source leaves the good reading in place.
+
+After landing verdicts, re-upload the table so the dashboard sees the new rows:
+
+```bash
 uv run python scripts/observations.py upload --oso-org <org-uuid>
 ```
 
