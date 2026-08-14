@@ -7,6 +7,8 @@ not mitigable here. Safety rests on committee PR review plus an independent host
 
 from __future__ import annotations
 
+import os
+
 from urllib.parse import urlparse
 
 from fpm.domain import MeasurementWindow
@@ -48,10 +50,47 @@ def resource_name(team: str, function_id: str) -> str:
     return f"fpm_{_slug(team)}_{_slug(function_id)}_t"
 
 
+class MissingSecretError(RuntimeError):
+    """Raised when a manifest declares an auth secret the environment does not provide."""
+
+
 def _auth_block(fn: FunctionSpec) -> dict | None:
-    if not fn.source.auth_secret_ref:
+    """Resolve `source.auth.secret_ref` to the real credential from the environment.
+
+    OSO expects the VALUE here, not a reference name: on attach it lifts the value into its own
+    secret store and keeps only a path-derived marker (`{"name": "client.auth.token", "$type":
+    "secret"}`), so `get_config` can never read it back. Passing the ref name instead — which this
+    did until it was first exercised live — makes OSO faithfully store the literal string and send
+    `Authorization: Bearer GITHUB_TOKEN`, which every API answers with 401.
+
+    The manifest therefore carries only the NAME of an environment variable, so no secret enters
+    the repo, but whoever provisions (a laptop, the nightly runner) must hold the credential.
+    """
+    ref = fn.source.auth_secret_ref
+    if not ref:
         return None
-    return {"type": "bearer", "token": {"$type": "secret", "value": fn.source.auth_secret_ref}}
+    value = os.environ.get(ref)
+    if not value:
+        # A VALUE-LESS placeholder, deliberately: OSO keeps the credential once attached, so a
+        # caller that only needs to compare config shape (the nightly runner, which never holds
+        # the token) must be able to build one. Secrets are stripped from shape fingerprints, so
+        # this is identical to the real thing for comparison — and `missing_secret` below stops it
+        # ever reaching an actual attach, where it would silently degrade to an anonymous fetch.
+        return {"type": "bearer", "token": {"$type": "secret"}}
+    return {"type": "bearer", "token": {"$type": "secret", "value": value}}
+
+
+def missing_secret(fn: FunctionSpec) -> str | None:
+    """The env-var name a function needs but does not have, or None. Checked before create/attach.
+
+    Provisioning is the ONLY moment the plaintext is required: OSO lifts the value into its own
+    store on attach and every later run uses what it kept. That is what lets the scheduled job
+    run without the credential at all — see docs/guide-reviewers.md.
+    """
+    ref = fn.source.auth_secret_ref
+    if ref and not os.environ.get(ref):
+        return ref
+    return None
 
 
 def build_ingestion_config(fn: FunctionSpec, window: MeasurementWindow, team: str) -> dict:

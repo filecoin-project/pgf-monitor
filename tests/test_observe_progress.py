@@ -54,3 +54,14 @@ def test_a_real_run_writes_the_csv(tmp_path):
     result = _run(tmp_path)
     assert result.returncode == 0
     assert (tmp_path / "observations.csv").exists()
+
+
+def test_blanks_are_grouped_by_host(tmp_path):
+    """The shape of a failure names its cause: many hosts = many broken sources; ONE host =
+    one problem (rate limit, outage, expired credential). The paginator bug read as 14
+    unrelated broken metrics for a month because nothing grouped them."""
+    out = _run(tmp_path, "--dry-run").stdout
+    assert "no value from 1 metrics:" in out
+    # chainsafe's fixture source has no base_url, so it groups under "none" — the grouping
+    # line must still be present and carry the count.
+    assert any(line.strip().endswith(": 1") for line in out.splitlines())

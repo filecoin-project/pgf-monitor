@@ -29,6 +29,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
+      auth: { secret_ref: GH_API_TOKEN }
       endpoint: "https://api.github.com/repos/libp2p/go-libp2p/releases?per_page=30"
       query: "/repos/libp2p/go-libp2p/releases?per_page=30"
     transform:

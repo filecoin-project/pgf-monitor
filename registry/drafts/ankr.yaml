@@ -1,0 +1,137 @@
+# Ankr operates public Filecoin RPC endpoints (mainnet and calibnet). Its node-operations
+# stack is closed-source, so this manifest measures the SERVICE OUTPUT — public endpoint
+# freshness — rather than the code, which is the honest attestation available for a
+# closed-source operator.
+#
+# 2026-08 review update (grant Appendix 1). Ankr accepted Section 3 and wrote their own
+# metric set. Reconciled here for the metrics we can measure today:
+#   - mainnet head-lag tightened 5 -> 3 epochs (their commitment; grant-doc name
+#     filecoin_chain_head_lag). Metric id kept as rpc_head_lag_epochs for registry-wide
+#     consistency — rename if we want to mirror the grant doc verbatim.
+#   - FEVM eth head-lag ADDED at <= 4 epochs (grant-doc name filecoin_fevm_block_lag;
+#     eth_blockNumber runs ~1 epoch below the native head by construction, so 4 = 3 + 1).
+# Three metrics Ankr also listed are NOT added — they need pipeline/allowlist support the
+# current adapter doesn't have, and stay out of the tracked set until it does:
+#   - filecoin_lotus_version_lag_days: needs a two-source compare (endpoint Filecoin.Version
+#     vs api.github.com/.../lotus/releases); the http-json adapter is single-source today.
+#   - filecoin_endpoint_reachable: an unreachable endpoint is recorded as "unavailable"
+#     rather than a miss (Section 2), so this can't fire as an SLA as the pipeline stands.
+#   - filecoin_status_page_published: status page is www.ankr.com/rpc/health (not
+#     allowlisted) and the "Filecoin listed" half is rendered client-side (unverifiable).
+# Calibnet head-lag is retained (endpoint live and at zero lag on 7 Aug 2026); Ankr's draft
+# omitted it and has been asked in-doc whether dropping it was intentional.
+team: ankr
+maintainers: ["@TODO-github-handle"]   # team fills in
+x_draft:
+  prepared_by: "OSO, 2026-08-07; reconciled against grant Appendix 1 (Ankr accepted Section 3 as written)"
+  allowlist_additions: []   # rpc.ankr.com already allowlisted — no NEW hosts for the tracked metrics
+  # Metrics Ankr committed to that we cannot measure yet — kept out of functions[] until the
+  # named unlock lands, rather than shipping a metric that can't fire honestly.
+  unmeasured:
+    - function: "filecoin_lotus_version_lag_days <= 45 — endpoint-reported Lotus version vs latest upstream stable"
+      reason: "Needs a two-source compare (Filecoin.Version on the endpoint vs api.github.com/repos/filecoin-project/lotus/releases); the http-json adapter reads one source per function today. Also Filecoin.Version returned Agent: lotus, but Ankr runs Forest too — a load-balanced Forest version string would not match Lotus releases. UNLOCK: two-source adapter support, plus a decision to scope to Lotus-backed nodes or compare against whichever client answers."
+    - function: "filecoin_endpoint_reachable — HTTP 200 + well-formed JSON-RPC from the open internet"
+      reason: "As the pipeline stands, an unreachable endpoint is recorded as unavailable rather than a miss (Section 2), so this can never fire as an SLA (a future 401 would read as a fetch failure, not a breach). UNLOCK: the fetch layer distinguishes auth-required/4xx from transport failure so a genuine miss can register."
+    - function: "filecoin_status_page_published — status page reachable with Filecoin listed"
+      reason: "status.ankr.com resolves to www.ankr.com/rpc/health (www.ankr.com is NOT allowlisted; only rpc.ankr.com is) and the 'Filecoin listed' half is rendered client-side, so the string never appears in served HTML. UNLOCK: allowlist www.ankr.com and expose a JSON health endpoint listing networks; absent that, narrow the metric to reachability alone."
+functions:
+  # Kernel function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)".
+  # Ankr's funded scope is the public RPC read surface of that function; a stalled or forked
+  # backing node shows up directly as a stale reported chain head.
+  # JSON shape: {"jsonrpc":..,"id":..,"result":{"Height":N,"Blocks":[...],"Cids":[...]}}.
+  #   result is a nested OBJECT, so dlt flattens result.Height to column height on the single
+  #   parent row. Blocks/Cids are nested ARRAYS -> child tables the transform cannot reach
+  #   (so max_table_nesting: 0 must NOT be set) — Height is all we need.
+  # Expected epoch = floor((now - 1598306400) / 30): mainnet genesis 2020-08-24T22:00:00Z.
+  # THRESHOLD: 3 epochs (90s) — confirmed by Ankr, who tightened it from the 5 we proposed.
+  - function_id: chain-sync-rpc-mainnet-head-lag
+    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Ledger & Consensus'
+    oso_project_slug: ankr-network
+    sla:
+      statement: "Public mainnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 3 epochs (90s), measured daily — Ankr tightened this from the 5 originally proposed"
+      metric: rpc_head_lag_epochs
+      threshold: { op: "<=", value: 3 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://rpc.ankr.com"
+      endpoint: "https://rpc.ankr.com/filecoin"
+      query: "/filecoin"
+      method: POST
+      params: { jsonrpc: "2.0", method: "Filecoin.ChainHead", params: [], id: 1 }
+      # result is the JSON-RPC payload object; without an explicit selector dlt
+      # would auto-descend into the longest nested list (Cids) instead.
+      data_selector: result
+    transform:
+      # expected epoch from wall clock minus the head Height the endpoint reports; single
+      # parent row, MAX() only for aggregate form. 1598306400 = mainnet genesis unix ts.
+      sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now) - 1598306400) / 30.0) - MAX(height)) FROM raw"
+
+  # Same kernel function, FEVM/Eth read surface: dApps hit the eth_* API, served by a distinct
+  # code path (Lotus ETH RPC / chain indexer) that can break while the native API stays up.
+  # JSON shape: single flat object {id, jsonrpc, result} -> one row; result is a top-level hex
+  #   STRING, no nested arrays and no data_selector needed. The extract vocab cannot cast hex,
+  #   so the transform decodes it with from_base(substr(result, 3), 16).
+  # THRESHOLD: 4 epochs — confirmed by Ankr. eth_blockNumber reports ~1 epoch below the native
+  #   head by construction, so 4 = native 3 + 1.
+  - function_id: chain-sync-rpc-fevm-eth-head-lag
+    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Ledger & Consensus'
+    oso_project_slug: ankr-network
+    sla:
+      statement: "FEVM/Eth RPC surface keeps pace: wall-clock expected epoch minus decoded eth_blockNumber <= 4 epochs, measured daily — the eth_* API is what FEVM dApps depend on, runs ~1 epoch below the native head by construction (so 4 = native 3 + 1), and can stall independently of the native API"
+      metric: fevm_eth_head_lag_epochs
+      threshold: { op: "<=", value: 4 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://rpc.ankr.com"
+      endpoint: "https://rpc.ankr.com/filecoin"
+      query: "/filecoin"
+      method: POST
+      params: { jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1 }
+    transform:
+      # decode the hex block number ("0x...") and compare to wall-clock expected epoch;
+      # from_base(substr(result, 3), 16) strips "0x" and parses base-16
+      sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now) - 1598306400) / 30.0) - from_base(substr(MAX(result), 3), 16)) FROM raw"
+
+  # Same kernel function, calibnet side: Ankr also operates a public calibration-testnet RPC,
+  # part of the same chain-sync/RPC read surface (used for upgrade rehearsal by developers).
+  # Expected epoch = floor((now - 1667326380) / 30): calibnet genesis 2022-11-01T18:13:00Z.
+  # THRESHOLD (placeholder, confirm with team): 5 epochs, same rationale as mainnet. Retained
+  #   from the prior manifest; Ankr's Appendix draft omitted calibnet and has been asked why.
+  - function_id: chain-sync-rpc-calibnet-head-lag
+    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Ledger & Consensus'
+    oso_project_slug: ankr-network
+    sla:
+      statement: "Public calibnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily"
+      metric: rpc_calibnet_head_lag_epochs
+      threshold: { op: "<=", value: 5 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://rpc.ankr.com"
+      endpoint: "https://rpc.ankr.com/filecoin_testnet"
+      query: "/filecoin_testnet"
+      method: POST
+      params: { jsonrpc: "2.0", method: "Filecoin.ChainHead", params: [], id: 1 }
+      # result is the JSON-RPC payload object; without an explicit selector dlt
+      # would auto-descend into the longest nested list (Cids) instead.
+      data_selector: result
+    transform:
+      # 1667326380 = calibnet genesis unix ts (2022-11-01T18:13:00Z)
+      sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now) - 1667326380) / 30.0) - MAX(height)) FROM raw"

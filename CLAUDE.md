@@ -62,8 +62,24 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   `endpoint.paginator`; never drop it. A `403 rate limit exceeded` on a metric that passes in
   isolation is this, and the real dlt error is in the run log's `extra.error`, NOT `event`
   (which only ever says "Data ingestion failed").
-- 15 metrics hit api.github.com unauthenticated and OSO's egress IP is shared across tenants,
-  so that 60/hour budget is not ours alone. `source.auth.secret_ref` would raise it to 5000.
+- `source.auth.secret_ref` names an ENV VAR, not an OSO secret: OSO wants the real VALUE in the
+  config, lifts it into its own store, and keeps a path-derived marker
+  (`{"name": "client.auth.token"}`). Passing a reference name makes it authenticate as that
+  literal string -> 401. So the provisioning host (laptop, nightly runner) must hold the
+  credential; the repo still holds only the name. Actions secret is `GH_API_TOKEN` because
+  Actions reserves the `GITHUB_` prefix.
+- Rotating a credential does NOT change the config shape (fingerprints strip secrets, and
+  OSO's stored config has no value to compare), so datasets keep the OLD token and 401
+  silently. After any rotation run `fpm observe --reprovision`.
+- A REST ingestion config CANNOT reference an OSO environment secret by name — tested and
+  rejected in all four syntaxes (`{$type:secret,name}`, `secretName`, `{{ secrets.X }}`,
+  `{$secret}`). Only a **Python UDM** can (`context.secret("NAME")` with
+  `secrets=[...] + environment_name=...`), verified live: core_limit 5000. That path is the
+  documented ESCAPE HATCH, deliberately not adopted — arbitrary Python discards the structural
+  exfiltration guard (single SELECT, single scalar, one bound `raw` table) that makes accepting
+  community-PR sources safe, and UDM code deploys over the API, outside CODEOWNERS and the
+  static gate. If it is ever adopted, the UDM source must live in this repo and deploy from CI,
+  or `registry/<team>.yaml` stops being the complete answer to how a metric is computed.
 - `fpm review` team name = `registry/<name>.yaml` filename stem.
 - Trino timestamp literals: `'YYYY-MM-DD HH:MM:SS'` (space, no T, no offset).
 

@@ -53,6 +53,23 @@ def manifest_paths(registry_dir: str, teams: list[str]) -> list[Path]:
     return sorted(p for p in Path(registry_dir).glob("*.yaml") if not p.name.startswith("_"))
 
 
+def _host_map(paths: list[Path]) -> dict[tuple[str, str], str]:
+    """(team, function_id) -> source host, for grouping failures by where they came from."""
+    from urllib.parse import urlparse
+
+    from fpm.manifest import load_manifest
+
+    out: dict[tuple[str, str], str] = {}
+    for path in paths:
+        try:
+            manifest = load_manifest(path)
+        except Exception:
+            continue  # a manifest that would not load already failed loudly in the run itself
+        for fn in manifest.functions:
+            out[(manifest.team, fn.function_id)] = urlparse(fn.source.base_url).hostname or "none"
+    return out
+
+
 def run_observe_cli(
     teams: list[str],
     registry_dir: str,
@@ -63,6 +80,7 @@ def run_observe_cli(
     live_oso: bool,
     oso_org: str,
     dry_run: bool,
+    reprovision: bool = False,
 ) -> int:
     """Measure every function in every named manifest and append the readings to the CSV.
 
@@ -95,6 +113,29 @@ def run_observe_cli(
         allowlist = load_allowlist(Path(registry_dir) / "_allowlist.txt")
 
     paths = manifest_paths(registry_dir, teams)
+    if reprovision and oso_client is not None:
+        # Rotating a credential does NOT change the config shape: `config_shape_fingerprint`
+        # strips secret values, and OSO's stored config holds only a marker, so there is nothing
+        # to compare. Without this, `_ensure_dataset` keeps the dataset carrying the OLD token and
+        # every authenticated metric 401s. This is the rotation escape hatch.
+        from fpm.manifest import load_manifest
+        from fpm.provision import dataset_name
+
+        dropped = 0
+        for path in paths:
+            try:
+                manifest = load_manifest(path)
+            except Exception:
+                continue
+            for fn in manifest.functions:
+                existing = oso_client.find_dataset(
+                    oso_org, dataset_name(manifest.team, fn.function_id)
+                )
+                if existing:
+                    oso_client.delete_dataset(existing)
+                    dropped += 1
+        _say(f"reprovision: dropped {dropped} datasets; they rebuild with the current credentials")
+
     started = time.monotonic()
     _say(f"observing {len(paths)} manifests at {as_of.date().isoformat()}")
 
@@ -146,9 +187,24 @@ def run_observe_cli(
     # on 2026-07-15 a third of the registry was already in this state without anyone noticing.
     blank = [o for o in observations if o.sla_outcome == "indeterminate"]
     if blank:
-        _say(f"\nno value from {len(blank)} metrics:")
+        # Grouped by host first, because the shape of the failure names its cause. Blanks spread
+        # across many hosts are that many broken sources; blanks concentrated on ONE host are one
+        # problem — a rate limit, an outage, or an expired credential for that host. The GitHub
+        # paginator bug read as 14 unrelated broken metrics for a month because nothing grouped it.
+        hosts = _host_map(paths)
+        by_host: dict[str, list] = {}
         for o in blank:
-            _say(f"  {o.team}/{o.function_id}\t{o.metric}\t{o.note[:70]}")
+            by_host.setdefault(hosts.get((o.team, o.function_id), "unknown"), []).append(o)
+        _say(f"\nno value from {len(blank)} metrics:")
+        for host, group in sorted(by_host.items(), key=lambda kv: -len(kv[1])):
+            flag = (
+                "  <-- one host: suspect a credential, rate limit or outage"
+                if len(group) > 2
+                else ""
+            )
+            _say(f"  {host}: {len(group)}{flag}")
+            for o in group:
+                _say(f"    {o.team}/{o.function_id}\t{o.metric}\t{o.note[:70]}")
 
     if dry_run:
         _say("\ndry run: nothing written")
@@ -212,6 +268,12 @@ def main(argv: list[str] | None = None) -> int:
     obs.add_argument("--live-oso", action="store_true", help="fetch for real via the OSO adapter")
     obs.add_argument("--oso-org", default="", help="OSO org id for --live-oso")
     obs.add_argument("--dry-run", action="store_true", help="measure and report, write nothing")
+    obs.add_argument(
+        "--reprovision",
+        action="store_true",
+        help="drop and rebuild every OSO dataset first — required after rotating a source "
+        "credential, since a new secret does not change the config shape",
+    )
 
     report = sub.add_parser("report", help="draft a manifest entry from intent + a source link")
     report.add_argument("team")
@@ -256,6 +318,7 @@ def main(argv: list[str] | None = None) -> int:
             live_oso=args.live_oso,
             oso_org=args.oso_org,
             dry_run=args.dry_run,
+            reprovision=args.reprovision,
         )
 
     if args.command == "report":
