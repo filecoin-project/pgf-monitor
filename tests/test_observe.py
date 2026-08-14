@@ -90,3 +90,37 @@ def test_review_and_observe_agree_on_the_number(tmp_path):
     for o in _observe():
         assert o.observed_value == reviewed[o.function_id].observed
         assert o.sla_outcome == reviewed[o.function_id].outcome
+
+
+def test_a_failed_ingestion_run_says_so():
+    """ "no value in source response" blames the source for a fetch that never completed."""
+    from fpm.domain import Claim, MeasurementWindow, Reading, SlaResult
+    from fpm.observe import _note
+
+    window = MeasurementWindow(start=AS_OF, end=AS_OF)
+    reading = Reading(
+        team="t",
+        function_id="f",
+        metric="m",
+        measurement_window=window,
+        claim=Claim(
+            value=None,
+            origin="independent",
+            source_ref="https://api.github.com",
+            fetched_at=AS_OF,
+            evidence=None,
+            fetched_by="test",
+        ),
+        source_metadata={"run_status": "FAILED"},
+        adapter="oso",
+        adapter_version="0.1.0",
+    )
+    sla = SlaResult(
+        outcome="indeterminate",
+        op="<=",
+        threshold=1.0,
+        observed=None,
+        measurement_window=window,
+        reason="no value in source response for the measurement window",
+    )
+    assert _note(reading, sla).startswith("ingestion run FAILED")

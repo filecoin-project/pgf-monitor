@@ -89,3 +89,19 @@ def test_post_params_become_json_body():
     assert ep["method"] == "POST"
     assert ep["json"] == {"jsonrpc": "2.0", "method": "Filecoin.ChainHead", "id": 1}
     assert "params" not in ep
+
+
+def test_config_declares_the_paginator():
+    """dlt auto-detects a paginator when none is given: GitHub's Link headers then make a
+    `commits?per_page=30` fetch walk the entire history, exhausting the unauthenticated
+    60 req/hour budget on one metric and failing every later GitHub metric with a 403."""
+    fn = _fn()
+    config = build_ingestion_config(fn, window_for(fn.sla.cadence, AS_OF), "chainsafe")
+    assert config["resources"][0]["endpoint"]["paginator"] == "single_page"
+
+
+def test_config_honors_a_declared_paginator():
+    fn = _fn()
+    fn.source.paginator = "header_link"
+    config = build_ingestion_config(fn, window_for(fn.sla.cadence, AS_OF), "chainsafe")
+    assert config["resources"][0]["endpoint"]["paginator"] == "header_link"
