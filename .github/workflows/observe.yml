@@ -49,10 +49,12 @@ jobs:
           set -euo pipefail
           # Fail loudly rather than silently recording a night of indeterminate readings.
           [ -n "$OSO_API_KEY" ] || { echo "::error::OSO_API_KEY secret is not set"; exit 1; }
-          # Named GH_API_TOKEN, not GITHUB_TOKEN: Actions reserves the GITHUB_ prefix for its own
-          # auto-provided token and refuses to create a secret with that name. The manifests carry
-          # only this NAME; provisioning resolves it to the real value and hands it to OSO.
-          [ -n "$GH_API_TOKEN" ] || { echo "::error::GH_API_TOKEN secret is not set — the 15 api.github.com metrics would fall back to the anonymous 60 req/hour ceiling"; exit 1; }
+          # GH_API_TOKEN is OPTIONAL here, by design. OSO keeps a source credential once its
+          # dataset is provisioned, so triggering runs needs no token — only CREATING or
+          # re-attaching a dataset does, and that is done by a human from a host that holds it.
+          # If the secret is absent and a dataset needs (re)provisioning, the run fails loudly
+          # naming the metric, rather than quietly fetching anonymously.
+          [ -n "$GH_API_TOKEN" ] || echo "::notice::GH_API_TOKEN not set — fine for existing datasets; provisioning a NEW authenticated source will fail with a named error"
           # OSO_ORG_ID is a repository VARIABLE, not a secret — it is not sensitive, and reading
           # it from `secrets` silently yields an empty string.
           [ -n "$OSO_ORG_ID" ] || { echo "::error::OSO_ORG_ID variable is not set"; exit 1; }

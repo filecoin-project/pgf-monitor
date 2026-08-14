@@ -16,11 +16,13 @@ from fpm.hashing import oso_evidence
 from fpm.manifest import FunctionSpec
 from fpm.oso.client import OsoIngestionClient, RunInfo
 from fpm.provision import (
+    MissingSecretError,
     assert_egress_allowed,
     build_ingestion_config,
     config_fingerprint,
     config_shape_fingerprint,
     dataset_name,
+    missing_secret,
 )
 from fpm.reduce import derive_observed
 from fpm.transform.validate import bind_transform_sql, validate_transform_sql
@@ -61,6 +63,17 @@ class OsoAdapter:
                 self._client.delete_dataset(dataset_id)
                 dataset_id = None
         if dataset_id is None:
+            # The one moment the plaintext credential is required. Refuse rather than attach a
+            # value-less auth block, which OSO would accept and then fetch anonymously — turning a
+            # missing secret into a silently rate-limited metric instead of a visible error.
+            ref = missing_secret(fn)
+            if ref is not None:
+                raise MissingSecretError(
+                    f"{fn.function_id} needs ${ref} to provision its source. Runs against an "
+                    f"EXISTING dataset do not need it (OSO keeps the credential), so this means "
+                    f"the dataset must be created or its config changed. Provision from a host "
+                    f"that has ${ref}, or run `fpm observe --reprovision` there."
+                )
             assert_egress_allowed(fn, self._allowlist)
             dataset_id = self._client.create_dataset(self._org_id, name, name)
             self._client.attach_rest_config(dataset_id, desired)

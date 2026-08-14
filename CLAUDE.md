@@ -71,6 +71,15 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 - Rotating a credential does NOT change the config shape (fingerprints strip secrets, and
   OSO's stored config has no value to compare), so datasets keep the OLD token and 401
   silently. After any rotation run `fpm observe --reprovision`.
+- A REST ingestion config CANNOT reference an OSO environment secret by name — tested and
+  rejected in all four syntaxes (`{$type:secret,name}`, `secretName`, `{{ secrets.X }}`,
+  `{$secret}`). Only a **Python UDM** can (`context.secret("NAME")` with
+  `secrets=[...] + environment_name=...`), verified live: core_limit 5000. That path is the
+  documented ESCAPE HATCH, deliberately not adopted — arbitrary Python discards the structural
+  exfiltration guard (single SELECT, single scalar, one bound `raw` table) that makes accepting
+  community-PR sources safe, and UDM code deploys over the API, outside CODEOWNERS and the
+  static gate. If it is ever adopted, the UDM source must live in this repo and deploy from CI,
+  or `registry/<team>.yaml` stops being the complete answer to how a metric is computed.
 - `fpm review` team name = `registry/<name>.yaml` filename stem.
 - Trino timestamp literals: `'YYYY-MM-DD HH:MM:SS'` (space, no T, no offset).
 

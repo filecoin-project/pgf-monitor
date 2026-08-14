@@ -71,12 +71,26 @@ def _auth_block(fn: FunctionSpec) -> dict | None:
         return None
     value = os.environ.get(ref)
     if not value:
-        # Loud, not silent: provisioning without the credential degrades to an anonymous fetch,
-        # which is how 15 metrics quietly go blank.
-        raise MissingSecretError(
-            f"{fn.function_id} declares source.auth.secret_ref={ref!r} but ${ref} is not set"
-        )
+        # A VALUE-LESS placeholder, deliberately: OSO keeps the credential once attached, so a
+        # caller that only needs to compare config shape (the nightly runner, which never holds
+        # the token) must be able to build one. Secrets are stripped from shape fingerprints, so
+        # this is identical to the real thing for comparison — and `missing_secret` below stops it
+        # ever reaching an actual attach, where it would silently degrade to an anonymous fetch.
+        return {"type": "bearer", "token": {"$type": "secret"}}
     return {"type": "bearer", "token": {"$type": "secret", "value": value}}
+
+
+def missing_secret(fn: FunctionSpec) -> str | None:
+    """The env-var name a function needs but does not have, or None. Checked before create/attach.
+
+    Provisioning is the ONLY moment the plaintext is required: OSO lifts the value into its own
+    store on attach and every later run uses what it kept. That is what lets the scheduled job
+    run without the credential at all — see docs/guide-reviewers.md.
+    """
+    ref = fn.source.auth_secret_ref
+    if ref and not os.environ.get(ref):
+        return ref
+    return None
 
 
 def build_ingestion_config(fn: FunctionSpec, window: MeasurementWindow, team: str) -> dict:

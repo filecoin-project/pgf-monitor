@@ -1,3 +1,5 @@
+import pytest
+
 from datetime import datetime, timezone
 
 from fpm.adapters.oso import OsoAdapter
@@ -91,3 +93,19 @@ def test_fetch_no_retry_without_poll_sleep():
     adapter = OsoAdapter(client, "org", ALLOW, poll_sleep=0.0)
     reading = adapter.fetch(fn, "chainsafe", window_for(fn.sla.cadence, AS_OF))
     assert reading.claim.value is None
+
+
+def test_provisioning_a_new_dataset_without_the_credential_is_refused(monkeypatch):
+    """OSO keeps the credential after attach, so runs against an EXISTING dataset need no token.
+    Creating one does — and attaching a value-less auth block would be accepted by OSO and then
+    fetched anonymously, turning a missing secret into a silently rate-limited metric."""
+    from fpm.manifest import load_manifest
+    from fpm.provision import MissingSecretError
+
+    monkeypatch.delenv("GH_API_TOKEN", raising=False)
+    fn = load_manifest("tests/fixtures/chainsafe_oso.yaml").functions[0]
+    fn.source.auth_secret_ref = "GH_API_TOKEN"
+    client = FakeOsoClient()
+    adapter = OsoAdapter(client, org_id="org", allowlist={"api.llama.fi"})
+    with pytest.raises(MissingSecretError, match="GH_API_TOKEN"):
+        adapter._ensure_dataset(fn, "chainsafe", window_for(fn.sla.cadence, AS_OF))

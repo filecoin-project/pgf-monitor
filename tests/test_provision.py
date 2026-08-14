@@ -5,7 +5,8 @@ import pytest
 from fpm.domain import window_for
 from fpm.manifest import load_manifest
 from fpm.provision import (
-    MissingSecretError,
+    config_shape_fingerprint,
+    missing_secret,
     EgressError,
     assert_egress_allowed,
     build_ingestion_config,
@@ -105,14 +106,28 @@ def test_auth_resolves_the_secret_from_the_environment(monkeypatch):
     }
 
 
-def test_a_declared_secret_missing_from_the_environment_is_loud(monkeypatch):
-    """Silently provisioning without the credential degrades to an anonymous fetch, which is
-    exactly how 15 metrics quietly go blank."""
+def test_shape_is_identical_with_and_without_the_credential(monkeypatch):
+    """This is what lets the scheduled job run WITHOUT the token: OSO keeps the credential after
+    attach, so a runner that only compares config shape must reach the same fingerprint as the
+    host that provisioned. If these ever diverge, every authenticated dataset is recreated nightly
+    — and the runner cannot recreate one, so every such metric goes blank."""
+    fn = _fn()
+    fn.source.auth_secret_ref = "GH_API_TOKEN"
+    monkeypatch.setenv("GH_API_TOKEN", "s3cret-value")
+    with_secret = build_ingestion_config(fn, window_for(fn.sla.cadence, AS_OF), "chainsafe")
+    monkeypatch.delenv("GH_API_TOKEN")
+    without = build_ingestion_config(fn, window_for(fn.sla.cadence, AS_OF), "chainsafe")
+    assert config_shape_fingerprint(with_secret) == config_shape_fingerprint(without)
+    assert "value" not in without["client"]["auth"]["token"]  # never attach a value-less secret
+
+
+def test_missing_secret_is_named(monkeypatch):
     monkeypatch.delenv("GH_API_TOKEN", raising=False)
     fn = _fn()
     fn.source.auth_secret_ref = "GH_API_TOKEN"
-    with pytest.raises(MissingSecretError, match="GH_API_TOKEN"):
-        build_ingestion_config(fn, window_for(fn.sla.cadence, AS_OF), "chainsafe")
+    assert missing_secret(fn) == "GH_API_TOKEN"
+    monkeypatch.setenv("GH_API_TOKEN", "x")
+    assert missing_secret(fn) is None
 
 
 def test_no_auth_block_when_none_declared():
