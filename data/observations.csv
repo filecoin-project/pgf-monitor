@@ -1,6 +1,7 @@
 observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,sla_outcome,method,note
 2026-07-15,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,<=,5.0,pass,live-review,scheduled review reading
 2026-07-15,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,<=,5.0,pass,live-review,scheduled review reading
+2026-07-15,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,2293.76634,<=,3600.0,pass,live-review,scheduled review reading
 2025-07-16,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,12505.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2025-07-17,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,12977.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2025-07-18,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,14718.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
@@ -366,12 +367,12 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-07-13,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,66652.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-14,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,66924.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-15,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,39326.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
-2026-07-15,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,2293.76634,<=,3600.0,pass,live-review,scheduled review reading
 2026-07-16,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,65367.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-17,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,66222.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-18,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,68021.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-19,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,67096.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-20,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,34038.0,>,0,pass,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
+2026-07-15,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,2278.945318,<=,3600.0,pass,live-review,scheduled review reading
 2025-07-16,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,132078.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2025-07-17,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,142820.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2025-07-18,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,149247.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
@@ -737,7 +738,6 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-07-13,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,36915.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-14,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,38481.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-15,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,26007.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
-2026-07-15,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,2278.945318,<=,3600.0,pass,live-review,scheduled review reading
 2026-07-16,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,36315.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-17,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,39866.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2026-07-18,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,34480.0,>,0,pass,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
@@ -749,6 +749,7 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-07-15,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,<=,5.0,pass,live-review,scheduled review reading
 2026-07-15,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,==,0.0,indeterminate,live-review,scheduled review reading
 2026-07-15,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,>=,250000000000000.0,pass,live-review,scheduled review reading
+2026-07-15,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,13330.032771,<=,21600.0,pass,live-review,scheduled review reading
 2026-07-07,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7979.781,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-08,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7883.856,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-09,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7887.171,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
@@ -758,13 +759,13 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-07-13,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7885.222,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-14,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,24690.595,<=,21600,fail,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-15,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7463.05,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
-2026-07-15,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,13330.032771,<=,21600.0,pass,live-review,scheduled review reading
 2026-07-16,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7885.305,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-17,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7883.223,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-18,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,8012.288,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-19,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7897.235,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-20,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7883.026,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-15,chainsafe,forest-ci-main-health,latest_ci_success_age_days,,<=,7.0,indeterminate,live-review,scheduled review reading
+2026-07-15,chainsafe,forest-release-cadence,avg_days_between_releases,21.268472,<=,45.0,pass,live-review,scheduled review reading
 2025-07-23,chainsafe,forest-release-cadence,days_between_releases,33.790127,<=,45,pass,backfill:api.github.com,gap since previous release of ChainSafe/forest
 2025-08-27,chainsafe,forest-release-cadence,days_between_releases,35.016713,<=,45,pass,backfill:api.github.com,gap since previous release of ChainSafe/forest
 2025-09-08,chainsafe,forest-release-cadence,days_between_releases,12.317616,<=,45,pass,backfill:api.github.com,gap since previous release of ChainSafe/forest
@@ -789,9 +790,9 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-06-22,chainsafe,forest-release-cadence,days_between_releases,17.459792,<=,45,pass,backfill:api.github.com,gap since previous release of ChainSafe/forest
 2026-07-08,chainsafe,forest-release-cadence,days_between_releases,15.791771,<=,45,pass,backfill:api.github.com,gap since previous release of ChainSafe/forest
 2026-07-14,chainsafe,forest-release-cadence,days_between_releases,5.937037,<=,45,pass,backfill:api.github.com,gap since previous release of ChainSafe/forest
-2026-07-15,chainsafe,forest-release-cadence,avg_days_between_releases,21.268472,<=,45.0,pass,live-review,scheduled review reading
 2026-07-16,chainsafe,forest-release-cadence,days_between_releases,1.985,<=,45,pass,backfill:api.github.com,gap since previous release of ChainSafe/forest
 2026-07-15,chainsafe,forest-snapshots,snapshot_freshness_hours,,<=,6.0,indeterminate,live-review,scheduled review reading
+2026-07-15,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,7122.115888,<=,21600.0,pass,live-review,scheduled review reading
 2026-07-03,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,9207.149,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
 2026-07-04,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,7975.735,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
 2026-07-05,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,64428.163,<=,21600,fail,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
@@ -804,7 +805,6 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-07-13,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,52510.726,<=,21600,fail,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
 2026-07-14,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,8123.27,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
 2026-07-15,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,10463.771,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
-2026-07-15,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,7122.115888,<=,21600.0,pass,live-review,scheduled review reading
 2026-07-16,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,8057.787,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
 2026-07-17,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,8073.032,<=,21600,pass,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
 2026-07-18,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,71826.421,<=,21600,fail,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
@@ -988,6 +988,7 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-07-15,filoz,builtin-actors,release_age_days,78.19354,<=,90.0,pass,live-review,scheduled review reading
 2026-07-19,filoz,builtin-actors,release_age_days,82.178476,<=,90,pass,backfill:api.github.com,weekly sample from filecoin-project/builtin-actors releases history
 2026-07-15,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,1032.0,>=,500.0,pass,live-review,scheduled review reading
+2026-07-15,filoz,curio-sealing-release-cadence,avg_days_between_releases,,<=,45.0,indeterminate,live-review,scheduled review reading
 2025-08-21,filoz,curio-sealing-release-cadence,days_between_releases,92.709479,<=,45,fail,backfill:api.github.com,gap since previous release of filecoin-project/curio
 2025-09-09,filoz,curio-sealing-release-cadence,days_between_releases,19.384005,<=,45,pass,backfill:api.github.com,gap since previous release of filecoin-project/curio
 2025-09-18,filoz,curio-sealing-release-cadence,days_between_releases,8.866586,<=,45,pass,backfill:api.github.com,gap since previous release of filecoin-project/curio
@@ -1004,15 +1005,15 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-05-28,filoz,curio-sealing-release-cadence,days_between_releases,7.905185,<=,45,pass,backfill:api.github.com,gap since previous release of filecoin-project/curio
 2026-06-08,filoz,curio-sealing-release-cadence,days_between_releases,11.126435,<=,45,pass,backfill:api.github.com,gap since previous release of filecoin-project/curio
 2026-06-11,filoz,curio-sealing-release-cadence,days_between_releases,3.090984,<=,45,pass,backfill:api.github.com,gap since previous release of filecoin-project/curio
-2026-07-15,filoz,curio-sealing-release-cadence,avg_days_between_releases,,<=,45.0,indeterminate,live-review,scheduled review reading
 2026-07-15,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,4.897715,>=,4.5,pass,live-review,scheduled review reading
+2026-07-15,filoz,evm-eam-actor-maintenance,avg_days_between_releases,,<=,60.0,indeterminate,live-review,scheduled review reading
 2025-09-03,filoz,evm-eam-actor-maintenance,days_between_releases,152.524907,<=,60,fail,backfill:api.github.com,gap since previous release of filecoin-project/builtin-actors
 2025-09-04,filoz,evm-eam-actor-maintenance,days_between_releases,0.898183,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/builtin-actors
 2025-09-05,filoz,evm-eam-actor-maintenance,days_between_releases,0.984097,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/builtin-actors
 2025-09-11,filoz,evm-eam-actor-maintenance,days_between_releases,6.0336,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/builtin-actors
 2026-04-16,filoz,evm-eam-actor-maintenance,days_between_releases,216.84434,<=,60,fail,backfill:api.github.com,gap since previous release of filecoin-project/builtin-actors
 2026-04-28,filoz,evm-eam-actor-maintenance,days_between_releases,11.828611,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/builtin-actors
-2026-07-15,filoz,evm-eam-actor-maintenance,avg_days_between_releases,,<=,60.0,indeterminate,live-review,scheduled review reading
+2026-07-15,filoz,lotus-consensus-client-release-cadence,avg_days_between_stable_releases,,<=,60.0,indeterminate,live-review,scheduled review reading
 2025-08-01,filoz,lotus-consensus-client-release-cadence,days_between_stable_releases,84.722477,<=,60,fail,backfill:api.github.com,gap since previous release of filecoin-project/lotus
 2025-09-11,filoz,lotus-consensus-client-release-cadence,days_between_stable_releases,41.553113,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/lotus
 2025-09-16,filoz,lotus-consensus-client-release-cadence,days_between_stable_releases,4.899051,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/lotus
@@ -1023,7 +1024,6 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-03-31,filoz,lotus-consensus-client-release-cadence,days_between_stable_releases,40.087917,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/lotus
 2026-05-13,filoz,lotus-consensus-client-release-cadence,days_between_stable_releases,43.394201,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/lotus
 2026-06-30,filoz,lotus-consensus-client-release-cadence,days_between_stable_releases,47.597674,<=,60,pass,backfill:api.github.com,gap since previous release of filecoin-project/lotus
-2026-07-15,filoz,lotus-consensus-client-release-cadence,avg_days_between_stable_releases,,<=,60.0,indeterminate,live-review,scheduled review reading
 2026-07-15,filoz,lotus-miner-winningpost-block-production,mainnet_avg_tipset_interval_seconds,30.369069,<=,45.0,pass,live-review,scheduled review reading
 2026-07-15,filoz,pdp-active-providers,pdp_total_providers,29.0,>=,3.0,pass,live-review,scheduled review reading
 2026-07-15,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,0.0,==,0.0,pass,live-review,scheduled review reading
@@ -1369,372 +1369,372 @@ observed_at,team,function_id,metric,observed_value,threshold_op,threshold_value,
 2026-07-15,pyth,pyth-fil-usd-feed-liveness,fil_usd_feed_age_seconds,2.0,<=,300.0,pass,live-review,scheduled review reading
 2026-07-15,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,0.0,<=,2.0,pass,live-review,scheduled review reading
 2026-07-15,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,0.0,<=,20.0,pass,live-review,scheduled review reading
-2025-07-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-07-31T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-08-31T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-09-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-10-31T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-11-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,1.0,<=,0,fail,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2025-12-31T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-01-31T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-02-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-03-31T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,1.0,<=,0,fail,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-04-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-05-31T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-21T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-22T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-23T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-24T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-25T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-26T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-27T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-28T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-29T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-06-30T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-01T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-02T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-03T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-04T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-05T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-06T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-07T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-08T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-09T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-10T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-11T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-12T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-13T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-14T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-15T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-16T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-17T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-18T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-19T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
-2026-07-20T12:00:00+00:00,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-07-31,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-08-31,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-09-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-10-31,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-11-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-17,randamu,drand-relay-statuspage,statuspage_impact_level,1.0,<=,0,fail,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2025-12-31,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-01-31,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-02-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-03-31,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-22,randamu,drand-relay-statuspage,statuspage_impact_level,1.0,<=,0,fail,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-04-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-05-31,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-23,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-24,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-25,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-26,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-27,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-28,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-29,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-06-30,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-05,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-06,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-07,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-08,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-09,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-10,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-11,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-12,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-13,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-14,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-15,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-16,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-17,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-18,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-19,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
+2026-07-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,<=,0,pass,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
 2026-07-15,randamu,randomness-beacon,beacon_round_lag,0.0,<=,1.0,pass,live-review,scheduled review reading
 2025-07-16,secured-finance,usdfc-collateral-tvl-floor,usdfc_tvl_usd,826747.0,>=,100000,pass,backfill:api.llama.fi,daily protocol TVL history
 2025-07-17,secured-finance,usdfc-collateral-tvl-floor,usdfc_tvl_usd,838092.0,>=,100000,pass,backfill:api.llama.fi,daily protocol TVL history
