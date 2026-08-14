@@ -31,7 +31,10 @@ concurrency:
 jobs:
   observe:
     runs-on: ubuntu-latest
-    timeout-minutes: 90             # ~47 metrics, each an OSO ingestion run polled to terminal
+    # Measured 2026-08-14: two full 47-metric runs at 23m23s and 24m18s, each metric being an
+    # OSO ingestion run polled to terminal. 60 leaves ~2.5x headroom and fails a wedged run an
+    # hour sooner than the original 90-minute guess did.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
