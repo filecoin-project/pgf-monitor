@@ -59,6 +59,12 @@ def build_ingestion_config(fn: FunctionSpec, window: MeasurementWindow, team: st
         "config_type": "advanced",
         "path": fn.source.query,
         "method": fn.source.method,
+        # MUST be sent. With no paginator dlt auto-detects one from the response, and GitHub
+        # sends Link headers — so a `commits?per_page=30` fetch walks the ENTIRE commit history
+        # page by page. One metric then burns the unauthenticated 60 req/hour budget and every
+        # later GitHub metric in the run dies on `403 rate limit exceeded`. The manifest has
+        # always defaulted this to single_page; provisioning simply never passed it through.
+        "paginator": fn.source.paginator,
     }
     if fn.source.params:
         # dlt rest_api semantics: `params` = URL query params; a POST payload

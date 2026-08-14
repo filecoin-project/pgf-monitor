@@ -99,6 +99,12 @@ def _note(reading: Reading, sla: SlaResult) -> str:
     for key in ("fetch_error", "transform_error"):
         if meta.get(key):
             return f"{key}: {meta[key]}"
+    # A failed ingestion run leaves no rows, which then reads as "no value in source response" —
+    # blaming the source for what was actually a fetch that never completed. Say which it was:
+    # that distinction is the difference between "this API changed" and "our request was rejected".
+    status = meta.get("run_status")
+    if sla.outcome == "indeterminate" and status and status != "SUCCESS":
+        return f"ingestion run {status}: {sla.reason}"
     return sla.reason if sla.outcome == "indeterminate" else ""
 
 
