@@ -44,10 +44,15 @@ jobs:
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
           OSO_ORG_ID: ${{ vars.OSO_ORG_ID }}
+          GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
         run: |
           set -euo pipefail
           # Fail loudly rather than silently recording a night of indeterminate readings.
           [ -n "$OSO_API_KEY" ] || { echo "::error::OSO_API_KEY secret is not set"; exit 1; }
+          # Named GH_API_TOKEN, not GITHUB_TOKEN: Actions reserves the GITHUB_ prefix for its own
+          # auto-provided token and refuses to create a secret with that name. The manifests carry
+          # only this NAME; provisioning resolves it to the real value and hands it to OSO.
+          [ -n "$GH_API_TOKEN" ] || { echo "::error::GH_API_TOKEN secret is not set — the 15 api.github.com metrics would fall back to the anonymous 60 req/hour ceiling"; exit 1; }
           # OSO_ORG_ID is a repository VARIABLE, not a secret — it is not sensitive, and reading
           # it from `secrets` silently yields an empty string.
           [ -n "$OSO_ORG_ID" ] || { echo "::error::OSO_ORG_ID variable is not set"; exit 1; }
@@ -55,6 +60,7 @@ jobs:
       - name: Observe every adopted metric
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
+          GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
         run: |
           set -euo pipefail
           uv run fpm observe \

@@ -5,6 +5,7 @@ import pytest
 from fpm.domain import window_for
 from fpm.manifest import load_manifest
 from fpm.provision import (
+    MissingSecretError,
     EgressError,
     assert_egress_allowed,
     build_ingestion_config,
@@ -89,6 +90,36 @@ def test_post_params_become_json_body():
     assert ep["method"] == "POST"
     assert ep["json"] == {"jsonrpc": "2.0", "method": "Filecoin.ChainHead", "id": 1}
     assert "params" not in ep
+
+
+def test_auth_resolves_the_secret_from_the_environment(monkeypatch):
+    """OSO wants the VALUE, not a ref name: it lifts the value into its own store and keeps a
+    path-derived marker. Sending the name makes it authenticate as the literal string."""
+    monkeypatch.setenv("GH_API_TOKEN", "s3cret-value")
+    fn = _fn()
+    fn.source.auth_secret_ref = "GH_API_TOKEN"
+    config = build_ingestion_config(fn, window_for(fn.sla.cadence, AS_OF), "chainsafe")
+    assert config["client"]["auth"] == {
+        "type": "bearer",
+        "token": {"$type": "secret", "value": "s3cret-value"},
+    }
+
+
+def test_a_declared_secret_missing_from_the_environment_is_loud(monkeypatch):
+    """Silently provisioning without the credential degrades to an anonymous fetch, which is
+    exactly how 15 metrics quietly go blank."""
+    monkeypatch.delenv("GH_API_TOKEN", raising=False)
+    fn = _fn()
+    fn.source.auth_secret_ref = "GH_API_TOKEN"
+    with pytest.raises(MissingSecretError, match="GH_API_TOKEN"):
+        build_ingestion_config(fn, window_for(fn.sla.cadence, AS_OF), "chainsafe")
+
+
+def test_no_auth_block_when_none_declared():
+    assert (
+        "auth"
+        not in build_ingestion_config(_fn(), window_for("daily", AS_OF), "chainsafe")["client"]
+    )
 
 
 def test_config_declares_the_paginator():

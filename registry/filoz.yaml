@@ -30,7 +30,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
-      auth: { secret_ref: github_api_token }
+      auth: { secret_ref: GH_API_TOKEN }
       endpoint: "https://api.github.com/repos/filecoin-project/curio/releases?per_page=30"
       query: "/repos/filecoin-project/curio/releases?per_page=30"
     transform:
@@ -123,7 +123,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
-      auth: { secret_ref: github_api_token }
+      auth: { secret_ref: GH_API_TOKEN }
       endpoint: "https://api.github.com/repos/filecoin-project/lotus/releases?per_page=30"
       query: "/repos/filecoin-project/lotus/releases?per_page=30"
     transform:
@@ -178,7 +178,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
-      auth: { secret_ref: github_api_token }
+      auth: { secret_ref: GH_API_TOKEN }
       endpoint: "https://api.github.com/repos/filecoin-project/builtin-actors/releases?per_page=30"
       query: "/repos/filecoin-project/builtin-actors/releases?per_page=30"
     transform:
@@ -232,7 +232,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
-      auth: { secret_ref: github_api_token }
+      auth: { secret_ref: GH_API_TOKEN }
       endpoint: "https://api.github.com/repos/filecoin-project/builtin-actors/releases"
       query: "/repos/filecoin-project/builtin-actors/releases"
       extract: { column: published_at, timestamp_column: published_at, cast: date, reduce: latest, derive: age_days, unit: days }

@@ -7,6 +7,8 @@ not mitigable here. Safety rests on committee PR review plus an independent host
 
 from __future__ import annotations
 
+import os
+
 from urllib.parse import urlparse
 
 from fpm.domain import MeasurementWindow
@@ -48,10 +50,33 @@ def resource_name(team: str, function_id: str) -> str:
     return f"fpm_{_slug(team)}_{_slug(function_id)}_t"
 
 
+class MissingSecretError(RuntimeError):
+    """Raised when a manifest declares an auth secret the environment does not provide."""
+
+
 def _auth_block(fn: FunctionSpec) -> dict | None:
-    if not fn.source.auth_secret_ref:
+    """Resolve `source.auth.secret_ref` to the real credential from the environment.
+
+    OSO expects the VALUE here, not a reference name: on attach it lifts the value into its own
+    secret store and keeps only a path-derived marker (`{"name": "client.auth.token", "$type":
+    "secret"}`), so `get_config` can never read it back. Passing the ref name instead — which this
+    did until it was first exercised live — makes OSO faithfully store the literal string and send
+    `Authorization: Bearer GITHUB_TOKEN`, which every API answers with 401.
+
+    The manifest therefore carries only the NAME of an environment variable, so no secret enters
+    the repo, but whoever provisions (a laptop, the nightly runner) must hold the credential.
+    """
+    ref = fn.source.auth_secret_ref
+    if not ref:
         return None
-    return {"type": "bearer", "token": {"$type": "secret", "value": fn.source.auth_secret_ref}}
+    value = os.environ.get(ref)
+    if not value:
+        # Loud, not silent: provisioning without the credential degrades to an anonymous fetch,
+        # which is how 15 metrics quietly go blank.
+        raise MissingSecretError(
+            f"{fn.function_id} declares source.auth.secret_ref={ref!r} but ${ref} is not set"
+        )
+    return {"type": "bearer", "token": {"$type": "secret", "value": value}}
 
 
 def build_ingestion_config(fn: FunctionSpec, window: MeasurementWindow, team: str) -> dict:

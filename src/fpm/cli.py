@@ -80,6 +80,7 @@ def run_observe_cli(
     live_oso: bool,
     oso_org: str,
     dry_run: bool,
+    reprovision: bool = False,
 ) -> int:
     """Measure every function in every named manifest and append the readings to the CSV.
 
@@ -112,6 +113,29 @@ def run_observe_cli(
         allowlist = load_allowlist(Path(registry_dir) / "_allowlist.txt")
 
     paths = manifest_paths(registry_dir, teams)
+    if reprovision and oso_client is not None:
+        # Rotating a credential does NOT change the config shape: `config_shape_fingerprint`
+        # strips secret values, and OSO's stored config holds only a marker, so there is nothing
+        # to compare. Without this, `_ensure_dataset` keeps the dataset carrying the OLD token and
+        # every authenticated metric 401s. This is the rotation escape hatch.
+        from fpm.manifest import load_manifest
+        from fpm.provision import dataset_name
+
+        dropped = 0
+        for path in paths:
+            try:
+                manifest = load_manifest(path)
+            except Exception:
+                continue
+            for fn in manifest.functions:
+                existing = oso_client.find_dataset(
+                    oso_org, dataset_name(manifest.team, fn.function_id)
+                )
+                if existing:
+                    oso_client.delete_dataset(existing)
+                    dropped += 1
+        _say(f"reprovision: dropped {dropped} datasets; they rebuild with the current credentials")
+
     started = time.monotonic()
     _say(f"observing {len(paths)} manifests at {as_of.date().isoformat()}")
 
@@ -244,6 +268,12 @@ def main(argv: list[str] | None = None) -> int:
     obs.add_argument("--live-oso", action="store_true", help="fetch for real via the OSO adapter")
     obs.add_argument("--oso-org", default="", help="OSO org id for --live-oso")
     obs.add_argument("--dry-run", action="store_true", help="measure and report, write nothing")
+    obs.add_argument(
+        "--reprovision",
+        action="store_true",
+        help="drop and rebuild every OSO dataset first — required after rotating a source "
+        "credential, since a new secret does not change the config shape",
+    )
 
     report = sub.add_parser("report", help="draft a manifest entry from intent + a source link")
     report.add_argument("team")
@@ -288,6 +318,7 @@ def main(argv: list[str] | None = None) -> int:
             live_oso=args.live_oso,
             oso_org=args.oso_org,
             dry_run=args.dry_run,
+            reprovision=args.reprovision,
         )
 
     if args.command == "report":
