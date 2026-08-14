@@ -25,6 +25,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
+      auth: { secret_ref: github_api_token }
       endpoint: "https://api.github.com/repos/davidgasquez/filecoin-data-portal/actions/workflows/pipeline.yml/runs?status=success&per_page=5"
       query: "/repos/davidgasquez/filecoin-data-portal/actions/workflows/pipeline.yml/runs?status=success&per_page=5"
       # response is a single object; runs live under workflow_runs -> select them as rows

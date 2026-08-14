@@ -31,6 +31,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
+      auth: { secret_ref: github_api_token }
       endpoint: "https://api.github.com/repos/filecoin-project/lily/commits?per_page=30"
       query: "/repos/filecoin-project/lily/commits?per_page=30"
       extract: { column: commit__committer__date, timestamp_column: commit__committer__date, cast: date, reduce: latest, derive: age_days, unit: days }

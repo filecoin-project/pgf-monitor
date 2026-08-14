@@ -123,6 +123,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
+      auth: { secret_ref: github_api_token }
       endpoint: "https://api.github.com/repos/ChainSafe/forest/releases"
       query: "/repos/ChainSafe/forest/releases?per_page=30"
     transform:
