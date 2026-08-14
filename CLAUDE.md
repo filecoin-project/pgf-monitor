@@ -56,6 +56,14 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 - Nested JSON arrays land in unreachable child tables; nested objects flatten to
   `parent__field` columns. Never set `max_table_nesting: 0` with nested arrays.
 - Trino integer division truncates — CAST to DOUBLE.
+- dlt AUTO-DETECTS a paginator when the config omits one, and GitHub sends Link headers, so a
+  `commits?per_page=30` fetch walks the whole history and 403s the unauthenticated 60 req/hour
+  budget for every later GitHub metric. `build_ingestion_config` now always sends
+  `endpoint.paginator`; never drop it. A `403 rate limit exceeded` on a metric that passes in
+  isolation is this, and the real dlt error is in the run log's `extra.error`, NOT `event`
+  (which only ever says "Data ingestion failed").
+- 15 metrics hit api.github.com unauthenticated and OSO's egress IP is shared across tenants,
+  so that 60/hour budget is not ours alone. `source.auth.secret_ref` would raise it to 5000.
 - `fpm review` team name = `registry/<name>.yaml` filename stem.
 - Trino timestamp literals: `'YYYY-MM-DD HH:MM:SS'` (space, no T, no offset).
 
