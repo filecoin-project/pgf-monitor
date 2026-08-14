@@ -52,3 +52,17 @@ def test_it_fetches_for_real():
 def test_missing_credentials_fail_the_run():
     body = WORKFLOW.read_text()
     assert "OSO_API_KEY secret is not set" in body
+    assert "OSO_ORG_ID variable is not set" in body
+
+
+def test_credentials_come_from_the_right_place():
+    """In this repo OSO_API_KEY is a secret and OSO_ORG_ID is a repository VARIABLE.
+
+    Reading a variable through `secrets.` yields an empty string with no error, so the job would
+    fail its own credential check every night for a reason the logs make look like a missing
+    secret. Assert each is read from the context that actually holds it.
+    """
+    body = WORKFLOW.read_text()
+    assert "secrets.OSO_API_KEY" in body
+    assert "vars.OSO_ORG_ID" in body
+    assert "secrets.OSO_ORG_ID" not in body

@@ -40,12 +40,14 @@ jobs:
       - name: Check credentials
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
-          OSO_ORG_ID: ${{ secrets.OSO_ORG_ID }}
+          OSO_ORG_ID: ${{ vars.OSO_ORG_ID }}
         run: |
           set -euo pipefail
           # Fail loudly rather than silently recording a night of indeterminate readings.
           [ -n "$OSO_API_KEY" ] || { echo "::error::OSO_API_KEY secret is not set"; exit 1; }
-          [ -n "$OSO_ORG_ID" ] || { echo "::error::OSO_ORG_ID secret is not set"; exit 1; }
+          # OSO_ORG_ID is a repository VARIABLE, not a secret — it is not sensitive, and reading
+          # it from `secrets` silently yields an empty string.
+          [ -n "$OSO_ORG_ID" ] || { echo "::error::OSO_ORG_ID variable is not set"; exit 1; }
 
       - name: Observe every adopted metric
         env:
@@ -53,7 +55,7 @@ jobs:
         run: |
           set -euo pipefail
           uv run fpm observe \
-            --live-oso --oso-org "${{ secrets.OSO_ORG_ID }}" \
+            --live-oso --oso-org "${{ vars.OSO_ORG_ID }}" \
             ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} \
             ${{ inputs.dry_run && '--dry-run' || '' }} \
             | tee -a "$GITHUB_STEP_SUMMARY"
