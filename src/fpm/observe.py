@@ -10,6 +10,7 @@ An Observation is one row of `data/observations.csv` — see fpm.observations fo
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -127,8 +128,13 @@ def observe(
     org_id: str = "",
     allowlist: set[str] | None = None,
     poll_sleep: float = 0.0,
+    on_observation: Callable[[Observation], None] | None = None,
 ) -> list[Observation]:
-    """Measure every function in one manifest. One Observation per function, always."""
+    """Measure every function in one manifest. One Observation per function, always.
+
+    `on_observation` fires as each metric lands, so a caller can report progress during a run
+    that takes tens of minutes rather than only at the end.
+    """
     manifest: Manifest = load_manifest(manifest_path)
     adapters = build_adapters(
         fixtures_dir,
@@ -140,5 +146,8 @@ def observe(
     out = []
     for fn in manifest.functions:
         _, reading, sla = measure(fn, manifest.team, adapters, as_of)
-        out.append(to_observation(fn, manifest.team, reading, sla, as_of, method))
+        obs = to_observation(fn, manifest.team, reading, sla, as_of, method)
+        out.append(obs)
+        if on_observation is not None:
+            on_observation(obs)
     return out

@@ -43,6 +43,13 @@ def test_method_labels_provenance():
     assert {o.method for o in _observe(method="replay:api.github.com")} == {"replay:api.github.com"}
 
 
+def test_progress_fires_as_each_metric_lands():
+    """A live run takes tens of minutes; the caller must be able to report during it, not after."""
+    seen = []
+    out = _observe(on_observation=seen.append)
+    assert [o.function_id for o in seen] == [o.function_id for o in out]
+
+
 def test_a_failing_fetch_does_not_abort_the_batch(monkeypatch):
     """One dead source yields an indeterminate row; the rest of the manifest still runs."""
     from fpm.adapters import fixture
