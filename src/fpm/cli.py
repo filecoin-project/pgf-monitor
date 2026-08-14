@@ -70,11 +70,19 @@ def run_observe_cli(
     is contained the same way a single function's is — recorded, then the batch continues.
     """
     import os
+    import time
     from collections import Counter
 
     from fpm.governance.allowlist import load_allowlist
     from fpm.observations import append_observations
     from fpm.observe import observe
+
+    # A live run takes tens of minutes (47 metrics, each an OSO ingestion run polled to terminal).
+    # Every progress line is flushed because stdout is block-buffered whenever it is not a tty —
+    # which is always, under GitHub Actions — and an unflushed run shows an empty log for an hour
+    # and then everything at once, so a hang is indistinguishable from slow progress.
+    def _say(line: str = "") -> None:
+        print(line, flush=True)
 
     oso_client = None
     allowlist: set[str] | None = None
@@ -86,8 +94,24 @@ def run_observe_cli(
         # scheduled job must not be able to reach a host the committee never approved.
         allowlist = load_allowlist(Path(registry_dir) / "_allowlist.txt")
 
+    paths = manifest_paths(registry_dir, teams)
+    started = time.monotonic()
+    _say(f"observing {len(paths)} manifests at {as_of.date().isoformat()}")
+
     observations, failed = [], []
-    for path in manifest_paths(registry_dir, teams):
+    for index, path in enumerate(paths, start=1):
+        team_started = time.monotonic()
+        last = [team_started]
+
+        def progress(obs, _last=last) -> None:
+            now = time.monotonic()
+            _say(
+                f"    {obs.metric[:44]:44} {obs.sla_outcome:14} "
+                f"{now - _last[0]:5.1f}s  (+{(now - started) / 60:.0f}m total)"
+            )
+            _last[0] = now
+
+        _say(f"[{index}/{len(paths)}] {path.stem}")
         try:
             got = observe(
                 manifest_path=path,
@@ -98,34 +122,45 @@ def run_observe_cli(
                 org_id=oso_org,
                 allowlist=allowlist,
                 poll_sleep=10.0 if live_oso else 0.0,
+                on_observation=progress,
             )
         except Exception as exc:
             failed.append(path.stem)
-            print(f"{path.stem}\tMANIFEST FAILED\t{exc}", file=sys.stderr)
+            print(f"    MANIFEST FAILED\t{exc}", file=sys.stderr, flush=True)
             continue
         counts = Counter(o.sla_outcome for o in got)
-        print(
-            f"{path.stem}\t{len(got)} metrics\t"
+        _say(
+            f"  {path.stem}: {len(got)} metrics  "
             f"pass={counts['pass']} fail={counts['fail']} indeterminate={counts['indeterminate']}"
+            f"  ({time.monotonic() - team_started:.0f}s)"
         )
         observations.extend(got)
 
     totals = Counter(o.sla_outcome for o in observations)
-    print(
+    _say(
         f"\n{len(observations)} observations at {as_of.date().isoformat()} "
-        f"(pass={totals['pass']} fail={totals['fail']} indeterminate={totals['indeterminate']})"
+        f"(pass={totals['pass']} fail={totals['fail']} indeterminate={totals['indeterminate']}) "
+        f"in {(time.monotonic() - started) / 60:.1f}m"
     )
+    # A metric with no value is not a neutral gap: it is a source that has stopped answering, and
+    # on 2026-07-15 a third of the registry was already in this state without anyone noticing.
+    blank = [o for o in observations if o.sla_outcome == "indeterminate"]
+    if blank:
+        _say(f"\nno value from {len(blank)} metrics:")
+        for o in blank:
+            _say(f"  {o.team}/{o.function_id}\t{o.metric}\t{o.note[:70]}")
+
     if dry_run:
-        print("dry run: nothing written")
+        _say("\ndry run: nothing written")
     elif observations:
         rows = append_observations(observations, Path(csv_path))
-        print(f"{csv_path}: {len(rows)} rows")
+        _say(f"\n{csv_path}: {len(rows)} rows")
 
     if failed:
-        print(f"manifests that failed to run: {', '.join(failed)}", file=sys.stderr)
+        print(f"manifests that failed to run: {', '.join(failed)}", file=sys.stderr, flush=True)
         return 1
     if not observations:
-        print("no observations produced", file=sys.stderr)
+        print("no observations produced", file=sys.stderr, flush=True)
         return 1
     return 0
 
