@@ -61,8 +61,8 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | adopted |
 | ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | adopted |
-| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | filecoin.chain.love | adopted |
-| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | filecoin.chain.love | adopted |
+| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | api.chain.love | adopted |
+| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | api.chain.love | adopted |
 | chainsafe | `avg_days_between_releases` (forest-release-cadence) | api.github.com | adopted |
 | zondax | `archival_tipset_height_served` (zondax-node-rpc-archival-depth) | api.zondax.ch | adopted |
 | zondax | `rosetta_release_age_days` (rosetta-release-currency) | api.github.com | adopted |
@@ -79,8 +79,8 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | adopted |
 | ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | adopted |
-| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | filecoin.chain.love | adopted |
-| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | filecoin.chain.love | adopted |
+| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | api.chain.love | adopted |
+| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | api.chain.love | adopted |
 | chainsafe | `avg_days_between_releases` (forest-release-cadence) | api.github.com | adopted |
 | zondax | `archival_tipset_height_served` (zondax-node-rpc-archival-depth) | api.zondax.ch | adopted |
 | zondax | `rosetta_release_age_days` (rosetta-release-currency) | api.github.com | adopted |
@@ -97,8 +97,8 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | adopted |
 | ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | adopted |
-| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | filecoin.chain.love | adopted |
-| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | filecoin.chain.love | adopted |
+| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | api.chain.love | adopted |
+| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | api.chain.love | adopted |
 | chainsafe | `avg_days_between_releases` (forest-release-cadence) | api.github.com | adopted |
 | zondax | `archival_tipset_height_served` (zondax-node-rpc-archival-depth) | api.zondax.ch | adopted |
 | zondax | `rosetta_release_age_days` (rosetta-release-currency) | api.github.com | adopted |
