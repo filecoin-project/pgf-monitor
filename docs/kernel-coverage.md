@@ -15,7 +15,7 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 
 | team | metric | source | state |
 |---|---|---|---|
-| filoz | `release_age_days` (builtin-actors) | api.github.com | adopted |
+| filoz | `release_age_days` (builtin-actors) | api.github.com | draft |
 
 ### 🟢 Storage market / miner / power / system / reward / datacap actors
 
@@ -23,7 +23,7 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 
 | team | metric | source | state |
 |---|---|---|---|
-| filoz | `release_age_days` (builtin-actors) | api.github.com | adopted |
+| filoz | `release_age_days` (builtin-actors) | api.github.com | draft |
 
 ### 🟢 Proving subsystem - PoRep (StackedDRG sealing), WinningPoSt/WindowPoSt, crypto primitives (BLST, bellperson, neptune)
 
@@ -31,8 +31,8 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 
 | team | metric | source | state |
 |---|---|---|---|
-| proving | `proofs_days_since_last_commit` (rust-fil-proofs-maintenance) | api.github.com | adopted |
-| proving | `bellperson_days_since_last_commit` (proving-crypto-primitives-maintenance) | api.github.com | adopted |
+| proving | `proofs_days_since_last_commit` (rust-fil-proofs-maintenance) | api.github.com | draft |
+| proving | `bellperson_days_since_last_commit` (proving-crypto-primitives-maintenance) | api.github.com | draft |
 
 ### 🟢 GossipSub propagation, Kademlia DHT peer/content discovery, transports (TCP/QUIC) + NAT traversal
 
@@ -40,8 +40,8 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 
 | team | metric | source | state |
 |---|---|---|---|
-| libp2p-networking | `libp2p_avg_days_between_releases` (libp2p-release-cadence) | api.github.com | adopted |
-| libp2p-networking | `mainnet_avg_seconds_per_epoch` (mainnet-block-propagation-cadence) | filfox.info | adopted |
+| libp2p-networking | `libp2p_avg_days_between_releases` (libp2p-release-cadence) | api.github.com | draft |
+| libp2p-networking | `mainnet_avg_seconds_per_epoch` (mainnet-block-propagation-cadence) | filfox.info | draft |
 
 ### 🟢 Distributed randomness beacon (threshold-BLS, League of Entropy)
 
@@ -61,12 +61,15 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | adopted |
 | ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | adopted |
-| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | api.chain.love | adopted |
-| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | api.chain.love | adopted |
+| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | filecoin.chain.love | adopted |
+| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | filecoin.chain.love | adopted |
 | chainsafe | `avg_days_between_releases` (forest-release-cadence) | api.github.com | adopted |
-| filoz | `avg_days_between_stable_releases` (lotus-consensus-client-release-cadence) | api.github.com | adopted |
 | zondax | `archival_tipset_height_served` (zondax-node-rpc-archival-depth) | api.zondax.ch | adopted |
 | zondax | `rosetta_release_age_days` (rosetta-release-currency) | api.github.com | adopted |
+| ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | draft |
+| ankr | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | rpc.ankr.com | draft |
+| ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | draft |
+| filoz | `avg_days_between_stable_releases` (lotus-consensus-client-release-cadence) | api.github.com | draft |
 
 ### 🟢 Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)
 
@@ -76,12 +79,15 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | adopted |
 | ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | adopted |
-| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | api.chain.love | adopted |
-| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | api.chain.love | adopted |
+| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | filecoin.chain.love | adopted |
+| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | filecoin.chain.love | adopted |
 | chainsafe | `avg_days_between_releases` (forest-release-cadence) | api.github.com | adopted |
-| filoz | `avg_days_between_stable_releases` (lotus-consensus-client-release-cadence) | api.github.com | adopted |
 | zondax | `archival_tipset_height_served` (zondax-node-rpc-archival-depth) | api.zondax.ch | adopted |
 | zondax | `rosetta_release_age_days` (rosetta-release-currency) | api.github.com | adopted |
+| ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | draft |
+| ankr | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | rpc.ankr.com | draft |
+| ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | draft |
+| filoz | `avg_days_between_stable_releases` (lotus-consensus-client-release-cadence) | api.github.com | draft |
 
 ### 🟢 Independent Rust full node (sync, validation, RPC, snapshot export)
 
@@ -91,12 +97,15 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | adopted |
 | ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | adopted |
-| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | api.chain.love | adopted |
-| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | api.chain.love | adopted |
+| chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | filecoin.chain.love | adopted |
+| chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | filecoin.chain.love | adopted |
 | chainsafe | `avg_days_between_releases` (forest-release-cadence) | api.github.com | adopted |
-| filoz | `avg_days_between_stable_releases` (lotus-consensus-client-release-cadence) | api.github.com | adopted |
 | zondax | `archival_tipset_height_served` (zondax-node-rpc-archival-depth) | api.zondax.ch | adopted |
 | zondax | `rosetta_release_age_days` (rosetta-release-currency) | api.github.com | adopted |
+| ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | draft |
+| ankr | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | rpc.ankr.com | draft |
+| ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | draft |
+| filoz | `avg_days_between_stable_releases` (lotus-consensus-client-release-cadence) | api.github.com | draft |
 
 ### 🟢 Block production - WinningPoSt leader election & block assembly
 
@@ -107,11 +116,11 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | filoz | `avg_days_between_releases` (curio-sealing-release-cadence) | api.github.com | adopted |
 | filoz | `avg_blocks_per_tipset` (curio-windowpost-winningpost-scheduler) | filfox.info | adopted |
 | filoz | `pdp_active_proof_sets` (curio-pdp-active-proofsets) | api.goldsky.com | adopted |
-| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | adopted |
-| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | adopted |
-| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
-| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
+| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | draft |
+| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | draft |
+| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | draft |
+| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | draft |
 
 ### 🟢 Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)
 
@@ -122,11 +131,11 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | filoz | `avg_days_between_releases` (curio-sealing-release-cadence) | api.github.com | adopted |
 | filoz | `avg_blocks_per_tipset` (curio-windowpost-winningpost-scheduler) | filfox.info | adopted |
 | filoz | `pdp_active_proof_sets` (curio-pdp-active-proofsets) | api.goldsky.com | adopted |
-| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | adopted |
-| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | adopted |
-| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
-| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
+| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | draft |
+| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | draft |
+| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | draft |
+| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | draft |
 
 ### 🟢 Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility
 
@@ -137,11 +146,11 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | filoz | `avg_days_between_releases` (curio-sealing-release-cadence) | api.github.com | adopted |
 | filoz | `avg_blocks_per_tipset` (curio-windowpost-winningpost-scheduler) | filfox.info | adopted |
 | filoz | `pdp_active_proof_sets` (curio-pdp-active-proofsets) | api.goldsky.com | adopted |
-| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | adopted |
-| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | adopted |
-| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
-| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
+| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | draft |
+| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | draft |
+| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | draft |
+| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | draft |
 
 ### 🟢 Pooled block production (sophon-miner) + distributed sealing cluster (Damocles)
 
@@ -152,11 +161,11 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | filoz | `avg_days_between_releases` (curio-sealing-release-cadence) | api.github.com | adopted |
 | filoz | `avg_blocks_per_tipset` (curio-windowpost-winningpost-scheduler) | filfox.info | adopted |
 | filoz | `pdp_active_proof_sets` (curio-pdp-active-proofsets) | api.goldsky.com | adopted |
-| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | adopted |
-| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | adopted |
-| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
-| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
+| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | draft |
+| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | draft |
+| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | draft |
+| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | draft |
 
 ### 🟢 EVM + EAM actor
 
@@ -164,7 +173,7 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 
 | team | metric | source | state |
 |---|---|---|---|
-| filoz | `avg_days_between_releases` (evm-eam-actor-maintenance) | api.github.com | adopted |
+| filoz | `avg_days_between_releases` (evm-eam-actor-maintenance) | api.github.com | draft |
 
 ### 🟢 High-SLA HTTP + gossipsub relays & quarterly resharing
 
@@ -185,9 +194,9 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | chainsafe | `snapshot_age_seconds` (mainnet-snapshot-freshness) | forest-archive.chainsafe.dev | adopted |
 | chainsafe | `bootstrap_dns_status` (bootstrap-dns-mainnet) | dns.google | adopted |
-| filecoin-infra-misc | `param_gateway_availability_ratio` (trusted-setup-param-hosting) | fixture | adopted |
 | chainsafe | `diff_snapshot_age_seconds` (mainnet-diff-snapshot-freshness) | forest-archive.chainsafe.dev | draft |
 | chainsafe | `lite_snapshot_age_seconds` (mainnet-lite-snapshot-freshness) | forest-archive.chainsafe.dev | draft |
+| filecoin-infra-misc | `param_gateway_availability_ratio` (trusted-setup-param-hosting) | fixture | draft |
 
 ### 🟢 Operation of seed nodes a new peer contacts on startup
 
@@ -197,9 +206,9 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | chainsafe | `snapshot_age_seconds` (mainnet-snapshot-freshness) | forest-archive.chainsafe.dev | adopted |
 | chainsafe | `bootstrap_dns_status` (bootstrap-dns-mainnet) | dns.google | adopted |
-| filecoin-infra-misc | `param_gateway_availability_ratio` (trusted-setup-param-hosting) | fixture | adopted |
 | chainsafe | `diff_snapshot_age_seconds` (mainnet-diff-snapshot-freshness) | forest-archive.chainsafe.dev | draft |
 | chainsafe | `lite_snapshot_age_seconds` (mainnet-lite-snapshot-freshness) | forest-archive.chainsafe.dev | draft |
+| filecoin-infra-misc | `param_gateway_availability_ratio` (trusted-setup-param-hosting) | fixture | draft |
 
 ### 🟢 Serving Groth16 trusted-setup parameters to every node and SP (go-paramfetch)
 
@@ -209,9 +218,9 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 |---|---|---|---|
 | chainsafe | `snapshot_age_seconds` (mainnet-snapshot-freshness) | forest-archive.chainsafe.dev | adopted |
 | chainsafe | `bootstrap_dns_status` (bootstrap-dns-mainnet) | dns.google | adopted |
-| filecoin-infra-misc | `param_gateway_availability_ratio` (trusted-setup-param-hosting) | fixture | adopted |
 | chainsafe | `diff_snapshot_age_seconds` (mainnet-diff-snapshot-freshness) | forest-archive.chainsafe.dev | draft |
 | chainsafe | `lite_snapshot_age_seconds` (mainnet-lite-snapshot-freshness) | forest-archive.chainsafe.dev | draft |
+| filecoin-infra-misc | `param_gateway_availability_ratio` (trusted-setup-param-hosting) | fixture | draft |
 
 ### 🟢 Mainnet-realistic testnet for rehearsing every network-version upgrade
 
@@ -227,7 +236,7 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 
 | team | metric | source | state |
 |---|---|---|---|
-| filecoin-infra-misc | `stewardship_attestation` (shared-infra-stewardship) | fixture | adopted |
+| filecoin-infra-misc | `stewardship_attestation` (shared-infra-stewardship) | fixture | draft |
 
 ### 🟢 Calibnet miners (Lotus-Miner / Curio / Venus) for upgrade rehearsal
 
@@ -253,7 +262,7 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 
 | team | metric | source | state |
 |---|---|---|---|
-| filecoin-infra-misc | `status_page_updated_age_days` (network-monitoring-status-page) | status.filecoin.io | adopted |
+| filecoin-infra-misc | `status_page_updated_age_days` (network-monitoring-status-page) | status.filecoin.io | draft |
 
 ### 🟢 Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards
 
@@ -264,9 +273,9 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | filecoin-data-portal | `pipeline_success_age_days` (network-data-portal-pipeline-freshness) | api.github.com | adopted |
 | goldsky | `fevm_subgraph_indexing_lag_seconds` (fevm-chain-indexing-freshness) | api.goldsky.com | adopted |
 | goldsky | `fevm_subgraph_indexing_errors` (fevm-chain-indexing-errors) | api.goldsky.com | adopted |
-| lily | `lily_days_since_last_commit` (lily-etl-maintenance) | api.github.com | adopted |
 | secured-finance | `usdfc_pool_tvl_usd` (usdfc-axlusdc-pool-tvl) | api.geckoterminal.com | adopted |
 | secured-finance | `usdfc_pool_volume_usd` (usdfc-axlusdc-pool-volume) | api.geckoterminal.com | adopted |
+| lily | `lily_days_since_last_commit` (lily-etl-maintenance) | api.github.com | draft |
 
 ### 🟢 Chain ETL, indexing, normalization & parameter matching (BigQuery, Spacescope API)
 
@@ -277,9 +286,9 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | filecoin-data-portal | `pipeline_success_age_days` (network-data-portal-pipeline-freshness) | api.github.com | adopted |
 | goldsky | `fevm_subgraph_indexing_lag_seconds` (fevm-chain-indexing-freshness) | api.goldsky.com | adopted |
 | goldsky | `fevm_subgraph_indexing_errors` (fevm-chain-indexing-errors) | api.goldsky.com | adopted |
-| lily | `lily_days_since_last_commit` (lily-etl-maintenance) | api.github.com | adopted |
 | secured-finance | `usdfc_pool_tvl_usd` (usdfc-axlusdc-pool-tvl) | api.geckoterminal.com | adopted |
 | secured-finance | `usdfc_pool_volume_usd` (usdfc-axlusdc-pool-volume) | api.geckoterminal.com | adopted |
+| lily | `lily_days_since_last_commit` (lily-etl-maintenance) | api.github.com | draft |
 
 ### 🟢 Chain ETL and indexing
 
@@ -288,9 +297,9 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | filecoin-data-portal | `pipeline_success_age_days` (network-data-portal-pipeline-freshness) | api.github.com | adopted |
 | goldsky | `fevm_subgraph_indexing_lag_seconds` (fevm-chain-indexing-freshness) | api.goldsky.com | adopted |
 | goldsky | `fevm_subgraph_indexing_errors` (fevm-chain-indexing-errors) | api.goldsky.com | adopted |
-| lily | `lily_days_since_last_commit` (lily-etl-maintenance) | api.github.com | adopted |
 | secured-finance | `usdfc_pool_tvl_usd` (usdfc-axlusdc-pool-tvl) | api.geckoterminal.com | adopted |
 | secured-finance | `usdfc_pool_volume_usd` (usdfc-axlusdc-pool-volume) | api.geckoterminal.com | adopted |
+| lily | `lily_days_since_last_commit` (lily-etl-maintenance) | api.github.com | draft |
 
 ### 🟢 Mainnet block explorer (Lotus archive, indexing, NV maintenance)
 
@@ -331,11 +340,11 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 | filoz | `avg_days_between_releases` (curio-sealing-release-cadence) | api.github.com | adopted |
 | filoz | `avg_blocks_per_tipset` (curio-windowpost-winningpost-scheduler) | filfox.info | adopted |
 | filoz | `pdp_active_proof_sets` (curio-pdp-active-proofsets) | api.goldsky.com | adopted |
-| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | adopted |
-| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | adopted |
-| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | adopted |
-| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
+| filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | draft |
+| filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | draft |
+| venus | `sophon_miner_days_since_last_commit` (sophon-miner-maintenance) | api.github.com | draft |
+| venus | `damocles_days_since_last_commit` (damocles-maintenance) | api.github.com | draft |
 
 ## Declared unmeasurable / candidate gaps
 
@@ -343,7 +352,11 @@ Honest gaps recorded by drafts (`x_draft.unmeasured`):
 
 | team | aspect | reason |
 |---|---|---|
-| fil-ponto | Ecosystem integration support & grants advisory (~50 teams/yr navigati | Coordination work with no public machine-checkable output; fulfilment shows up in partner integrations shippin |
-| fil-ponto | Drips-based funding distribution for Filecoin public goods (filponto-d | Onchain Drips streams could in principle be observed via the onchain-indexsupply adapter, but no catalogued ke |
-| fil-ponto | UCAN authorization tooling milestone (under committee review; may be r | No catalogued kernel function covers UCAN authorization tooling, and the milestone itself is under review — pr |
-| fil-ponto | Coordination of open chain infrastructure (public RPC, indexers) as a  | The operated services belong to OTHER teams (e.g. Ankr's public RPC is monitored in registry/ankr.yaml). FIL P |
+| ankr | filecoin_lotus_version_lag_days <= 45 — endpoint-reported Lotus versio | Needs a two-source compare (Filecoin.Version on the endpoint vs api.github.com/repos/filecoin-project/lotus/re |
+| ankr | filecoin_endpoint_reachable — HTTP 200 + well-formed JSON-RPC from the | As the pipeline stands, an unreachable endpoint is recorded as unavailable rather than a miss (Section 2), so  |
+| ankr | filecoin_status_page_published — status page reachable with Filecoin l | status.ankr.com resolves to www.ankr.com/rpc/health (www.ankr.com is NOT allowlisted; only rpc.ankr.com is) an |
+| fil-ponto | §3.2 'Discretionary grants administered' — count and $ of grants issue | The application names the data source as 'FilPonto grant records', which are private. No public register exist |
+| fil-ponto | §3.2 'DeFi due-diligence reviews completed' — # of Filecoin DeFi/stabl | The application names the data source as 'Review reports'. Reviews are documents, not a countable endpoint, an |
+| fil-ponto | §3.2 'Contractor engagements' — number of teams supported / % of ecosy | Attested by FilPonto's own engagement records; 'as needed' is also not a fixed target a threshold can encode.  |
+| fil-ponto | §3.2 'Monitoring data sources hardened' — # critical dashboards on res | The application names the data source as the 'FilOz dashboard inventory', which FilOz holds and which is not p |
+
