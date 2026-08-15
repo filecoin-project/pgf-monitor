@@ -56,6 +56,25 @@ def validate_manifest(
     return ok, md
 
 
+def validate_removal(base: Manifest, head_path: str) -> tuple[bool, str]:
+    """A manifest deleted in this PR.
+
+    Removing a commitment is a governance event the committee must SEE, not a crash. The
+    workflow feeds every changed path under registry/ to this script as `head`, including
+    deleted ones, so diff the base against an empty head: every function then classifies as
+    `removed` -> MATERIAL via the same rubric a threshold change goes through.
+
+    Returns ok=True — a removal is a legitimate change requiring review, not a rule violation.
+    """
+    empty = base.model_copy(update={"functions": []})
+    report = render_report(classify(manifest_diff(base, empty), empty))
+    return True, (
+        f"### Manifest removed: `{head_path}`\n\n"
+        f"{len(base.functions)} function(s) are no longer monitored. "
+        "Confirm this is intended before merging.\n\n" + report
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="validate_pr")
     ap.add_argument("head", help="path to the head (PR) manifest")
@@ -71,13 +90,17 @@ def main(argv: list[str] | None = None) -> int:
     as_of = datetime.fromisoformat(args.as_of).replace(tzinfo=timezone.utc)
     allowlist = load_allowlist(args.allowlist)
     try:
-        head = load_manifest(args.head)
-        base = load_manifest(args.base) if args.base else None
+        if not Path(args.head).exists():
+            if not args.base:
+                raise ManifestError(f"{args.head}: neither head nor base exists")
+            ok, md = validate_removal(load_manifest(args.base), args.head)
+        else:
+            head = load_manifest(args.head)
+            base = load_manifest(args.base) if args.base else None
+            ok, md = validate_manifest(base, head, allowlist, as_of)
     except ManifestError as exc:
         md = f"### Validation failed\n\nschema error: {exc}"
         ok = False
-    else:
-        ok, md = validate_manifest(base, head, allowlist, as_of)
     if args.summary:
         Path(args.summary).open("a").write(md + "\n")
     print(md)
