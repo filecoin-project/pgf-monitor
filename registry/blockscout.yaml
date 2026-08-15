@@ -3,6 +3,14 @@
 # (314159, filecoin-testnet.blockscout.com). This manifest probes BLOCKSCOUT's own
 # instances directly so explorer redundancy and the FEVM-developer surface (contract
 # read/write, verified sources) are evidenced independently of other explorers.
+#
+# APPENDIX STATUS (checked 2026-08-15, agreement doc 1dotjw_i…, mod 2026-08-10): the signed
+# §3 lists these two health endpoints as SOURCES but carries NO metric names, thresholds or
+# cadences — the team replaced §3 with bare URLs. The <= 3600s bars below are OURS, not
+# theirs, and were never agreed. Treat as PLACEHOLDER pending confirmation at check-in.
+# `mainnet-block-explorer` additionally reads filfox.info, a third party Blockscout does not
+# operate and cannot keep public under §2 (though the Funded list does name that metric for
+# them). See docs/reconciliation-2026-08-15.md.
 team: blockscout
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:

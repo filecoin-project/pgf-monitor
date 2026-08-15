@@ -3,6 +3,11 @@
 # machine-checkable: the public archival RPC node's depth of served chain history, and the
 # Rosetta integration's release currency relative to Lotus. Beryx's own data API sits behind
 # a JWT and is not yet probeable without a provisioned token.
+#
+# APPENDIX STATUS (checked 2026-08-15): Zondax IS funded ($79,000 committed thru Dec on the
+# ProPGF Batch 3 Funded list) and that sheet names exactly these two metrics. But NO Batch 3
+# agreement for Zondax exists anywhere on the Drive, so there is no signed §3 to reconcile
+# against and the thresholds below are ours. FOLLOW-UP: obtain the agreement.
 team: zondax
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:

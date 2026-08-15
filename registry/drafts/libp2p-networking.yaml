@@ -1,3 +1,13 @@
+# DRAFT — kernel coverage with NO grant behind it.
+#
+# Demoted from registry/libp2p-networking.yaml on 2026-08-15. This manifest tracks the IRREPLACEABLE networking function (GossipSub, Kademlia DHT, transports).
+# It is OSO-authored: `maintainers: ["@TODO-github-handle"]`, thresholds ours, and the team
+# appears nowhere on the ProPGF Batch 3 Funded list. There is no counterparty and no signed
+# Appendix 1 §3, so an SLA "breach" here breaches nothing — the readings are ecosystem
+# telemetry filed in a schema whose noun is "commitment".
+#
+# Kept as a draft so the kernel-coverage map still shows the function is watched. Promote if
+# and when a grantee signs a §3 for it. See docs/reconciliation-2026-08-15.md.
 # Covers the IRREPLACEABLE networking function — GossipSub propagation, Kademlia DHT
 # peer/content discovery, transports (TCP/QUIC) + NAT traversal. Stewardship sits with the
 # libp2p maintainers (Shipyard) and ProbeLab.
@@ -10,6 +20,10 @@
 # working end-to-end).
 team: libp2p-networking
 maintainers: ["@TODO-github-handle"]   # team fills in
+x_draft:
+  slate: "no-grant-kernel-coverage"
+  provenance: "demoted from registry/libp2p-networking.yaml 2026-08-15 — no counterparty, no signed §3"
+  unmeasured: []
 functions:
   # Maintenance-cadence signal for the network stack every Filecoin node embeds.
   # THRESHOLD (placeholder, confirm with team): observed ~21-day average; <= 60 days flags

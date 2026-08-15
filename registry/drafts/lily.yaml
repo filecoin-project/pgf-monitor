@@ -1,3 +1,13 @@
+# DRAFT — kernel coverage with NO grant behind it.
+#
+# Demoted from registry/lily.yaml on 2026-08-15. This manifest tracks the ESSENTIAL chain ETL/indexing function (Lily/Sentinel, Spacescope).
+# It is OSO-authored: `maintainers: ["@TODO-github-handle"]`, thresholds ours, and the team
+# appears nowhere on the ProPGF Batch 3 Funded list. There is no counterparty and no signed
+# Appendix 1 §3, so an SLA "breach" here breaches nothing — the readings are ecosystem
+# telemetry filed in a schema whose noun is "commitment".
+#
+# Kept as a draft so the kernel-coverage map still shows the function is watched. Promote if
+# and when a grantee signs a §3 for it. See docs/reconciliation-2026-08-15.md.
 # Covers the ESSENTIAL chain ETL/indexing function (Lily: chain ETL, indexing, normalization
 # & parameter matching feeding the BigQuery public dataset and the Spacescope API).
 # Historical stewards are the Lily/Sentinel team and Spacescope (Starboard).
@@ -8,6 +18,10 @@
 # repo activity alone does not evidence the pipeline actually producing fresh data.
 team: lily
 maintainers: ["@TODO-github-handle"]   # team fills in
+x_draft:
+  slate: "no-grant-kernel-coverage"
+  provenance: "demoted from registry/lily.yaml 2026-08-15 — no counterparty, no signed §3"
+  unmeasured: []
 functions:
   # Maintenance signal for the ETL codebase itself. This evidences the software function
   # (indexing/normalization logic tracking network upgrades), not data freshness.

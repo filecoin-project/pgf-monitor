@@ -2,6 +2,18 @@
 # mainnet/calibnet bootstrap and snapshot infrastructure. This manifest tracks snapshot
 # freshness, bootstrap DNS reachability, calibnet rehearsal miner power, and Forest's
 # release cadence.
+#
+# APPENDIX STATUS (checked 2026-08-15): this manifest CONFLATES TWO SEPARATE ChainSafe grants.
+#   - forest-release-cadence is the only entry in the signed Forest Batch 3 §3
+#     (agreement doc 193C2hY7…, $252,000 committed thru Dec).
+#   - mainnet-snapshot-freshness, calibnet-snapshot-freshness, bootstrap-dns-mainnet and
+#     calibnet-miner-power belong to "Filecoin Infrastructure Services (ChainSafe)", a
+#     SEPARATE Funded-list line ($8,400, an amendment to a Batch 2 agreement running through
+#     March 2027) whose metrics that sheet names exactly. They are backed — by a different
+#     contract we have not yet located on the Drive.
+# Forest's §3 also commits to two metrics NOT measured here (upgrade_ready_days_before_
+# activation, lotus_conformance_tested_methods); both are shapes the pipeline cannot express.
+# FOLLOW-UP: locate the Batch 2 agreement + amendment, then split this manifest in two.
 team: chainsafe
 maintainers: ["@lemmih", "@dignifiedquire"]
 functions:
