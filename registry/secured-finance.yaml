@@ -8,6 +8,15 @@
 # catalogued. Informational input to the reject-vs-fund decision until the committee
 # catalogues (or declines) a DeFi/liquidity function, at which point these get re-homed
 # under the real triple.
+#
+# APPENDIX STATUS (checked 2026-08-15): the signed §3 (agreement doc 1YzUQqPK…, mod
+# 2026-08-03) matches this manifest exactly, so there is no drift — but read Exhibit A before
+# adjudicating a breach. The Work Plan states: "Liquidity capital itself is explicitly not
+# part of this request; it is being arranged separately with PL-FIF." The grant funds
+# onboarding docs, Squid integration support, and MEASUREMENT/REPORTING of settlement depth —
+# not provision of it. Both thresholds are still marked "(to confirm)" in the signed document
+# and 170,000 is described there as a "Phase 1 target". Pool TVL therefore scores the
+# recipient on a third party's undeployed capital. Committee call, not a registry fix.
 team: secured-finance
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:

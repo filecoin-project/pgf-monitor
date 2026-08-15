@@ -66,9 +66,11 @@ functions:
     sub_category: 'Content routing'
     oso_project_slug: ipni
     sla:
-      statement: "IPNI providers error-free: >= 95% of providers report no LastError, measured daily"
+      statement: "IPNI providers error-free: >= 90% of providers report no LastError, measured daily"
       metric: ipni_error_free_ratio
-      threshold: { op: ">=", value: 0.95 }
+      # 0.90 is the threshold in the SIGNED Appendix 1 §3 (agreement doc 1LSw0hk1…, 2026-08-12).
+      # This manifest previously carried 0.95, which the recipient never agreed to.
+      threshold: { op: ">=", value: 0.90 }
       cadence: daily
     source:
       adapter: oso

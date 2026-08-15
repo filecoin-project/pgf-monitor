@@ -1,3 +1,13 @@
+# DRAFT — kernel coverage with NO grant behind it.
+#
+# Demoted from registry/proving.yaml on 2026-08-15. This manifest tracks the IRREPLACEABLE proving subsystem (rust-fil-proofs, bellperson).
+# It is OSO-authored: `maintainers: ["@TODO-github-handle"]`, thresholds ours, and the team
+# appears nowhere on the ProPGF Batch 3 Funded list. There is no counterparty and no signed
+# Appendix 1 §3, so an SLA "breach" here breaches nothing — the readings are ecosystem
+# telemetry filed in a schema whose noun is "commitment".
+#
+# Kept as a draft so the kernel-coverage map still shows the function is watched. Promote if
+# and when a grantee signs a §3 for it. See docs/reconciliation-2026-08-15.md.
 # Covers the IRREPLACEABLE proving subsystem — PoRep (StackedDRG sealing), WinningPoSt /
 # WindowPoSt, and the crypto primitives underneath (BLST, bellperson, neptune). Stewardship
 # sits with the rust-fil-proofs maintainers / Filecoin core teams. Release cadence on
@@ -10,6 +20,10 @@
 # subsystem indirectly.
 team: proving
 maintainers: ["@TODO-github-handle"]   # team fills in
+x_draft:
+  slate: "no-grant-kernel-coverage"
+  provenance: "demoted from registry/proving.yaml 2026-08-15 — no counterparty, no signed §3"
+  unmeasured: []
 functions:
   # Maintenance signal for the proofs library every sealer/prover/verifier runs.
   # NOTE: dlt flattens the nested GitHub payload; commit.committer.date lands as column
