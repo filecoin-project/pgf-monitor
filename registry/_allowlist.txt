@@ -9,7 +9,7 @@ cid.contact
 rpc.ankr.com
 filecoin.blockscout.com
 filecoin-testnet.blockscout.com
-api.chain.love
+filecoin.chain.love
 status.filecoin.io
 api.goldsky.com
 api.calibration.node.glif.io
