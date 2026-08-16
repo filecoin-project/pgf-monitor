@@ -46,3 +46,34 @@ def test_reduce_change_is_material_direction_unknown():
         i for i in classify(manifest_diff(m, m2), m2) if i.field_path == "source.extract.reduce"
     )
     assert it.bucket == "material" and it.direction == "n/a"
+
+
+def test_adding_a_threshold_is_a_material_new_commitment():
+    """null -> value: the function was measured but unbound, and is now bound. This is the
+    moment a commitment comes into existence, and a reviewer must see it."""
+    m = load_manifest("tests/fixtures/chainsafe_oso.yaml")
+    unbound = _with_threshold(m, None)
+    bound = _with_threshold(m, 1_000_000.0)
+    tv = next(
+        i
+        for i in classify(manifest_diff(unbound, bound), bound)
+        if i.field_path == "sla.threshold_value"
+    )
+    assert tv.bucket == "material"
+    assert tv.direction == "tightened"
+    assert "added" in tv.reason
+
+
+def test_removing_a_threshold_is_material_and_loosened():
+    """value -> null: withdrawing a commitment. Strictly a loosening, and never trivial."""
+    m = load_manifest("tests/fixtures/chainsafe_oso.yaml")
+    unbound = _with_threshold(m, None)
+    tv = next(
+        i
+        for i in classify(manifest_diff(m, unbound), unbound)
+        if i.field_path == "sla.threshold_value"
+    )
+    assert tv.bucket == "material"
+    assert tv.direction == "loosened"
+    assert "removed" in tv.reason
+    assert has_material(classify(manifest_diff(m, unbound), unbound))

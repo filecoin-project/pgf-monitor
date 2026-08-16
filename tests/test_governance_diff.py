@@ -91,3 +91,13 @@ def test_category_change_detected():
     m2.functions[0].sub_category = "Explorers and Tooling"
     changes = manifest_diff(m, m2)
     assert any(c.field_path == "sub_category" for c in changes)
+
+
+def test_threshold_source_change_is_diffed():
+    """Promoting a number from 'provisional' to 'signed-appendix' changes what the dashboard
+    asserts about it, so it must reach a reviewer rather than slip through unnoticed."""
+    old = load_manifest("tests/fixtures/chainsafe_oso.yaml")
+    new = old.model_copy(deep=True)
+    new.functions[0].sla.threshold_source = "signed-appendix"
+    paths = {c.field_path for c in manifest_diff(old, new)}
+    assert "sla.threshold_source" in paths

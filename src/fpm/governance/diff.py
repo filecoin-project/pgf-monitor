@@ -37,6 +37,7 @@ def _fields(fn: FunctionSpec) -> dict[str, Any]:
         "sla.metric": s.metric,
         "sla.threshold_op": s.threshold_op,
         "sla.threshold_value": s.threshold_value,
+        "sla.threshold_source": s.threshold_source,
         "sla.cadence": s.cadence,
         "sla.statement": s.statement,
         "source.kind": src.kind,
