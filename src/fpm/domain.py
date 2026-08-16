@@ -12,7 +12,9 @@ ComparisonOperator = Literal[">=", "<=", ">", "<", "=="]
 Cadence = Literal["daily", "weekly", "monthly"]
 Tier = Literal["irreplaceable", "essential", "important", "nice-to-have"]
 Origin = Literal["independent", "asserted", "corroborating"]
-SlaOutcome = Literal["pass", "fail", "indeterminate"]
+# "unscored": a value was measured, but no threshold has been agreed, so nothing is asserted
+# about compliance. Distinct from "indeterminate", which means no defensible value at all.
+SlaOutcome = Literal["pass", "fail", "indeterminate", "unscored"]
 ReviewStatus = Literal["meeting", "at-risk", "breach", "pending_review"]
 DetectorSignal = Literal["not_applicable", "insufficient_data", "no_signal", "signal_detected"]
 Severity = Literal["low", "medium", "high"]
@@ -69,7 +71,7 @@ class Reading(_Model):
 
 class SlaResult(_Model):
     outcome: SlaOutcome
-    op: ComparisonOperator
+    op: ComparisonOperator | None
     threshold: float | None
     observed: float | None
     measurement_window: MeasurementWindow
