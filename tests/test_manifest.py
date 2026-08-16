@@ -48,3 +48,58 @@ def test_functions_carry_category_and_sub_category():
     fn = m.functions[0]
     assert fn.category == "Coordination & Incentives"
     assert fn.sub_category == "Network data & monitoring"
+
+
+from fpm.manifest import manifest_from_raw
+
+
+def _raw_function(**sla_overrides):
+    sla = {
+        "statement": "release cadence stays under 90 days",
+        "metric": "release_age_days",
+        "threshold": {"op": "<=", "value": 90.0},
+        "cadence": "daily",
+    }
+    sla.update(sla_overrides)
+    return {
+        "team": "acme",
+        "maintainers": ["acme-bot"],
+        "functions": [
+            {
+                "function_id": "acme-release-cadence",
+                "tier": "essential",
+                "category": "UX/DX",
+                "sub_category": "Tooling",
+                "sla": sla,
+                "source": {"adapter": "fixture", "kind": "fixture", "fixture": "acme.json"},
+            }
+        ],
+    }
+
+
+def test_manifest_without_a_threshold_loads_unscored():
+    raw = _raw_function()
+    del raw["functions"][0]["sla"]["threshold"]
+    sla = manifest_from_raw(raw).functions[0].sla
+    assert sla.threshold_op is None
+    assert sla.threshold_value is None
+    assert sla.threshold_source == "provisional"
+
+
+def test_threshold_source_defaults_to_provisional():
+    sla = manifest_from_raw(_raw_function()).functions[0].sla
+    assert (sla.threshold_op, sla.threshold_value) == ("<=", 90.0)
+    assert sla.threshold_source == "provisional"
+
+
+def test_threshold_source_is_read_from_the_manifest():
+    raw = _raw_function(
+        threshold={"op": "<=", "value": 90.0, "source": "signed-appendix"}
+    )
+    assert manifest_from_raw(raw).functions[0].sla.threshold_source == "signed-appendix"
+
+
+def test_a_threshold_still_needs_both_op_and_value():
+    raw = _raw_function(threshold={"op": "<="})
+    with pytest.raises(ManifestError):
+        manifest_from_raw(raw)

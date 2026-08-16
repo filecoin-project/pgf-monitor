@@ -24,7 +24,7 @@
           "sla": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["statement", "metric", "threshold", "cadence"],
+            "required": ["statement", "metric", "cadence"],
             "properties": {
               "statement": {"type": "string", "minLength": 1},
               "metric": {"type": "string", "minLength": 1},
@@ -34,7 +34,14 @@
                 "required": ["op", "value"],
                 "properties": {
                   "op": {"enum": [">=", "<=", ">", "<", "=="]},
-                  "value": {"type": "number"}
+                  "value": {"type": "number"},
+                  "source": {
+                    "enum": [
+                      "signed-appendix",
+                      "to-confirm",
+                      "provisional"
+                    ]
+                  }
                 }
               },
               "cadence": {"enum": ["daily", "weekly", "monthly"]}
