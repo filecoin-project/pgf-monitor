@@ -82,7 +82,25 @@ class GraphqlStaticModelClient:
         # createDataset.dataset.id. Confirmed live.
         return d["createDataset"]["dataset"]["id"]
 
-    def create_static_model(self, org_id: str, dataset_id: str, name: str) -> str:
+    def ensure_static_model(self, org_id: str, dataset_id: str, name: str) -> str:
+        """Reuse the static model if it already exists, else create it.
+
+        Must be idempotent, exactly like ensure_static_dataset: `land` republishes the SAME
+        two tables on every review, so an unconditional createStaticModel fails with
+        ALREADY_EXISTS on the second land and no verdict can ever be published twice.
+
+        The staticModels connection exposes `dataset { id }`, not a flat datasetId, and the
+        `where` filter keys on DATABASE COLUMN names (name, org_id, dataset_id).
+        """
+        d = self._gql(
+            "query($w:JSON){ staticModels(first:50, where:$w){ edges{ node{ "
+            "id name orgId dataset{ id } } } } }",
+            {"w": {"name": {"eq": name}, "dataset_id": {"eq": dataset_id}}},
+        )
+        for edge in d["staticModels"]["edges"]:
+            node = edge["node"]
+            if node["orgId"] == org_id and node["dataset"]["id"] == dataset_id:
+                return node["id"]
         d = self._gql(
             "mutation($i:CreateStaticModelInput!){ createStaticModel(input:$i){ "
             "staticModel{ id } } }",

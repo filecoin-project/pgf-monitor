@@ -521,7 +521,9 @@ def upload(org_id: str) -> None:
     client = GraphqlStaticModelClient(api_key=os.environ["OSO_API_KEY"], org_id=org_id)
     name = "filpgf_sla_observations"
     dataset_id = client.ensure_static_dataset(org_id, name)
-    model_id = client.create_static_model(org_id, dataset_id, name)
+    # ensure_, not create_: this republishes the SAME table every run, so creating
+    # unconditionally fails with ALREADY_EXISTS from the second upload onward.
+    model_id = client.ensure_static_model(org_id, dataset_id, name)
     client.upload_csv(model_id, CSV_PATH.read_text())
     client.run_static_model(dataset_id)
     client.grant_public(model_id)
