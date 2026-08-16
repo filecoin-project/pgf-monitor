@@ -1,6 +1,10 @@
 """fpm.thresholds is the only writer of data/thresholds.csv. These lock its contract."""
 
+import csv
 from dataclasses import dataclass
+from pathlib import Path
+
+import yaml
 
 from fpm import thresholds
 
@@ -91,3 +95,31 @@ def test_distinct_days_accumulate_so_a_change_is_visible(tmp_path):
 
 def test_loading_a_missing_file_is_empty(tmp_path):
     assert thresholds.load_rows(tmp_path / "nope.csv") == []
+
+
+def test_every_shipped_threshold_row_maps_to_a_real_registry_function():
+    """Every (team, function_id) in the committed data/thresholds.csv must exist in that
+    team's registry/<team>.yaml functions[]. This is not a hypothetical: test-fixture rows
+    once leaked into this production file — chainsafe/forest-snapshots and
+    chainsafe/network-uptime, which exist only in tests/fixtures/chainsafe.yaml, not in
+    registry/chainsafe.yaml — and only a manual review caught it. This test encodes that
+    invariant so CI catches a recurrence, whether it comes from a stray test write, a hand
+    edit, or a draft merged prematurely."""
+    registry_dir = Path("registry")
+    rows = list(csv.DictReader(Path("data/thresholds.csv").open()))
+    assert rows
+
+    teams = {r["team"] for r in rows}
+    function_ids_by_team: dict[str, set[str]] = {}
+    for team in teams:
+        manifest_path = registry_dir / f"{team}.yaml"
+        assert manifest_path.exists(), f"registry/{team}.yaml does not exist for team {team!r}"
+        raw = yaml.safe_load(manifest_path.read_text())
+        function_ids_by_team[team] = {fn["function_id"] for fn in raw["functions"]}
+
+    missing = [
+        (r["team"], r["function_id"])
+        for r in rows
+        if r["function_id"] not in function_ids_by_team[r["team"]]
+    ]
+    assert missing == []

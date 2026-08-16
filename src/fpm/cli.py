@@ -150,7 +150,7 @@ def run_observe_cli(
         def progress(obs, _last=last) -> None:
             now = time.monotonic()
             _say(
-                f"    {obs.metric[:44]:44} {obs.sla_outcome:14} "
+                f"    {obs.metric[:44]:44} {obs.outcome:14} "
                 f"{now - _last[0]:5.1f}s  (+{(now - started) / 60:.0f}m total)"
             )
             _last[0] = now
@@ -172,7 +172,7 @@ def run_observe_cli(
             failed.append(path.stem)
             print(f"    MANIFEST FAILED\t{exc}", file=sys.stderr, flush=True)
             continue
-        counts = Counter(o.sla_outcome for o in got)
+        counts = Counter(o.outcome for o in got)
         _say(
             f"  {path.stem}: {len(got)} metrics  "
             f"pass={counts['pass']} fail={counts['fail']} "
@@ -184,7 +184,7 @@ def run_observe_cli(
         # same (day, team, function, metric) keys and the render-time join cannot miss.
         threshold_records.extend(thresholds_for(path, as_of))
 
-    totals = Counter(o.sla_outcome for o in observations)
+    totals = Counter(o.outcome for o in observations)
     _say(
         f"\n{len(observations)} observations at {as_of.date().isoformat()} "
         f"(pass={totals['pass']} fail={totals['fail']} "
@@ -193,7 +193,7 @@ def run_observe_cli(
     )
     # A metric with no value is not a neutral gap: it is a source that has stopped answering, and
     # on 2026-07-15 a third of the registry was already in this state without anyone noticing.
-    blank = [o for o in observations if o.sla_outcome == "indeterminate"]
+    blank = [o for o in observations if o.outcome == "indeterminate"]
     if blank:
         # Grouped by host first, because the shape of the failure names its cause. Blanks spread
         # across many hosts are that many broken sources; blanks concentrated on ONE host are one

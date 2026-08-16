@@ -23,15 +23,21 @@ def test_one_observation_per_function():
 def test_carries_the_evaluated_sla():
     by_fn = {o.function_id: o for o in _observe()}
     up = by_fn["network-uptime"]
-    assert up.sla_outcome == "pass"
+    assert up.outcome == "pass"
     assert up.observed_value is not None
-    assert (up.threshold_op, up.threshold_value) == (">=", 0.999)
     assert up.note == ""
+
+
+def test_the_threshold_a_reading_was_judged_against():
+    """The threshold moved out of Observation into its own time series; this is its new home."""
+    recs = {r.function_id: r for r in thresholds_for(MANIFEST, AS_OF)}
+    up = recs["network-uptime"]
+    assert (up.threshold_op, up.threshold_value) == (">=", 0.999)
 
 
 def test_indeterminate_carries_its_reason():
     snap = {o.function_id: o for o in _observe()}["forest-snapshots"]
-    assert snap.sla_outcome == "indeterminate"
+    assert snap.outcome == "indeterminate"
     assert snap.note  # why it could not be evaluated, for the reviewer
 
 
@@ -66,7 +72,7 @@ def test_a_failing_fetch_does_not_abort_the_batch(monkeypatch):
     monkeypatch.setattr(fixture.FixtureAdapter, "fetch", boom)
     by_fn = {o.function_id: o for o in _observe()}
     assert calls["n"] == 2
-    assert by_fn["network-uptime"].sla_outcome == "indeterminate"
+    assert by_fn["network-uptime"].outcome == "indeterminate"
     assert "source unreachable" in by_fn["network-uptime"].note
     assert by_fn["network-uptime"].observed_value is None
 
@@ -89,7 +95,7 @@ def test_review_and_observe_agree_on_the_number(tmp_path):
     reviewed = {b.recommendation.function_id: b.dossier.sla_result for b in bundles}
     for o in _observe():
         assert o.observed_value == reviewed[o.function_id].observed
-        assert o.sla_outcome == reviewed[o.function_id].outcome
+        assert o.outcome == reviewed[o.function_id].outcome
 
 
 import yaml

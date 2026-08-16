@@ -14,6 +14,8 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
+from pydantic import Field
+
 from fpm.adapters.base import Adapter
 from fpm.adapters.registry import UnsupportedAdapterError, build_adapters
 from fpm.domain import (
@@ -31,18 +33,23 @@ from fpm.manifest import FunctionSpec, Manifest, load_manifest
 
 
 class Observation(_Model):
-    """One (day, team, function, metric) reading, flattened for the CSV time series."""
+    """One (day, team, function, metric) reading, flattened for the CSV time series.
+
+    Measurement only. What the value was judged against is a separate fact with its own
+    time series (fpm.thresholds), because a threshold can be corrected and a measurement
+    cannot.
+    """
 
     observed_at: str  # YYYY-MM-DD, UTC
     team: str
     function_id: str
     metric: str
     observed_value: float | None
-    threshold_op: ComparisonOperator
-    threshold_value: float | None
-    sla_outcome: SlaOutcome
     method: str
     note: str = ""
+    # Reported in the run log, deliberately NOT a CSV column: this is operator feedback about
+    # today's run, not a fact about the reading. `exclude=True` keeps it out of any dump.
+    outcome: SlaOutcome = Field(default="indeterminate", exclude=True)
 
 
 class ThresholdRecord(_Model):
@@ -133,11 +140,9 @@ def to_observation(
         function_id=fn.function_id,
         metric=fn.sla.metric,
         observed_value=sla.observed,
-        threshold_op=fn.sla.threshold_op,
-        threshold_value=fn.sla.threshold_value,
-        sla_outcome=sla.outcome,
         method=method,
         note=_note(reading, sla),
+        outcome=sla.outcome,
     )
 
 

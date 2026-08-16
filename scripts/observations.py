@@ -15,9 +15,9 @@ A single point-in-time verdict is useless for uptime-style SLAs. This script mai
 - `upload-thresholds --oso-org UUID` — pushes `data/thresholds.csv` (see
   `fpm.thresholds`) to the public `filpgf_sla_thresholds` static model.
 
-Columns: observed_at, team, function_id, metric, observed_value, threshold_op,
-threshold_value, sla_outcome, method, note. sla_outcome is computed against TODAY's
-threshold (goalpost history is the registry's job, not this table's).
+Columns: observed_at, team, function_id, metric, observed_value, method, note. Measurement
+only — the bar a value is judged against lives in `data/thresholds.csv` (see
+`fpm.thresholds`), published as `filpgf_sla_thresholds`.
 
 Usage:
   uv run python scripts/observations.py backfill [--days 365]
@@ -44,9 +44,6 @@ COLUMNS = [
     "function_id",
     "metric",
     "observed_value",
-    "threshold_op",
-    "threshold_value",
-    "sla_outcome",
     "method",
     "note",
 ]
@@ -59,20 +56,7 @@ def _get(url: str, timeout: float = 30.0):
     return r.json()
 
 
-def _outcome(value: float | None, op: str, threshold: float) -> str:
-    if value is None:
-        return "indeterminate"
-    ops = {
-        ">=": value >= threshold,
-        "<=": value <= threshold,
-        ">": value > threshold,
-        "<": value < threshold,
-        "==": value == threshold,
-    }
-    return "pass" if ops[op] else "fail"
-
-
-def _row(observed_at, team, fid, metric, value, op, threshold, method, note=""):
+def _row(observed_at, team, fid, metric, value, method, note=""):
     return {
         "observed_at": observed_at.strftime("%Y-%m-%d")
         if hasattr(observed_at, "strftime")
@@ -81,9 +65,6 @@ def _row(observed_at, team, fid, metric, value, op, threshold, method, note=""):
         "function_id": fid,
         "metric": metric,
         "observed_value": None if value is None else round(float(value), 6),
-        "threshold_op": op,
-        "threshold_value": threshold,
-        "sla_outcome": _outcome(value, op, threshold) if op else "",
         "method": method,
         "note": note,
     }
@@ -111,8 +92,6 @@ def _daily_series_usdfc_tvl(cutoff: datetime) -> list[dict]:
                     "usdfc-collateral-tvl-floor",
                     "usdfc_tvl_usd",
                     p.get("totalLiquidityUSD"),
-                    ">=",
-                    100_000,
                     "backfill:api.llama.fi",
                     "daily protocol TVL history",
                 )
@@ -141,8 +120,6 @@ def _daily_series_blockscout(cutoff: datetime) -> list[dict]:
                         fid,
                         "daily_indexed_transactions",
                         float(p["value"]),
-                        ">",
-                        0,
                         f"backfill:{host}",
                         "reconstructed operational history (explorer indexed the day); "
                         "live SLA metric is head-block age",
@@ -203,7 +180,7 @@ _RELEASE_REPOS = [
 
 def _release_series(cutoff: datetime) -> list[dict]:
     out = []
-    for team, fid, repo, metric, op, thr, stable in _RELEASE_REPOS:
+    for team, fid, repo, metric, _op, _thr, stable in _RELEASE_REPOS:
         rels = _get(f"https://api.github.com/repos/{repo}/releases?per_page=100")
         dates = sorted(
             _parse_dt(r["published_at"])
@@ -227,8 +204,6 @@ def _release_series(cutoff: datetime) -> list[dict]:
                         fid,
                         metric,
                         gap,
-                        op,
-                        thr,
                         "backfill:api.github.com",
                         f"gap since previous release of {repo}",
                     )
@@ -306,7 +281,7 @@ _AGE_REPOS = [
 
 def _age_series(cutoff: datetime, now: datetime) -> list[dict]:
     out = []
-    for team, fid, repo, kind, metric, op, thr in _AGE_REPOS:
+    for team, fid, repo, kind, metric, _op, _thr in _AGE_REPOS:
         if kind == "releases":
             items = _get(f"https://api.github.com/repos/{repo}/releases?per_page=100")
             dates = sorted(_parse_dt(r["published_at"]) for r in items if r.get("published_at"))
@@ -331,8 +306,6 @@ def _age_series(cutoff: datetime, now: datetime) -> list[dict]:
                         fid,
                         metric,
                         age,
-                        op,
-                        thr,
                         "backfill:api.github.com",
                         f"weekly sample from {repo} {kind} history",
                     )
@@ -365,8 +338,6 @@ def _snapshot_series(cutoff: datetime) -> list[dict]:
                         fid,
                         metric + "_daily_max_gap",
                         gap,
-                        "<=",
-                        21600,
                         "backfill:forest-archive.chainsafe.dev",
                         f"max inter-snapshot gap that day ({net}, archive retention window)",
                     )
@@ -394,8 +365,6 @@ def _status_series(cutoff: datetime) -> list[dict]:
                 "network-monitoring-status-page",
                 "incidents_in_month",
                 by_month.get(key, 0),
-                "",
-                0,
                 "backfill:status.filecoin.io",
                 "incident history (informational, no SLA threshold)",
             )
@@ -441,8 +410,6 @@ def _statuspage_daily_series(cutoff: datetime) -> list[dict]:
                     fid,
                     metric,
                     down,
-                    "<=",
-                    0,
                     "backfill:" + url.split("/")[2],
                     "operator status page (self-reported): 1 = active incident that day",
                 )
@@ -491,8 +458,6 @@ def live_rows(store_dir: str) -> list[dict]:
                 r.function_id,
                 reading.metric,
                 sla.observed,
-                sla.op,
-                sla.threshold if sla.threshold is not None else 0,
                 "live-review",
                 "scheduled review reading",
             )
