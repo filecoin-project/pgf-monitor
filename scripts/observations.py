@@ -38,15 +38,7 @@ import requests
 from fpm import observations as fpm_observations
 
 CSV_PATH = Path("data/observations.csv")
-COLUMNS = [
-    "observed_at",
-    "team",
-    "function_id",
-    "metric",
-    "observed_value",
-    "method",
-    "note",
-]
+COLUMNS = fpm_observations.COLUMNS
 UA = {"User-Agent": "fpm-monitor/1.0 (+github.com/filecoin-project/pgf-monitor)"}
 
 

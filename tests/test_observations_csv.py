@@ -64,9 +64,7 @@ def test_history_is_preserved_across_appends(tmp_path):
 
 def test_a_null_reading_round_trips_as_empty(tmp_path):
     path = tmp_path / "observations.csv"
-    rows = append_observations(
-        [_obs(observed_value=None, note="fetch_error: boom")], path
-    )
+    rows = append_observations([_obs(observed_value=None, note="fetch_error: boom")], path)
     assert rows[0]["observed_value"] == ""
     assert load_rows(path)[0]["note"] == "fetch_error: boom"
 
@@ -96,7 +94,7 @@ def test_merge_leaves_existing_rows_untouched():
 
 def test_columns_are_measurement_only():
     """Thresholds and outcomes live in fpm.thresholds and at render. A stored outcome is a
-    frozen judgement against a bar that can change — which is how 2,398 rows came to be
+    frozen judgment against a bar that can change — which is how 2,398 rows came to be
     judged against an IPNI threshold nobody signed."""
     assert observations.COLUMNS == [
         "observed_at",
@@ -117,7 +115,7 @@ def test_the_shipped_csv_has_been_migrated():
     assert header == observations.COLUMNS
 
 
-def test_indeterminate_is_still_signalled_by_an_empty_value():
+def test_indeterminate_is_still_signaled_by_an_empty_value():
     """The equivalence that makes dropping sla_outcome lossless: every indeterminate row had
     an empty observed_value, and no valued row was indeterminate. After migration the empty
     cell is the ONLY remaining signal, so blank rows must still be present and readable.

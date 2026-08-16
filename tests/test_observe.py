@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
 from fpm.manifest import load_manifest
-from fpm.observe import observe
+from fpm.observe import observe, thresholds_for
 
 AS_OF = datetime(2026, 7, 1, tzinfo=timezone.utc)
 FIXTURES = Path("fixtures/responses")
@@ -96,11 +98,6 @@ def test_review_and_observe_agree_on_the_number(tmp_path):
     for o in _observe():
         assert o.observed_value == reviewed[o.function_id].observed
         assert o.outcome == reviewed[o.function_id].outcome
-
-
-import yaml
-
-from fpm.observe import thresholds_for
 
 
 def test_thresholds_for_emits_one_record_per_function():
