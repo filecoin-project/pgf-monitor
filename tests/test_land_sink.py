@@ -37,3 +37,34 @@ def test_land_dataset_reused_by_name(sample_bundle):
     land([sample_bundle()], sink)
     land([sample_bundle()], sink)  # second land reuses the same datasets, not new ones
     assert len(client.datasets) == 2  # exactly filpgf_public + filpgf_private
+
+
+def test_republish_reuses_the_static_model(sample_bundle):
+    """Landing twice must reuse the model, not try to create it again.
+
+    `land` republishes the SAME two tables on every review. The live client used to call
+    createStaticModel unconditionally, which fails with ALREADY_EXISTS on the second land —
+    so verdicts could only ever be published once. Caught landing the 2026-08-16 review.
+    """
+    client = FakeStaticModelClient()
+    sink = StaticModelSink(client, org_id="org")
+    rows = verdict_rows([sample_bundle()])[0]
+
+    first = sink.publish("filpgf_sla_verdicts", rows, public=True)
+    second = sink.publish("filpgf_sla_verdicts", rows, public=True)
+
+    assert first == second, "republish must reuse the existing static model"
+    assert len(client.models) == 1, "no duplicate model should be created"
+
+
+def test_distinct_names_get_distinct_models(sample_bundle):
+    """Idempotency keys on (dataset, name) — the public and private tables stay separate."""
+    client = FakeStaticModelClient()
+    sink = StaticModelSink(client, org_id="org")
+    pub_rows, priv_rows = verdict_rows([sample_bundle()])
+
+    pub = sink.publish("filpgf_sla_verdicts", pub_rows, public=True)
+    priv = sink.publish("filpgf_sla_verdicts_private", priv_rows, public=False)
+
+    assert pub != priv
+    assert len(client.models) == 2

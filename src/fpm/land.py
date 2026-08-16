@@ -86,7 +86,7 @@ class VerdictSink(Protocol):
 
 class StaticModelClient(Protocol):
     def ensure_static_dataset(self, org_id: str, name: str) -> str: ...
-    def create_static_model(self, org_id: str, dataset_id: str, name: str) -> str: ...
+    def ensure_static_model(self, org_id: str, dataset_id: str, name: str) -> str: ...
     def upload_csv(self, static_model_id: str, csv_text: str) -> None: ...
     def run_static_model(self, dataset_id: str) -> None: ...
     def grant_public(self, static_model_id: str) -> None: ...
@@ -98,6 +98,7 @@ class FakeStaticModelClient:
     def __init__(self) -> None:
         self.datasets: dict[str, str] = {}  # name -> dataset_id
         self.models: dict[str, str] = {}  # model_id -> dataset_id
+        self.model_ids: dict[tuple[str, str], str] = {}  # (dataset_id, name) -> model_id
         self.uploaded: dict[str, str] = {}  # model_id -> csv text
         self.granted_public: set[str] = set()
         self.ran: list[str] = []
@@ -112,10 +113,13 @@ class FakeStaticModelClient:
             self.datasets[name] = self._next("ds")
         return self.datasets[name]
 
-    def create_static_model(self, org_id: str, dataset_id: str, name: str) -> str:
-        model_id = self._next("sm")
-        self.models[model_id] = dataset_id
-        return model_id
+    def ensure_static_model(self, org_id: str, dataset_id: str, name: str) -> str:
+        key = (dataset_id, name)
+        if key not in self.model_ids:
+            model_id = self._next("sm")
+            self.model_ids[key] = model_id
+            self.models[model_id] = dataset_id
+        return self.model_ids[key]
 
     def upload_csv(self, static_model_id: str, csv_text: str) -> None:
         self.uploaded[static_model_id] = csv_text
@@ -136,7 +140,7 @@ class StaticModelSink:
 
     def publish(self, name: str, rows: list[dict], public: bool) -> str:
         dataset_id = self._client.ensure_static_dataset(self._org_id, name)
-        model_id = self._client.create_static_model(self._org_id, dataset_id, name)
+        model_id = self._client.ensure_static_model(self._org_id, dataset_id, name)
         self._client.upload_csv(model_id, to_csv(rows))
         self._client.run_static_model(dataset_id)
         if public:
