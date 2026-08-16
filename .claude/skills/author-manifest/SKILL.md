@@ -78,7 +78,11 @@ you need no credentials to author and validate a manifest.
 
 6. **Thresholds are commitments**: derive from the probe (observed 30s cadence →
    threshold 45s), state the rationale in a `# THRESHOLD:` comment. If uncertain, mark
-   `PLACEHOLDER` and flag for the team/committee.
+   `PLACEHOLDER` and flag for the team/committee. `sla.threshold` is optional — omitting
+   it entirely means "measured, not scored," the honest state when there is no agreement
+   to point to. Give it `source: signed-appendix` only once you've read the number in the
+   signed appendix; it defaults to `provisional`, and the dashboard labels provisional
+   bars as such. Never invent a number just to fill the slot.
 
 7. **Validate** (must be clean before any commit):
    ```bash

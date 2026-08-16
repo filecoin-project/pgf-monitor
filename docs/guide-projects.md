@@ -34,7 +34,10 @@ Your job: make the manifest *yours*.
 - Confirm or change each metric. You know your service better than we do — if there is
   a better health signal (a status endpoint, a metrics API), swap it in.
 - Set thresholds you are willing to be held to. The SLA `statement` should read as a
-  plain-English promise.
+  plain-English promise. Omitting `sla.threshold` entirely is legitimate — it means the
+  function is monitored but not scored, which is honest when there is no agreement to
+  point to yet or your signed §3 still reads "(to confirm)". Don't invent a number just
+  to fill the slot.
 - Anything genuinely unmeasurable (coordination work, quality judgments) belongs in
   `x_draft.unmeasured` with a reason — honesty beats theater.
 
@@ -53,7 +56,12 @@ Your job: make the manifest *yours*.
   sla:
     statement: "Newest mainnet snapshot <= 6h old, measured daily"
     metric: snapshot_age_hours
-    threshold: { op: "<=", value: 6 }
+    threshold: { op: "<=", value: 6, source: signed-appendix }  # source defaults to
+                                              # `provisional`; use `signed-appendix` only
+                                              # once you've read the number off your signed
+                                              # agreement. Omit `threshold` entirely if none
+                                              # is agreed yet — the function is still
+                                              # monitored, just not scored.
     cadence: daily                            # daily | weekly | monthly
   source:
     adapter: oso
@@ -136,5 +144,6 @@ What happens on the PR:
 ## Changing your SLA later
 
 Edit `registry/<team>.yaml` in a PR. The same gate runs; material goalpost moves are
-labelled in the diff report and reviewed by the committee. Keep the `function_id`
-stable — it is the join key for your verdict history.
+labeled in the diff report and reviewed by the committee — a threshold appearing or
+disappearing is material too (`tightened` / `loosened`), same as changing its value.
+Keep the `function_id` stable — it is the join key for your verdict history.

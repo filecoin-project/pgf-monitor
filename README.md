@@ -27,9 +27,16 @@ The **Filecoin kernel** is the set of functions the network cannot operate witho
 into irreplaceable and essential tiers and catalogued in
 [`registry/_kernel.yaml`](registry/_kernel.yaml). Each funded team declares, in a public
 manifest, which kernel functions it maintains and how to check each one: a **metric**, a
-**public source** for it, and an **SLA** (the threshold it commits to). The pipeline fetches
-each source, evaluates the SLA, and publishes the result. Every value comes from the source,
-not from self-reporting.
+**public source** for it, and an **SLA** (the threshold it commits to — a team may also
+have none yet, which just means "monitored, not scored"). The pipeline fetches each
+source, evaluates against the threshold as it stood that day, and publishes the result.
+Every value comes from the source, not from self-reporting.
+
+Two append-only tables carry the history: `data/observations.csv` records what was
+measured, `data/thresholds.csv` records what was promised on that same day. Neither
+stores an outcome — the dashboard joins them at render time and derives
+pass/fail/unscored/indeterminate, so fixing a threshold fixes the judgment on every past
+reading instead of leaving it scored against a bar nobody agreed to.
 
 ```
 FUNCTION → SLA → SOURCE → READING → EVALUATION → RECOMMENDATION → VERDICT
@@ -117,6 +124,8 @@ registry/            the trust anchor (PR-governed, CI-gated)
   <team>.yaml          adopted team manifests, running live
   drafts/<team>.yaml   staging for new proposals, created on demand
 src/fpm/             the pipeline: manifest → fetch → evaluate → recommend → adjudicate → land
+data/                observations.csv + thresholds.csv, the append-only time series
+                       (never hand-edited — written only through fpm.observations / fpm.thresholds)
 scripts/             validate_pr (the PR gate), validate_draft / promote_draft, offline demos
 dashboards/          propgf-kernel-health.py (marimo; uv sync --extra dashboards)
 docs/                guides (project · reviewer · governance · coverage)
@@ -128,7 +137,7 @@ docs/                guides (project · reviewer · governance · coverage)
 `registry/` changes ride PRs. A **static gate** runs on every PR with no secrets: it checks
 the schema, kernel-taxonomy conformance, the source-host allowlist, and transform-SQL safety,
 and prints a **goalpost report** — a team can't quietly loosen an SLA, because every threshold
-change is classified and surfaced for review. The committee's `dry-run-ok` label triggers a
+change is classified and surfaced for review, including a threshold appearing or disappearing. The committee's `dry-run-ok` label triggers a
 **live dry-run** that provisions the source for real and posts the observed value before merge.
 CODEOWNERS keeps each team's file under its own maintainers, and the kernel taxonomy itself
 evolves by reviewed PR.

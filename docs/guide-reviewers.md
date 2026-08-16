@@ -41,7 +41,11 @@ adjudicator: the model's output is advisory (`a` approve / `revise` / `reject` /
 `defer`). `--dev-auto-approve` exists for development only and says so loudly.
 
 Outcome vocabulary: `pass` / `fail` / **`indeterminate`** (the source could not produce
-a defensible number — never silently coerced to pass or fail).
+a defensible number — never silently coerced to pass or fail) / **`unscored`** (a value
+*was* measured, but no threshold is on file for that day — a manifest with no
+`sla.threshold`, or a reading that predates the thresholds series). Don't conflate the
+two: `indeterminate` is a fact-finding failure, `unscored` is the absence of an agreed
+bar to judge a perfectly good reading against.
 
 ## 3. Land verdicts to the warehouse
 
@@ -64,7 +68,9 @@ ORDER BY team, function_id;
 ## 4. Reviewing a manifest PR
 
 1. Read the **static-gate job summary**: validation problems, and the goalpost report —
-   `MATERIAL`/`loosened` lines are the ones that need committee eyes.
+   `MATERIAL`/`loosened` lines are the ones that need committee eyes. A threshold
+   appearing or disappearing classifies as `MATERIAL` too (`tightened` for appearing,
+   `loosened` for disappearing), same as any other goalpost move.
 2. If the entry looks right, apply the **`dry-run-ok` label**: the live dry-run
    provisions the source in OSO, fetches once, posts the observed value, and cleans up.
    A FAILED run blocks merge — this is what catches "works on my machine" sources.
@@ -74,15 +80,24 @@ ORDER BY team, function_id;
 
 ## 4b. Keep the time series accruing
 
-Verdicts are snapshots; the dashboard's per-function history comes from the append-only
-observations table (`filecoin.filpgf_sla_observations`).
+Verdicts are snapshots; the dashboard's per-function history comes from two append-only
+tables that the dashboard joins at render time: `data/observations.csv` (what was
+measured — `filecoin.filpgf_sla_observations`) and `data/thresholds.csv` (the bar as it
+stood that day — `filecoin.filpgf_sla_thresholds`). Neither stores an outcome; the join
+key is `(observed_at, team, function_id, metric)`, and pass/fail/unscored/indeterminate
+is derived at render. That means correcting a threshold fixes history — old readings get
+re-judged against the corrected bar instead of staying wrong forever. The thresholds
+series starts 2026-08-16 with no backfill, so anything measured before that date renders
+`unscored`: we decline to assert today's threshold over readings we didn't have a bar
+for at the time.
 
 **This is automatic now.** `.github/workflows/observe.yml` runs nightly at 06:17 UTC, measures
-every adopted metric, and commits the readings to `data/observations.csv`. It runs
-`fpm observe` — the deterministic half of the pipeline, fetch and evaluate only. No model, no
-adjudication: a verdict stays a human act, and nothing unattended ever writes one. A red run in
-the Actions tab means the readings did not land that night; re-run it by hand from the same tab
-(`Run workflow`), optionally with an `as_of` date to fill a specific gap.
+every adopted metric, and commits the readings to both `data/observations.csv` and
+`data/thresholds.csv`. It runs `fpm observe` — the deterministic half of the pipeline, fetch and
+evaluate only. No model, no adjudication: a verdict stays a human act, and nothing unattended
+ever writes one. A red run in the Actions tab means the readings did not land that night; re-run
+it by hand from the same tab (`Run workflow`), optionally with an `as_of` date to fill a specific
+gap.
 
 To take a reading yourself — after a review, or to check a source before merging:
 
@@ -95,17 +110,18 @@ uv run fpm observe --live-oso --oso-org <org-uuid>   # fetch for real (needs OSO
 `fpm observe` is idempotent per day: re-running it replaces that day's rows rather than
 appending duplicates, so a re-run after fixing a source leaves the good reading in place.
 
-After landing verdicts, re-upload the table so the dashboard sees the new rows:
+After landing verdicts, re-upload both tables so the dashboard sees the new rows:
 
 ```bash
 uv run python scripts/observations.py upload --oso-org <org-uuid>
+uv run python scripts/observations.py upload-thresholds --oso-org <org-uuid>
 ```
 
 `scripts/observations.py backfill` reconstructs history where a source's own data
 carries it (DefiLlama daily TVL, Blockscout daily indexing charts, GitHub
 release/commit event history, snapshot-archive listings, status-page incidents) —
-every backfilled row is labelled with its method. `data/observations.csv` is the
-git-tracked record.
+every backfilled row is labeled with its method. `data/observations.csv` and
+`data/thresholds.csv` are the git-tracked records; never hand-edit either.
 
 ## 5. Automate the reporting loop
 
@@ -156,6 +172,8 @@ uv run marimo run dashboards/propgf-kernel-health.py
 - **Manipulation detectors** run deterministically (indicators, not determinations) and
   ride with the recommendation.
 - **Goalpost tracking**: SLA edits are diffed field-by-field and classified
-  (material / new / trivial, tightened / loosened) — visible in every PR.
+  (material / new / trivial, tightened / loosened) — visible in every PR. A threshold
+  appearing or disappearing is diffed the same way.
 - **`indeterminate` is first-class**: a broken source is a fact to adjudicate, not a
-  pass, not a fail.
+  pass, not a fail. **`unscored`** is a different fact: the reading is fine, there is
+  just no agreed bar to judge it against yet.
