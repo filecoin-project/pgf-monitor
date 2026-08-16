@@ -92,6 +92,43 @@ def test_review_and_observe_agree_on_the_number(tmp_path):
         assert o.sla_outcome == reviewed[o.function_id].outcome
 
 
+import yaml
+
+from fpm.observe import thresholds_for
+
+
+def test_thresholds_for_emits_one_record_per_function():
+    """One row per function per run, mirroring observations exactly — that parity is what
+    makes the render-time join a plain equality rather than an as-of window."""
+    recs = thresholds_for(MANIFEST, AS_OF)
+    manifest = load_manifest(MANIFEST)
+    assert [r.function_id for r in recs] == [f.function_id for f in manifest.functions]
+    assert {r.observed_at for r in recs} == {"2026-07-01"}
+    assert {r.team for r in recs} == {"chainsafe"}
+    assert all(r.source in {"signed-appendix", "to-confirm", "provisional"} for r in recs)
+
+
+def test_thresholds_for_matches_the_observation_keys():
+    """The join key must agree by construction, or compliance silently disappears."""
+    obs_keys = {(o.team, o.function_id, o.metric, o.observed_at) for o in _observe()}
+    thr_keys = {(r.team, r.function_id, r.metric, r.observed_at) for r in thresholds_for(MANIFEST, AS_OF)}
+    assert obs_keys == thr_keys
+
+
+def test_thresholds_for_carries_none_when_unbound(tmp_path):
+    """A function with no agreed SLA still gets a row — the absence is the fact being
+    recorded. A missing row would be indistinguishable from a day the monitor did not run."""
+    raw = yaml.safe_load(Path(MANIFEST).read_text())
+    for f in raw["functions"]:
+        f["sla"].pop("threshold", None)
+    p = tmp_path / "unbound.yaml"
+    p.write_text(yaml.safe_dump(raw, sort_keys=False))
+    recs = thresholds_for(p, AS_OF)
+    assert recs
+    assert all(r.threshold_op is None and r.threshold_value is None for r in recs)
+    assert all(r.source == "provisional" for r in recs)
+
+
 def test_a_failed_ingestion_run_says_so():
     """ "no value in source response" blames the source for a fetch that never completed."""
     from fpm.domain import Claim, MeasurementWindow, Reading, SlaResult

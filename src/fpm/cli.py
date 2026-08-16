@@ -81,6 +81,7 @@ def run_observe_cli(
     oso_org: str,
     dry_run: bool,
     reprovision: bool = False,
+    thresholds_csv: str = "data/thresholds.csv",
 ) -> int:
     """Measure every function in every named manifest and append the readings to the CSV.
 
@@ -93,7 +94,8 @@ def run_observe_cli(
 
     from fpm.governance.allowlist import load_allowlist
     from fpm.observations import append_observations
-    from fpm.observe import observe
+    from fpm.observe import observe, thresholds_for
+    from fpm.thresholds import append_thresholds
 
     # A live run takes tens of minutes (47 metrics, each an OSO ingestion run polled to terminal).
     # Every progress line is flushed because stdout is block-buffered whenever it is not a tty —
@@ -140,6 +142,7 @@ def run_observe_cli(
     _say(f"observing {len(paths)} manifests at {as_of.date().isoformat()}")
 
     observations, failed = [], []
+    threshold_records: list = []
     for index, path in enumerate(paths, start=1):
         team_started = time.monotonic()
         last = [team_started]
@@ -172,15 +175,20 @@ def run_observe_cli(
         counts = Counter(o.sla_outcome for o in got)
         _say(
             f"  {path.stem}: {len(got)} metrics  "
-            f"pass={counts['pass']} fail={counts['fail']} indeterminate={counts['indeterminate']}"
+            f"pass={counts['pass']} fail={counts['fail']} "
+            f"unscored={counts['unscored']} indeterminate={counts['indeterminate']}"
             f"  ({time.monotonic() - team_started:.0f}s)"
         )
         observations.extend(got)
+        # Recorded from the manifest that was just measured, so the two tables always carry the
+        # same (day, team, function, metric) keys and the render-time join cannot miss.
+        threshold_records.extend(thresholds_for(path, as_of))
 
     totals = Counter(o.sla_outcome for o in observations)
     _say(
         f"\n{len(observations)} observations at {as_of.date().isoformat()} "
-        f"(pass={totals['pass']} fail={totals['fail']} indeterminate={totals['indeterminate']}) "
+        f"(pass={totals['pass']} fail={totals['fail']} "
+        f"unscored={totals['unscored']} indeterminate={totals['indeterminate']}) "
         f"in {(time.monotonic() - started) / 60:.1f}m"
     )
     # A metric with no value is not a neutral gap: it is a source that has stopped answering, and
@@ -211,6 +219,8 @@ def run_observe_cli(
     elif observations:
         rows = append_observations(observations, Path(csv_path))
         _say(f"\n{csv_path}: {len(rows)} rows")
+        trows = append_thresholds(threshold_records, Path(thresholds_csv))
+        _say(f"{thresholds_csv}: {len(trows)} rows")
 
     if failed:
         print(f"manifests that failed to run: {', '.join(failed)}", file=sys.stderr, flush=True)
@@ -265,6 +275,7 @@ def main(argv: list[str] | None = None) -> int:
     obs.add_argument("--as-of", default="", help="observation date (default: today, UTC)")
     obs.add_argument("--method", default="nightly", help="provenance label for the rows written")
     obs.add_argument("--csv", default="data/observations.csv")
+    obs.add_argument("--thresholds-csv", default="data/thresholds.csv")
     obs.add_argument("--live-oso", action="store_true", help="fetch for real via the OSO adapter")
     obs.add_argument("--oso-org", default="", help="OSO org id for --live-oso")
     obs.add_argument("--dry-run", action="store_true", help="measure and report, write nothing")
@@ -315,6 +326,7 @@ def main(argv: list[str] | None = None) -> int:
             as_of=as_of,
             method=args.method,
             csv_path=args.csv,
+            thresholds_csv=args.thresholds_csv,
             live_oso=args.live_oso,
             oso_org=args.oso_org,
             dry_run=args.dry_run,

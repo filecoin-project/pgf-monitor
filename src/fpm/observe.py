@@ -45,6 +45,22 @@ class Observation(_Model):
     note: str = ""
 
 
+class ThresholdRecord(_Model):
+    """One (day, team, function, metric) commitment, flattened for the CSV time series.
+
+    Separate from Observation on purpose: a value and a promise are different kinds of fact,
+    and only one of them changes when a grant agreement is corrected.
+    """
+
+    observed_at: str  # YYYY-MM-DD, UTC
+    team: str
+    function_id: str
+    metric: str
+    threshold_op: ComparisonOperator | None
+    threshold_value: float | None
+    source: str
+
+
 def error_reading(
     fn: FunctionSpec, team: str, window: MeasurementWindow, exc: Exception
 ) -> Reading:
@@ -157,3 +173,26 @@ def observe(
         if on_observation is not None:
             on_observation(obs)
     return out
+
+
+def thresholds_for(manifest_path: str | Path, as_of: datetime) -> list[ThresholdRecord]:
+    """The commitments a manifest declares on one day. Pure: no adapters, no network.
+
+    Emits a row for EVERY function, including ones with no agreed threshold — the absence is
+    the fact being recorded, and a missing row would be indistinguishable from a day the
+    monitor did not run.
+    """
+    manifest: Manifest = load_manifest(manifest_path)
+    day = as_of.date().isoformat()
+    return [
+        ThresholdRecord(
+            observed_at=day,
+            team=manifest.team,
+            function_id=fn.function_id,
+            metric=fn.sla.metric,
+            threshold_op=fn.sla.threshold_op,
+            threshold_value=fn.sla.threshold_value,
+            source=fn.sla.threshold_source,
+        )
+        for fn in manifest.functions
+    ]
