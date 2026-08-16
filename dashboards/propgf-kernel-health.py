@@ -96,6 +96,7 @@ def theme():
         "pass": "#16A34A",          # green — okay
         "fail": "#DC2626",          # red — recent interruption
         "indeterminate": "#D97706", # amber — indeterminate
+        "unscored": "#64748B",      # slate — measured, but no agreed bar
         "monitored": "#D97706",     # -> amber
         "proposed": "#D97706",      # -> amber
         "unmonitored": "#D97706",   # -> amber
@@ -223,11 +224,45 @@ def obs_data(FALLBACK, mo, pyoso_db_conn, to_records):
     try:
         _rows = to_records(
             mo.sql(
-                """/* uptime-strips + drand-statuspage 2026-07-20 */
-                SELECT function_id, observed_at, metric, observed_value,
-                       threshold_op, threshold_value, sla_outcome, method
-                FROM filecoin.filpgf_sla_observations.filpgf_sla_observations
-                ORDER BY observed_at
+                """/* uptime-strips + drand-statuspage 2026-07-20; threshold join 2026-08-16.
+                   Compliance is computed HERE, not stored: the thresholds table carries the bar as it
+                   stood on each day, so a corrected threshold re-renders history honestly instead of
+                   leaving old rows judged against a number nobody agreed to. */
+                SELECT o.function_id,
+                       o.observed_at,
+                       o.metric,
+                       o.observed_value,
+                       t.threshold_op,
+                       t.threshold_value,
+                       t.source AS threshold_source,
+                       CASE
+                         WHEN o.observed_value IS NULL OR o.observed_value = '' THEN 'indeterminate'
+                         WHEN t.threshold_op IS NULL THEN 'unscored'
+                         WHEN t.threshold_op = '>=' THEN
+                           CASE WHEN CAST(o.observed_value AS DOUBLE) >= CAST(t.threshold_value AS DOUBLE)
+                                THEN 'pass' ELSE 'fail' END
+                         WHEN t.threshold_op = '<=' THEN
+                           CASE WHEN CAST(o.observed_value AS DOUBLE) <= CAST(t.threshold_value AS DOUBLE)
+                                THEN 'pass' ELSE 'fail' END
+                         WHEN t.threshold_op = '>' THEN
+                           CASE WHEN CAST(o.observed_value AS DOUBLE) > CAST(t.threshold_value AS DOUBLE)
+                                THEN 'pass' ELSE 'fail' END
+                         WHEN t.threshold_op = '<' THEN
+                           CASE WHEN CAST(o.observed_value AS DOUBLE) < CAST(t.threshold_value AS DOUBLE)
+                                THEN 'pass' ELSE 'fail' END
+                         WHEN t.threshold_op = '==' THEN
+                           CASE WHEN CAST(o.observed_value AS DOUBLE) = CAST(t.threshold_value AS DOUBLE)
+                                THEN 'pass' ELSE 'fail' END
+                         ELSE 'unscored'
+                       END AS sla_outcome,
+                       o.method
+                FROM filecoin.filpgf_sla_observations.filpgf_sla_observations o
+                LEFT JOIN filecoin.filpgf_sla_thresholds.filpgf_sla_thresholds t
+                       ON t.observed_at = o.observed_at
+                      AND t.team = o.team
+                      AND t.function_id = o.function_id
+                      AND t.metric = o.metric
+                ORDER BY o.observed_at
                 """,
                 output=False,
                 engine=pyoso_db_conn,
@@ -402,11 +437,17 @@ def kernel_board(
         "pass": "OK",
         "fail": "interruption",
         "indeterminate": "indeterminate",
+        "unscored": "no agreed SLA",
         "monitored": "pending",
         "proposed": "pending",
         "unmonitored": "pending",
     }
-    _OC = {"pass": "#16A34A", "fail": "#DC2626", "indeterminate": "#D97706"}
+    _OC = {
+        "pass": "#16A34A",
+        "fail": "#DC2626",
+        "indeterminate": "#D97706",
+        "unscored": "#64748B",
+    }
 
     def _fmt(v):
         a = abs(v)
@@ -503,9 +544,11 @@ def kernel_board(
                 f'<line x1="{_ml}" y1="{_ty:.1f}" x2="{_W - _mr}" y2="{_ty:.1f}" '
                 f'stroke="{SIGNAL}" stroke-width="1.2" stroke-dasharray="4 3" opacity=".8"/>'
             )
+            _src = (_sp[-1].get("threshold_source") or "provisional") if _sp else "provisional"
+            _srcmark = "" if _src == "signed-appendix" else "  (provisional)"
             _p.append(
                 f'<text x="{_W - _mr}" y="{_ty - 4:.1f}" text-anchor="end" font-family="{FONT}" '
-                f'font-size="9.5" fill="{SIGNAL}">SLA {op} {_fmt(thr)}</text>'
+                f'font-size="9.5" fill="{SIGNAL}">SLA {op} {_fmt(thr)}{_srcmark}</text>'
             )
         _poly = " ".join(f"{_X(i):.1f},{_Y(v):.1f}" for i, v in enumerate(_vals))
         _p.append(
@@ -537,7 +580,9 @@ def kernel_board(
         # Atlassian-style uptime bars: one bar per day, coloured by SLA outcome (green pass /
         # red interruption / amber indeterminate / grey no-reading). This is the public rendering
         # of the SLA the team agreed to in its manifest — the outcome series, over time.
-        _rk = {"fail": 3, "indeterminate": 2, "": 2, "pass": 1}
+        # Worst-of-day wins. `unscored` ranks below indeterminate: not knowing the bar is a
+        # weaker statement than not getting a reading, and must not mask a genuine failure.
+        _rk = {"fail": 3, "indeterminate": 2, "": 2, "unscored": 1.5, "pass": 1}
         _bd = {}
         for _p in pts:
             _d = str(_p.get("observed_at"))[:10]
@@ -547,9 +592,11 @@ def kernel_board(
         _ds = sorted(_bd)[-90:]
         if not _ds:
             return ""
-        _npass = sum(1 for d in _ds if _bd[d] == "pass")
-        _nfail = sum(1 for d in _ds if _bd[d] == "fail")
-        _up = f"{100.0 * _npass / (_npass + _nfail):.1f}% uptime" if (_npass + _nfail) else "accruing"
+        # A day with no agreed bar is not a passing day and not a failing one — counting it
+        # either way is a claim we cannot support, so the percentage is over scored days only.
+        _scored = [d for d in _ds if _bd[d] in ("pass", "fail")]
+        _npass = sum(1 for d in _scored if _bd[d] == "pass")
+        _up = f"{100.0 * _npass / len(_scored):.1f}% uptime" if _scored else "—"
         _bars = "".join(
             f'<span title="{d}: {_bd[d] or "no reading"}" style="flex:1 1 0; min-width:2px; '
             f'height:22px; border-radius:1.5px; background:{_OC.get(_bd[d], "#CBD5E1")};"></span>'
