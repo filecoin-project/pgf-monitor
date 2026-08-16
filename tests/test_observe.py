@@ -114,7 +114,9 @@ def test_thresholds_for_emits_one_record_per_function():
 def test_thresholds_for_matches_the_observation_keys():
     """The join key must agree by construction, or compliance silently disappears."""
     obs_keys = {(o.team, o.function_id, o.metric, o.observed_at) for o in _observe()}
-    thr_keys = {(r.team, r.function_id, r.metric, r.observed_at) for r in thresholds_for(MANIFEST, AS_OF)}
+    thr_keys = {
+        (r.team, r.function_id, r.metric, r.observed_at) for r in thresholds_for(MANIFEST, AS_OF)
+    }
     assert obs_keys == thr_keys
 
 

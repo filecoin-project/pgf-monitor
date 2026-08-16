@@ -110,11 +110,26 @@ uv run fpm observe --live-oso --oso-org <org-uuid>   # fetch for real (needs OSO
 `fpm observe` is idempotent per day: re-running it replaces that day's rows rather than
 appending duplicates, so a re-run after fixing a source leaves the good reading in place.
 
-After landing verdicts, re-upload both tables so the dashboard sees the new rows:
+After landing verdicts, re-publish the tables and the notebook so the dashboard sees the
+new rows. The order matters and must not be inverted:
+
+1. `scripts/observations.py upload-thresholds --oso-org <org-uuid>` — creates/refreshes
+   `filpgf_sla_thresholds`.
+2. Publish the notebook — safe to do against the OLD (wider) observations table, because
+   the new query names only columns that exist in both the old and narrowed schemas.
+3. `scripts/observations.py upload --oso-org <org-uuid>` — republishes
+   `filpgf_sla_observations`, narrowed to the columns the notebook's committed query
+   expects.
+
+Inverting this order produces a window where the dashboard's `obs_data` cell hits its bare
+`except Exception` fallback (which has no `observations` entry), so every chart and uptime
+strip silently disappears: thresholds must exist, and the notebook must already be
+querying the narrowed shape, before the narrowed observations table replaces the old one.
 
 ```bash
-uv run python scripts/observations.py upload --oso-org <org-uuid>
 uv run python scripts/observations.py upload-thresholds --oso-org <org-uuid>
+# publish the notebook here
+uv run python scripts/observations.py upload --oso-org <org-uuid>
 ```
 
 `scripts/observations.py backfill` reconstructs history where a source's own data

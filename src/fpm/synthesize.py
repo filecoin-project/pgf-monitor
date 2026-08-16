@@ -13,6 +13,7 @@ _STATUS_FROM_SLA: dict[str, ReviewStatus] = {
     "pass": "meeting",
     "fail": "breach",
     "indeterminate": "pending_review",
+    "unscored": "pending_review",
 }
 
 

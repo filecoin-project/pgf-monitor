@@ -22,7 +22,7 @@ on:
         default: false
 
 permissions:
-  contents: write                   # the job commits data/observations.csv back to main
+  contents: write                   # the job commits data/observations.csv and data/thresholds.csv back to main
 
 concurrency:
   group: observe

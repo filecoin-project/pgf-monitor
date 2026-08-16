@@ -87,9 +87,7 @@ def test_the_same_day_is_replaced_not_appended(tmp_path):
 def test_distinct_days_accumulate_so_a_change_is_visible(tmp_path):
     p = tmp_path / "t.csv"
     thresholds.append_thresholds([_rec(observed_at="2026-08-15", threshold_value=0.95)], p)
-    rows = thresholds.append_thresholds(
-        [_rec(observed_at="2026-08-16", threshold_value=0.90)], p
-    )
+    rows = thresholds.append_thresholds([_rec(observed_at="2026-08-16", threshold_value=0.90)], p)
     assert [r["threshold_value"] for r in rows] == ["0.95", "0.9"]
 
 

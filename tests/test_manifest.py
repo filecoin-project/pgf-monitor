@@ -1,6 +1,6 @@
 import pytest
 
-from fpm.manifest import ManifestError, load_manifest
+from fpm.manifest import ManifestError, load_manifest, manifest_from_raw
 
 
 def test_load_valid_manifest():
@@ -50,9 +50,6 @@ def test_functions_carry_category_and_sub_category():
     assert fn.sub_category == "Network data & monitoring"
 
 
-from fpm.manifest import manifest_from_raw
-
-
 def _raw_function(**sla_overrides):
     sla = {
         "statement": "release cadence stays under 90 days",
@@ -93,9 +90,7 @@ def test_threshold_source_defaults_to_provisional():
 
 
 def test_threshold_source_is_read_from_the_manifest():
-    raw = _raw_function(
-        threshold={"op": "<=", "value": 90.0, "source": "signed-appendix"}
-    )
+    raw = _raw_function(threshold={"op": "<=", "value": 90.0, "source": "signed-appendix"})
     assert manifest_from_raw(raw).functions[0].sla.threshold_source == "signed-appendix"
 
 

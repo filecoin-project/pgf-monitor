@@ -51,6 +51,22 @@ def test_indeterminate_cannot_be_breach():
         validate_recommendation(out, d)
 
 
+def test_unscored_cannot_be_meeting():
+    d = _dossier(0)
+    d = d.model_copy(update={"sla_result": d.sla_result.model_copy(update={"outcome": "unscored"})})
+    out = SynthesisOutput(review_status="meeting", narrative="x", cited_evidence_hashes=[])
+    with pytest.raises(GateError):
+        validate_recommendation(out, d)
+
+
+def test_unscored_cannot_be_breach():
+    d = _dossier(0)
+    d = d.model_copy(update={"sla_result": d.sla_result.model_copy(update={"outcome": "unscored"})})
+    out = SynthesisOutput(review_status="breach", narrative="x", cited_evidence_hashes=[])
+    with pytest.raises(GateError):
+        validate_recommendation(out, d)
+
+
 def test_blank_narrative_rejected():
     d = _dossier(0)
     out = SynthesisOutput(

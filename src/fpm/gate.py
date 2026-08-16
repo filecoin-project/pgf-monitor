@@ -13,6 +13,7 @@ _ILLEGAL = {
     "indeterminate": {"meeting", "at-risk", "breach"},
     "pass": {"breach"},
     "fail": {"meeting"},
+    "unscored": {"meeting", "breach"},
 }
 
 

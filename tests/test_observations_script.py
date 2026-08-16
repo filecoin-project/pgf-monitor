@@ -31,9 +31,7 @@ def test_upload_thresholds_targets_its_own_table(monkeypatch):
             seen["public"] = True
 
     monkeypatch.setenv("OSO_API_KEY", "not-a-real-key")
-    monkeypatch.setattr(
-        "fpm.oso.static_model.GraphqlStaticModelClient", FakeClient, raising=True
-    )
+    monkeypatch.setattr("fpm.oso.static_model.GraphqlStaticModelClient", FakeClient, raising=True)
     script.main(["upload-thresholds", "--oso-org", "35c17c26-4aa8-47ba-ba75-be8fe1e3718c"])
     assert seen["dataset"] == "filpgf_sla_thresholds"
     assert seen["model"] == "filpgf_sla_thresholds"

@@ -19,11 +19,16 @@ def test_observe_writes_both_csvs(tmp_path):
     rc = main(
         [
             "observe",
-            "--registry", _registry(tmp_path),
-            "--fixtures", "fixtures/responses",
-            "--as-of", "2026-08-16",
-            "--csv", str(obs_csv),
-            "--thresholds-csv", str(thr_csv),
+            "--registry",
+            _registry(tmp_path),
+            "--fixtures",
+            "fixtures/responses",
+            "--as-of",
+            "2026-08-16",
+            "--csv",
+            str(obs_csv),
+            "--thresholds-csv",
+            str(thr_csv),
         ]
     )
     assert rc == 0
@@ -40,11 +45,16 @@ def test_observe_dry_run_writes_no_thresholds(tmp_path):
     main(
         [
             "observe",
-            "--registry", _registry(tmp_path),
-            "--fixtures", "fixtures/responses",
-            "--as-of", "2026-08-16",
-            "--csv", str(tmp_path / "observations.csv"),
-            "--thresholds-csv", str(thr_csv),
+            "--registry",
+            _registry(tmp_path),
+            "--fixtures",
+            "fixtures/responses",
+            "--as-of",
+            "2026-08-16",
+            "--csv",
+            str(tmp_path / "observations.csv"),
+            "--thresholds-csv",
+            str(thr_csv),
             "--dry-run",
         ]
     )

@@ -3,8 +3,8 @@
 # run_full_review.sh — the canonical FULL monitoring run, as one reproducible command.
 #
 # Reviews every registry team, lands the verdicts to the warehouse, and appends + uploads
-# the readings to the observations time series. The INVOCATION is deterministic (fixed team
-# order + fixed flags), so an agent can run it identically every time. The RESULTS are not
+# both the thresholds and observations time series. The INVOCATION is deterministic (fixed
+# team order + fixed flags), so an agent can run it identically every time. The RESULTS are not
 # deterministic, by design:
 #   - live readings change run-to-run (that is what monitoring is);
 #   - GitHub's 60/hr unauth rate limit makes some GitHub-sourced functions read
@@ -73,12 +73,23 @@ done
 echo "== land verdicts =="
 uv run fpm land --store "$STORE" --oso-org "$OSO_ORG_ID"
 
-echo "== append + upload observations =="
+# Upload order is load-bearing, not incidental (see docs/guide-reviewers.md §4):
+#   1. upload-thresholds FIRST — creates/refreshes filpgf_sla_thresholds.
+#   2. publish the notebook (a separate, held step this script does not run) — safe
+#      against the OLD observations table, because the new query names only columns
+#      that exist in both the old and narrowed schemas.
+#   3. upload (observations) LAST — republishing this table narrows it to what the
+#      notebook's committed query expects.
+# Inverting this order leaves a window where the dashboard's obs_data cell hits the bare
+# `except Exception` fallback (missing an "observations" entry) and every chart/uptime
+# strip silently disappears.
+echo "== append + upload thresholds and observations =="
 uv run python scripts/observations.py append --store "$STORE"
+uv run python scripts/observations.py upload-thresholds --oso-org "$OSO_ORG_ID"
 uv run python scripts/observations.py upload --oso-org "$OSO_ORG_ID"
 
 echo "== DONE: ${TEAMS[*]}"
-echo "== reviewed ${#TEAMS[@]} teams ($fails review failure(s)); verdicts landed; observations uploaded =="
+echo "== reviewed ${#TEAMS[@]} teams ($fails review failure(s)); verdicts landed; thresholds and observations uploaded =="
 if [[ $fails -gt 0 ]]; then
   echo "NOTE: $fails team(s) failed review — usually the GitHub 60/hr unauth rate limit;" >&2
   echo "      provision a committee GitHub token via a source auth.secret_ref to reduce it." >&2

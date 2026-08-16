@@ -69,9 +69,9 @@ def test_fail_when_below():
 @pytest.mark.parametrize(
     "value,op,threshold,expected",
     [
-        (0.90, ">=", 0.90, True),   # boundary equality passes for >=
+        (0.90, ">=", 0.90, True),  # boundary equality passes for >=
         (0.89, ">=", 0.90, False),
-        (0.90, ">", 0.90, False),   # boundary equality fails for >
+        (0.90, ">", 0.90, False),  # boundary equality fails for >
         (0.91, ">", 0.90, True),
         (5.0, "<=", 5.0, True),
         (5.1, "<=", 5.0, False),

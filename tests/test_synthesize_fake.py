@@ -1,12 +1,14 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
 from fpm.adapters.registry import build_adapters
 from fpm.detectors.base import DETECTORS
 from fpm.domain import window_for
 from fpm.dossier import assemble_dossier
 from fpm.evaluate import evaluate_sla
-from fpm.manifest import load_manifest
+from fpm.manifest import load_manifest, manifest_from_raw
 from fpm.synthesize import SYNTHESIS_JSON_SCHEMA, FakeReviewSynthesizer
 
 AS_OF = datetime(2026, 7, 1, tzinfo=timezone.utc)
@@ -39,6 +41,22 @@ def test_fake_indeterminate_pending_no_citation():
 def test_fake_exposes_metadata():
     s = FakeReviewSynthesizer()
     assert s.model_id == "fake" and s.prompt_version == "0"
+
+
+def test_unscored_synthesizes_pending_review_without_raising():
+    raw = yaml.safe_load(Path("tests/fixtures/chainsafe.yaml").read_text())
+    del raw["functions"][0]["sla"]["threshold"]
+    m = manifest_from_raw(raw)
+    fn = m.functions[0]
+    reading = build_adapters(Path("fixtures/responses"))["fixture"].fetch(
+        fn, "chainsafe", window_for(fn.sla.cadence, AS_OF)
+    )
+    sla = evaluate_sla(reading, fn, "chainsafe")
+    assert sla.outcome == "unscored"
+    results = DETECTORS.results(reading, fn)
+    dossier = assemble_dossier(m, fn, reading, sla, results, DETECTORS.flags(results))
+    out = FakeReviewSynthesizer().synthesize(dossier)
+    assert out.review_status == "pending_review"
 
 
 def test_schema_fields():
