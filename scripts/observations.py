@@ -10,8 +10,10 @@ A single point-in-time verdict is useless for uptime-style SLAs. This script mai
   with its method; nothing is invented — days the source doesn't cover don't exist.
 - `append --store DIR` — appends the live readings from a review run's ReviewBundles,
   so history accrues forward with every scheduled review.
-- `upload --oso-org UUID` — pushes the CSV to the public `filpgf_sla_observations`
-  static model.
+- `upload --oso-org UUID` — pushes `data/observations.csv` to the public
+  `filpgf_sla_observations` static model.
+- `upload-thresholds --oso-org UUID` — pushes `data/thresholds.csv` (see
+  `fpm.thresholds`) to the public `filpgf_sla_thresholds` static model.
 
 Columns: observed_at, team, function_id, metric, observed_value, threshold_op,
 threshold_value, sla_outcome, method, note. sla_outcome is computed against TODAY's
@@ -21,6 +23,7 @@ Usage:
   uv run python scripts/observations.py backfill [--days 365]
   uv run python scripts/observations.py append --store /tmp/fpm_all_store
   uv run python scripts/observations.py upload --oso-org <uuid>
+  uv run python scripts/observations.py upload-thresholds --oso-org <uuid>
 """
 
 from __future__ import annotations
@@ -513,21 +516,20 @@ def save_csv(rows: list[dict]) -> None:
     print(f"{CSV_PATH}: {len(merged)} rows")
 
 
-def upload(org_id: str) -> None:
+def upload(org_id: str, csv_path: Path, name: str) -> None:
     import os
 
     from fpm.oso.static_model import GraphqlStaticModelClient
 
     client = GraphqlStaticModelClient(api_key=os.environ["OSO_API_KEY"], org_id=org_id)
-    name = "filpgf_sla_observations"
     dataset_id = client.ensure_static_dataset(org_id, name)
     # ensure_, not create_: this republishes the SAME table every run, so creating
     # unconditionally fails with ALREADY_EXISTS from the second upload onward.
     model_id = client.ensure_static_model(org_id, dataset_id, name)
-    client.upload_csv(model_id, CSV_PATH.read_text())
+    client.upload_csv(model_id, csv_path.read_text())
     client.run_static_model(dataset_id)
     client.grant_public(model_id)
-    print(f"uploaded {CSV_PATH} -> {name} (dataset {dataset_id})")
+    print(f"uploaded {csv_path} -> {name} (dataset {dataset_id})")
 
 
 def main(argv=None) -> int:
@@ -539,6 +541,8 @@ def main(argv=None) -> int:
     a.add_argument("--store", required=True)
     u = sub.add_parser("upload")
     u.add_argument("--oso-org", required=True)
+    ut = sub.add_parser("upload-thresholds")
+    ut.add_argument("--oso-org", required=True)
     args = ap.parse_args(argv)
 
     if args.cmd == "backfill":
@@ -546,7 +550,11 @@ def main(argv=None) -> int:
     elif args.cmd == "append":
         save_csv(load_csv() + live_rows(args.store))
     elif args.cmd == "upload":
-        upload(args.oso_org)
+        upload(args.oso_org, CSV_PATH, "filpgf_sla_observations")
+    elif args.cmd == "upload-thresholds":
+        from fpm.thresholds import CSV_PATH as THRESHOLDS_CSV
+
+        upload(args.oso_org, THRESHOLDS_CSV, "filpgf_sla_thresholds")
     return 0
 
 
