@@ -3,13 +3,11 @@
 # OUTPUT of the endpoint directly: a stalled or forked backing node shows up as a stale
 # reported chain head on the endpoint the community actually calls.
 #
-# PENDING REPOINT: the SIGNED Appendix 1 §3 (agreement doc 1u_7hLjX…, 2026-08-14) names
-# `filecoin.chain.love`, not the api.chain.love host polled below. Under §2 the Recipient only
-# undertakes to keep the LISTED source public, so this manifest currently monitors a host that
-# carries no commitment. filecoin.chain.love is added to _allowlist.txt in this PR and verified
-# reachable (200 JSON on both functions); the base_url/endpoint swap follows in a SEPARATE PR,
-# because the static gate resolves the allowlist from the BASE ref — a PR that both adds a host
-# and uses it can never go green. That ordering is the guard rail, not an obstacle.
+# The host below is the one named in the SIGNED Appendix 1 §3 (agreement doc 1u_7hLjX…,
+# 2026-08-14). It previously polled api.chain.love, which the Recipient never undertook to keep
+# public under §2 — so a metric could have gone dark with no commitment breached. The allowlist
+# entry landed in #18; this completes the repoint. Verified reachable: 200 JSON on both
+# functions.
 team: chain-love
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -42,8 +40,8 @@ functions:
     source:
       adapter: oso
       kind: http-json
-      base_url: "https://api.chain.love"
-      endpoint: "https://api.chain.love/rpc/v1"
+      base_url: "https://filecoin.chain.love"
+      endpoint: "https://filecoin.chain.love/rpc/v1"
       query: "/rpc/v1"
       method: POST
       params: { jsonrpc: "2.0", method: "Filecoin.ChainHead", params: [], id: 1 }
@@ -79,8 +77,8 @@ functions:
     source:
       adapter: oso
       kind: http-json
-      base_url: "https://api.chain.love"
-      endpoint: "https://api.chain.love/rpc/v1"
+      base_url: "https://filecoin.chain.love"
+      endpoint: "https://filecoin.chain.love/rpc/v1"
       query: "/rpc/v1"
       method: POST
       params: { jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1 }
