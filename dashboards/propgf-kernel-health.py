@@ -236,7 +236,10 @@ def obs_data(FALLBACK, mo, pyoso_db_conn, to_records):
                        t.threshold_value,
                        t.source AS threshold_source,
                        CASE
-                         WHEN o.observed_value IS NULL OR o.observed_value = '' THEN 'indeterminate'
+                         /* observed_value lands as a DOUBLE, so comparing it to '' is a
+                            TYPE_MISMATCH that 400s the whole query and drops the page into its
+                            stale-JSON fallback. NULL is the only empty. */
+                         WHEN o.observed_value IS NULL THEN 'indeterminate'
                          WHEN t.threshold_op IS NULL THEN 'unscored'
                          WHEN t.threshold_op = '>=' THEN
                            CASE WHEN CAST(o.observed_value AS DOUBLE) >= CAST(t.threshold_value AS DOUBLE)
