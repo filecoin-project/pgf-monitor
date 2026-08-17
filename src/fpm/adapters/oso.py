@@ -9,6 +9,7 @@ network latency paces the loop.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from datetime import datetime, timezone
 
 from fpm.domain import Claim, EvidenceRef, MeasurementWindow, OsoRunRef, Reading
@@ -41,15 +42,19 @@ class OsoAdapter:
         allowlist: set[str],
         poll_attempts: int = 30,
         poll_sleep: float = 0.0,
+        dataset_namer: Callable[[str, str], str] = dataset_name,
     ) -> None:
         self._client = client
         self._org_id = org_id
         self._allowlist = allowlist
         self._poll_attempts = poll_attempts
         self._poll_sleep = poll_sleep
+        # The durable name by default. The PR dry-run overrides it so a throwaway measurement
+        # provisions its own dataset and can never reuse — or delete — a production one.
+        self._dataset_namer = dataset_namer
 
     def _ensure_dataset(self, fn: FunctionSpec, team: str, window: MeasurementWindow) -> str:
-        name = dataset_name(team, fn.function_id)
+        name = self._dataset_namer(team, fn.function_id)
         desired = build_ingestion_config(fn, window, team)
         dataset_id = self._client.find_dataset(self._org_id, name)
         if dataset_id is not None:
