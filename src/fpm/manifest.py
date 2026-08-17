@@ -16,6 +16,7 @@ _SCHEMA_PATH = Path(__file__).resolve().parents[2] / "registry" / "_schema.json"
 
 SourceKind = Literal["fixture", "http-json", "onchain-indexsupply"]
 ReduceOp = Literal["single", "latest", "avg", "min", "max", "null_ratio"]
+ThresholdSource = Literal["signed-appendix", "to-confirm", "provisional"]
 
 
 DeriveOp = Literal["value", "diff", "age_seconds", "age_days"]
@@ -44,8 +45,14 @@ class ManifestError(ValueError):
 class SlaSpec(_Model):
     statement: str
     metric: str
-    threshold_op: ComparisonOperator
-    threshold_value: float
+    # None/None means "measured but not scored": the team is monitored, but no threshold has
+    # been agreed yet. Several adopted functions are in exactly this state — their agreements
+    # are missing, or their signed appendix still marks the number "(to confirm)".
+    threshold_op: ComparisonOperator | None = None
+    threshold_value: float | None = None
+    # Where the number came from. A team passing a bar we invented must not render like a team
+    # passing one they signed.
+    threshold_source: ThresholdSource = "provisional"
     cadence: Cadence
 
 
@@ -127,8 +134,9 @@ def manifest_from_raw(raw: object) -> Manifest:
             sla=SlaSpec(
                 statement=f["sla"]["statement"],
                 metric=f["sla"]["metric"],
-                threshold_op=f["sla"]["threshold"]["op"],
-                threshold_value=f["sla"]["threshold"]["value"],
+                threshold_op=(f["sla"].get("threshold") or {}).get("op"),
+                threshold_value=(f["sla"].get("threshold") or {}).get("value"),
+                threshold_source=(f["sla"].get("threshold") or {}).get("source", "provisional"),
                 cadence=f["sla"]["cadence"],
             ),
             source=SourceSpec(

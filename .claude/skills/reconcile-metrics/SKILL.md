@@ -119,6 +119,14 @@ Goldsky and Zondax had no Batch 3 agreement on the Drive at all as of 2026-08-13
    the manifest disagree on a number, **the agreement is what they signed** — IPNI's
    `ipni_error_free_ratio` is `>= 0.90` in the document and `>= 0.95` in the manifest.
 
+   A number with no signed appendix behind it stays `sla.threshold.source: provisional` — do not
+   quietly promote it to `signed-appendix` because it "feels agreed"; that field is a record of
+   where the number came from, not of your confidence in it. And dropping the threshold entirely
+   is now available where a placeholder used to be the only option: if there is truly nothing
+   agreed yet, omit `sla.threshold` rather than ship a placeholder number the function will be
+   scored against by accident. That renders the function as monitored-but-unscored, which is more
+   honest than a "(to confirm)" bar nobody would recognize.
+
 6. **Sources must be the recipient's own.** §2 obliges them to keep every listed source public. A
    third-party endpoint (filfox, a coin API) is fine as an internal cross-check but is not theirs
    to commit to — putting it in their §3 makes them liable for someone else's uptime. Check the

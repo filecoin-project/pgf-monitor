@@ -1,5 +1,10 @@
 """`data/observations.csv` — the append-only time series, and the system of record for it.
 
+Measurement only: what a metric read as, on a given day. What that value is judged against is
+a separate fact with its own time series (`fpm.thresholds`), because a threshold can be
+corrected and a measurement cannot — compliance is computed by joining the two at render time,
+never baked into this table.
+
 The CSV is canonical: OSO's `filpgf_sla_observations` static model is a full-table republish of
 this file, so a row is not real until it lands here and rides a commit. Git history is the audit
 trail — a value cannot be revised silently.
@@ -25,9 +30,6 @@ COLUMNS = [
     "function_id",
     "metric",
     "observed_value",
-    "threshold_op",
-    "threshold_value",
-    "sla_outcome",
     "method",
     "note",
 ]
@@ -62,9 +64,6 @@ def to_row(obs: Observation) -> Row:
         "function_id": obs.function_id,
         "metric": obs.metric,
         "observed_value": "" if value is None else repr(float(value)),
-        "threshold_op": obs.threshold_op,
-        "threshold_value": "" if obs.threshold_value is None else repr(float(obs.threshold_value)),
-        "sla_outcome": obs.sla_outcome,
         "method": obs.method,
         "note": obs.note,
     }

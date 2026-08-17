@@ -22,7 +22,7 @@ on:
         default: false
 
 permissions:
-  contents: write                   # the job commits data/observations.csv back to main
+  contents: write                   # the job commits data/observations.csv and data/thresholds.csv back to main
 
 concurrency:
   group: observe
@@ -77,12 +77,12 @@ jobs:
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- data/observations.csv; then
-            echo "no change to data/observations.csv"
+          if git diff --quiet -- data/observations.csv data/thresholds.csv; then
+            echo "no change to data/observations.csv or data/thresholds.csv"
             exit 0
           fi
-          git add data/observations.csv
-          git commit -m "chore(observations): readings for $(date -u +%F)"
+          git add data/observations.csv data/thresholds.csv
+          git commit -m "chore(observations): readings and thresholds for $(date -u +%F)"
           # A concurrent merge to main between checkout and push is normal, not an error.
           git pull --rebase --autostash origin "${{ github.ref_name }}"
           git push origin "HEAD:${{ github.ref_name }}"

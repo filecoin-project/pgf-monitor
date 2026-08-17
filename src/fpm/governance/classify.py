@@ -47,8 +47,18 @@ def classify(changes: list[Change], new: Manifest) -> list[ClassifiedChange]:
         direction: Literal["loosened", "tightened", "n/a"] = "n/a"
         reason = f"{c.field_path} changed"
         if c.field_path == "sla.threshold_value" and c.function_id in ops:
-            direction = _direction(ops[c.function_id], float(c.old), float(c.new))
-            reason = f"threshold {direction}" if direction != "n/a" else "threshold changed"
+            op = ops[c.function_id]
+            if c.old is None:
+                # A commitment coming into existence. Bound where it was unbound.
+                direction, reason = "tightened", "threshold added: new commitment"
+            elif c.new is None:
+                # A commitment being withdrawn. Strictly a loosening.
+                direction, reason = "loosened", "threshold removed: commitment withdrawn"
+            elif op is None:
+                reason = "threshold changed"
+            else:
+                direction = _direction(op, float(c.old), float(c.new))
+                reason = f"threshold {direction}" if direction != "n/a" else "threshold changed"
         out.append(ClassifiedChange(**base, bucket="material", direction=direction, reason=reason))
     return out
 

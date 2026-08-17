@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
 from fpm.manifest import load_manifest
-from fpm.observe import observe
+from fpm.observe import observe, thresholds_for
 
 AS_OF = datetime(2026, 7, 1, tzinfo=timezone.utc)
 FIXTURES = Path("fixtures/responses")
@@ -23,15 +25,21 @@ def test_one_observation_per_function():
 def test_carries_the_evaluated_sla():
     by_fn = {o.function_id: o for o in _observe()}
     up = by_fn["network-uptime"]
-    assert up.sla_outcome == "pass"
+    assert up.outcome == "pass"
     assert up.observed_value is not None
-    assert (up.threshold_op, up.threshold_value) == (">=", 0.999)
     assert up.note == ""
+
+
+def test_the_threshold_a_reading_was_judged_against():
+    """The threshold moved out of Observation into its own time series; this is its new home."""
+    recs = {r.function_id: r for r in thresholds_for(MANIFEST, AS_OF)}
+    up = recs["network-uptime"]
+    assert (up.threshold_op, up.threshold_value) == (">=", 0.999)
 
 
 def test_indeterminate_carries_its_reason():
     snap = {o.function_id: o for o in _observe()}["forest-snapshots"]
-    assert snap.sla_outcome == "indeterminate"
+    assert snap.outcome == "indeterminate"
     assert snap.note  # why it could not be evaluated, for the reviewer
 
 
@@ -66,7 +74,7 @@ def test_a_failing_fetch_does_not_abort_the_batch(monkeypatch):
     monkeypatch.setattr(fixture.FixtureAdapter, "fetch", boom)
     by_fn = {o.function_id: o for o in _observe()}
     assert calls["n"] == 2
-    assert by_fn["network-uptime"].sla_outcome == "indeterminate"
+    assert by_fn["network-uptime"].outcome == "indeterminate"
     assert "source unreachable" in by_fn["network-uptime"].note
     assert by_fn["network-uptime"].observed_value is None
 
@@ -89,7 +97,41 @@ def test_review_and_observe_agree_on_the_number(tmp_path):
     reviewed = {b.recommendation.function_id: b.dossier.sla_result for b in bundles}
     for o in _observe():
         assert o.observed_value == reviewed[o.function_id].observed
-        assert o.sla_outcome == reviewed[o.function_id].outcome
+        assert o.outcome == reviewed[o.function_id].outcome
+
+
+def test_thresholds_for_emits_one_record_per_function():
+    """One row per function per run, mirroring observations exactly — that parity is what
+    makes the render-time join a plain equality rather than an as-of window."""
+    recs = thresholds_for(MANIFEST, AS_OF)
+    manifest = load_manifest(MANIFEST)
+    assert [r.function_id for r in recs] == [f.function_id for f in manifest.functions]
+    assert {r.observed_at for r in recs} == {"2026-07-01"}
+    assert {r.team for r in recs} == {"chainsafe"}
+    assert all(r.source in {"signed-appendix", "to-confirm", "provisional"} for r in recs)
+
+
+def test_thresholds_for_matches_the_observation_keys():
+    """The join key must agree by construction, or compliance silently disappears."""
+    obs_keys = {(o.team, o.function_id, o.metric, o.observed_at) for o in _observe()}
+    thr_keys = {
+        (r.team, r.function_id, r.metric, r.observed_at) for r in thresholds_for(MANIFEST, AS_OF)
+    }
+    assert obs_keys == thr_keys
+
+
+def test_thresholds_for_carries_none_when_unbound(tmp_path):
+    """A function with no agreed SLA still gets a row — the absence is the fact being
+    recorded. A missing row would be indistinguishable from a day the monitor did not run."""
+    raw = yaml.safe_load(Path(MANIFEST).read_text())
+    for f in raw["functions"]:
+        f["sla"].pop("threshold", None)
+    p = tmp_path / "unbound.yaml"
+    p.write_text(yaml.safe_dump(raw, sort_keys=False))
+    recs = thresholds_for(p, AS_OF)
+    assert recs
+    assert all(r.threshold_op is None and r.threshold_value is None for r in recs)
+    assert all(r.source == "provisional" for r in recs)
 
 
 def test_a_failed_ingestion_run_says_so():

@@ -47,6 +47,10 @@ export OSO_API_KEY=...    # or put it in a .env the shell loads
 - **SLA verdicts:** `filecoin.filpgf_sla_verdicts` — produced by `fpm review` + `fpm land`.
 - **Metric history** (the modal line charts): `filecoin.filpgf_sla_observations` — the
   backfilled + accruing observation time series, maintained by `scripts/observations.py`.
+- **Thresholds** (the bar a reading is judged against, as it stood that day):
+  `filecoin.filpgf_sla_thresholds` — maintained alongside observations by
+  `scripts/observations.py`; the dashboard LEFT JOINs it against observations and derives
+  pass/fail/unscored/indeterminate at render time.
 
 ## Offline fallback
 

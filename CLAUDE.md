@@ -40,9 +40,13 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 - Thresholds are human commitments: the report drafter deliberately omits them; drafts
   mark ours `PLACEHOLDER`. Don't invent tight thresholds without probe evidence.
 - Secrets never enter the repo; live smokes read `OSO_API_KEY` from the environment.
-- `data/observations.csv` is the system of record for the time series (OSO's
-  `filpgf_sla_observations` is a full-table republish of it) — never hand-edit it, and never
-  write it except through `fpm.observations`, which normalizes the date and dedupes the day.
+- `data/observations.csv` (values) and `data/thresholds.csv` (the bar as it stood that day) are
+  the system of record for the time series — OSO's `filpgf_sla_observations` and
+  `filpgf_sla_thresholds` are full-table republishes of them. Never hand-edit either, and never
+  write them except through `fpm.observations` / `fpm.thresholds`, which normalize the date and
+  dedupe the day. Compliance is NOT stored: the dashboard joins the two on
+  (observed_at, team, function_id, metric) and derives pass/fail/unscored/indeterminate at render,
+  so a corrected threshold fixes history instead of leaving it judged against a superseded bar.
 - Nothing unattended may write a verdict. `.github/workflows/observe.yml` runs `fpm observe`
   (fetch + evaluate, no model); adjudication stays `fpm review` with a human.
 - Tests are offline-deterministic; anything live goes in `scripts/live_*_smoke.py`
@@ -82,10 +86,15 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   or `registry/<team>.yaml` stops being the complete answer to how a metric is computed.
 - `fpm review` team name = `registry/<name>.yaml` filename stem.
 - Trino timestamp literals: `'YYYY-MM-DD HH:MM:SS'` (space, no T, no offset).
+- A manifest may omit `sla.threshold` entirely — that is "measured, not scored", and it is the
+  honest state for a team whose agreement is missing or whose signed §3 still says "(to confirm)".
+  Do NOT invent a number to fill the slot. Set `sla.threshold.source` to `signed-appendix` only
+  when you have read it in the signed appendix; it defaults to `provisional` and the dashboard
+  labels provisional bars as such.
 
 ## Layout
 
-`src/fpm/` pipeline (manifest, provision, adapters, evaluate, observe, observations,
+`src/fpm/` pipeline (manifest, provision, adapters, evaluate, observe, observations, thresholds,
 detectors, synthesize, pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
 `tests/` mirrors it · `registry/` the trust anchor · `fixtures/` offline responses ·
 `dashboards/propgf-kernel-health.py` (marimo, `uv sync --extra dashboards`) ·

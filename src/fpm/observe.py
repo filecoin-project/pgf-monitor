@@ -14,6 +14,8 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
+from pydantic import Field
+
 from fpm.adapters.base import Adapter
 from fpm.adapters.registry import UnsupportedAdapterError, build_adapters
 from fpm.domain import (
@@ -31,18 +33,39 @@ from fpm.manifest import FunctionSpec, Manifest, load_manifest
 
 
 class Observation(_Model):
-    """One (day, team, function, metric) reading, flattened for the CSV time series."""
+    """One (day, team, function, metric) reading, flattened for the CSV time series.
+
+    Measurement only. What the value was judged against is a separate fact with its own
+    time series (fpm.thresholds), because a threshold can be corrected and a measurement
+    cannot.
+    """
 
     observed_at: str  # YYYY-MM-DD, UTC
     team: str
     function_id: str
     metric: str
     observed_value: float | None
-    threshold_op: ComparisonOperator
-    threshold_value: float | None
-    sla_outcome: SlaOutcome
     method: str
     note: str = ""
+    # Reported in the run log, deliberately NOT a CSV column: this is operator feedback about
+    # today's run, not a fact about the reading. `exclude=True` keeps it out of any dump.
+    outcome: SlaOutcome = Field(default="indeterminate", exclude=True)
+
+
+class ThresholdRecord(_Model):
+    """One (day, team, function, metric) commitment, flattened for the CSV time series.
+
+    Separate from Observation on purpose: a value and a promise are different kinds of fact,
+    and only one of them changes when a grant agreement is corrected.
+    """
+
+    observed_at: str  # YYYY-MM-DD, UTC
+    team: str
+    function_id: str
+    metric: str
+    threshold_op: ComparisonOperator | None
+    threshold_value: float | None
+    source: str
 
 
 def error_reading(
@@ -117,11 +140,9 @@ def to_observation(
         function_id=fn.function_id,
         metric=fn.sla.metric,
         observed_value=sla.observed,
-        threshold_op=fn.sla.threshold_op,
-        threshold_value=fn.sla.threshold_value,
-        sla_outcome=sla.outcome,
         method=method,
         note=_note(reading, sla),
+        outcome=sla.outcome,
     )
 
 
@@ -157,3 +178,26 @@ def observe(
         if on_observation is not None:
             on_observation(obs)
     return out
+
+
+def thresholds_for(manifest_path: str | Path, as_of: datetime) -> list[ThresholdRecord]:
+    """The commitments a manifest declares on one day. Pure: no adapters, no network.
+
+    Emits a row for EVERY function, including ones with no agreed threshold — the absence is
+    the fact being recorded, and a missing row would be indistinguishable from a day the
+    monitor did not run.
+    """
+    manifest: Manifest = load_manifest(manifest_path)
+    day = as_of.date().isoformat()
+    return [
+        ThresholdRecord(
+            observed_at=day,
+            team=manifest.team,
+            function_id=fn.function_id,
+            metric=fn.sla.metric,
+            threshold_op=fn.sla.threshold_op,
+            threshold_value=fn.sla.threshold_value,
+            source=fn.sla.threshold_source,
+        )
+        for fn in manifest.functions
+    ]

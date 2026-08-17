@@ -117,10 +117,13 @@ def _metric_block(metric: str, source: str, threshold: str, statement: str) -> s
 def _sla_block(fn: FunctionSpec, to_confirm: bool = False) -> str:
     url = fn.source.endpoint or fn.source.base_url or "(no public source yet)"
     confirm = " (to confirm)" if to_confirm else ""
-    thr = (
-        f"`{fn.sla.metric} {fn.sla.threshold_op} {_num(fn.sla.threshold_value)}`, "
-        f"cadence {fn.sla.cadence}{confirm}"
-    )
+    if fn.sla.threshold_op is None or fn.sla.threshold_value is None:
+        thr = f"`{fn.sla.metric}` — no agreed threshold, cadence {fn.sla.cadence}{confirm}"
+    else:
+        thr = (
+            f"`{fn.sla.metric} {fn.sla.threshold_op} {_num(fn.sla.threshold_value)}`, "
+            f"cadence {fn.sla.cadence}{confirm}"
+        )
     return _metric_block(fn.sla.metric, url, thr, fn.sla.statement)
 
 

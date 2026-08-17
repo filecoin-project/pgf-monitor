@@ -23,6 +23,8 @@ def _run(tmp_path, *args):
             "2026-08-14",
             "--csv",
             str(tmp_path / "observations.csv"),
+            "--thresholds-csv",
+            str(tmp_path / "thresholds.csv"),
             *args,
         ],
         capture_output=True,

@@ -143,6 +143,18 @@ def test_reporting_has_slack_channel():
     assert "every two months" in s5
 
 
+def test_thresholdless_function_renders_no_agreed_threshold():
+    raw = {
+        "team": "t",
+        "maintainers": ["@m"],
+        "functions": [_fn("relay-liveness", "essential", "Randomness", "relay_lag")],
+    }
+    del raw["functions"][0]["sla"]["threshold"]
+    md = build_contract(_FACTS, manifest_from_raw(raw).functions, load_kernel())
+    s3 = md.split("## 3.")[1].split("## 4.")[0]
+    assert "`relay_lag` — no agreed threshold, cadence daily" in s3
+
+
 def test_load_team_functions_tolerates_missing_adopted_manifest(tmp_path):
     """A draft-only team (no registry/<team>.yaml yet) still renders its staged SLAs."""
     from fpm.report.contract import load_team_functions
