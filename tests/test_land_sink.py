@@ -1,4 +1,10 @@
-from fpm.land import FakeStaticModelClient, StaticModelSink, land, verdict_rows
+from fpm.land import (
+    FakeStaticModelClient,
+    StaticModelSink,
+    UnadjudicatedVerdictError,
+    land,
+    verdict_rows,
+)
 
 
 def test_sink_publish_sequence_and_public_grant(sample_bundle):
@@ -68,3 +74,32 @@ def test_distinct_names_get_distinct_models(sample_bundle):
 
     assert pub != priv
     assert len(client.models) == 2
+
+
+def test_land_refuses_verdicts_that_no_human_adjudicated(sample_bundle):
+    """`--dev-auto-approve` stamps approver="dev-auto". Those verdicts are a development
+    convenience; letting them reach the public table would make "a human adjudicated this"
+    false for rows nobody ever read."""
+    import pytest
+
+    client = FakeStaticModelClient()
+    sink = StaticModelSink(client, org_id="org")
+
+    with pytest.raises(UnadjudicatedVerdictError) as exc:
+        land([sample_bundle(approver="dev-auto")], sink)
+
+    assert "chainsafe" in str(exc.value) and "forest-uptime" in str(exc.value)
+    assert not client.models  # refused before publishing anything
+
+
+def test_land_refuses_the_whole_batch_if_any_verdict_is_unadjudicated(sample_bundle):
+    import pytest
+
+    client = FakeStaticModelClient()
+    sink = StaticModelSink(client, org_id="org")
+    bundles = [sample_bundle(rid="rec-1"), sample_bundle(rid="rec-2", approver="dev-auto")]
+
+    with pytest.raises(UnadjudicatedVerdictError):
+        land(bundles, sink)
+
+    assert not client.models

@@ -148,6 +148,37 @@ class StaticModelSink:
         return model_id
 
 
+class UnadjudicatedVerdictError(RuntimeError):
+    """Raised when a batch carries a verdict no human ever approved."""
+
+
+#: `fpm review --dev-auto-approve` stamps this approver. It is a development convenience and
+#: must never reach a published table — see `assert_adjudicated`.
+DEV_AUTO_APPROVER = "dev-auto"
+
+
+def assert_adjudicated(bundles: list[ReviewBundle]) -> None:
+    """Refuse the whole batch if any verdict was auto-approved rather than adjudicated.
+
+    The system's central claim is that a verdict is a human act. `--dev-auto-approve` exists so
+    the pipeline can be exercised end-to-end without a reviewer, and `scripts/run_full_review.sh`
+    used it while also landing to the normal tables — so the public verdict table could carry
+    rows nobody read. Checked before anything is published: a batch is refused whole, never
+    half-landed.
+    """
+    offenders = [
+        f"{b.recommendation.team}/{b.recommendation.function_id}"
+        for b in bundles
+        if b.verdict.approver == DEV_AUTO_APPROVER
+    ]
+    if offenders:
+        raise UnadjudicatedVerdictError(
+            f"{len(offenders)} verdict(s) carry approver={DEV_AUTO_APPROVER!r} and were never "
+            f"adjudicated by a human: {', '.join(sorted(offenders))}. Re-run `fpm review` without "
+            "--dev-auto-approve, or land to a table you have named as experimental."
+        )
+
+
 def land(
     bundles: list[ReviewBundle],
     sink: VerdictSink,
@@ -157,6 +188,7 @@ def land(
     private_name: str = "filpgf_sla_verdicts_private",
 ) -> dict:
     """Flatten bundles and publish the public + private tables through the sink."""
+    assert_adjudicated(bundles)
     public_rows, private_rows = verdict_rows(bundles)
     return {
         "public": sink.publish(public_name, public_rows, public=True),
