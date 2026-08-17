@@ -4,6 +4,11 @@ on:
     types: [labeled]
 permissions:
   contents: read
+concurrency:
+  # Two dry-runs for the same PR would share a throwaway dataset name and delete it
+  # out from under each other. One at a time, per PR.
+  group: dry-run-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
 jobs:
   live-dry-run:
     if: github.event.label.name == 'dry-run-ok'
@@ -27,22 +32,26 @@ jobs:
           echo "$changed" > /tmp/changed_manifests.txt
           for f in $changed; do
             mkdir -p "/tmp/pr_head/$(dirname "$f")" "/tmp/pr_base/$(dirname "$f")"
-            git show "$HEAD_SHA:$f" > "/tmp/pr_head/$f"
+            # A PR that DELETES a manifest has no head blob. There is nothing to measure, and
+            # without this guard `set -e` killed the whole gate on the failed `git show`.
+            git show "$HEAD_SHA:$f" > "/tmp/pr_head/$f" 2>/dev/null || rm -f "/tmp/pr_head/$f"
             git show "$BASE_SHA:$f" > "/tmp/pr_base/$f" 2>/dev/null || rm -f "/tmp/pr_base/$f"
           done
       - name: Live dry-run over changed functions
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
           OSO_ORG_ID: ${{ vars.OSO_ORG_ID }}
+          RUN_TAG: pr${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
           rc=0
           while IFS= read -r f; do
             [ -z "$f" ] && continue
+            [ -f "/tmp/pr_head/$f" ] || continue   # deleted by this PR
             base_arg=""
             if [ -f "/tmp/pr_base/$f" ]; then base_arg="--base /tmp/pr_base/$f"; fi
             uv run python -m scripts.dry_run_pr "/tmp/pr_head/$f" $base_arg \
               --allowlist registry/_allowlist.txt --oso-org "$OSO_ORG_ID" \
-              --summary "$GITHUB_STEP_SUMMARY" || rc=1
+              --run-tag "$RUN_TAG" --summary "$GITHUB_STEP_SUMMARY" || rc=1
           done < /tmp/changed_manifests.txt
           exit $rc
