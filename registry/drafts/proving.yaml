@@ -18,6 +18,11 @@
 # network — a proving regression would halt liveness proofs and block production
 # network-wide, so the chain advancing on its ~30s cadence already evidences the proving
 # subsystem indirectly.
+# NO FUNDED MAINTAINER. The committee's own record is explicit: requirement_stewards for
+# proving-subsystem reads "rust-fil-proofs (core; needs a funded maintainer)" with no resolved
+# project, there is no ProPGF 3 application against it and no Batch 2 commitment. So both entries
+# say `unfunded` rather than naming the code's OSO project, which would imply a payee that does
+# not exist. This manifest stays a DRAFT until someone is funded to maintain the subsystem.
 team: proving
 maintainers: ["@TODO-github-handle"]   # team fills in
 x_draft:
@@ -36,7 +41,7 @@ functions:
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Proving'
-    funded_project_oso_slug: filecoin-proofs-filecoin-project   # TODO: confirm OSO/oss-directory slug
+    funded_project_oso_slug: unfunded   # TODO: confirm OSO/oss-directory slug
     repos:
       - filecoin-project/rust-fil-proofs
     sla:
@@ -62,7 +67,7 @@ functions:
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Proving'
-    funded_project_oso_slug: filecoin-crypto-primitives-filecoin-project   # TODO: confirm OSO/oss-directory slug
+    funded_project_oso_slug: unfunded   # TODO: confirm OSO/oss-directory slug
     repos:
       - filecoin-project/bellperson
     sla:
