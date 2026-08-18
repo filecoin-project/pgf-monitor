@@ -47,8 +47,12 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   dedupe the day. Compliance is NOT stored: the dashboard joins the two on
   (observed_at, team, function_id, metric) and derives pass/fail/unscored/indeterminate at render,
   so a corrected threshold fixes history instead of leaving it judged against a superseded bar.
-- Nothing unattended may write a verdict. `.github/workflows/observe.yml` runs `fpm observe`
-  (fetch + evaluate, no model); adjudication stays `fpm review` with a human.
+- Nothing unattended may write a verdict, and this is now ENFORCED, not just stated:
+  `fpm.land.assert_adjudicated` refuses any batch carrying `approver="dev-auto"` (what
+  `fpm review --dev-auto-approve` stamps), whole and before publishing anything.
+  `.github/workflows/observe.yml` runs `fpm observe` (fetch + evaluate, no model);
+  `scripts/run_full_review.sh` refreshes the observation/threshold series and lands NOTHING;
+  adjudication stays `fpm review` with a human.
 - Tests are offline-deterministic; anything live goes in `scripts/live_*_smoke.py`
   (quarantined, never imported by tests).
 

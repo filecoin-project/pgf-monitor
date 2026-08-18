@@ -140,11 +140,13 @@ every backfilled row is labeled with its method. `data/observations.csv` and
 
 ## 5. Automate the reporting loop
 
-The cadence loop is: review → land → append observations → dashboard reads the tables.
+The cadence loop is: review → append observations → dashboard reads the tables. Landing
+verdicts is a separate, human step (§2) and deliberately not part of the loop.
 
 **The canonical full run is one command** — `scripts/run_full_review.sh`. It reviews every
-registry team, lands the verdicts, and appends + uploads observations, in a fixed team order
-with fixed flags, so an agent can run it identically every time:
+registry team and appends + uploads the observations and thresholds series, in a fixed team
+order with fixed flags, so an agent can run it identically every time. **It lands no
+verdicts**: it passes `--dev-auto-approve`, and `fpm land` refuses a batch approved that way.
 
 ```bash
 export OSO_API_KEY=<org-scoped key>
@@ -159,9 +161,14 @@ What is and isn't deterministic:
   60/hr unauth rate limit makes some GitHub-sourced functions read `indeterminate`
   non-deterministically (durable fix: a committee token via a source `auth.secret_ref`);
   `--synth live` narratives are model-generated.
-- **No human in the loop** — the wrapper passes `--dev-auto-approve`, so every recommendation
-  is auto-approved. That refreshes the dashboard/warehouse but is **not** a human-adjudicated
-  funding decision — for that, review teams individually (§2) and adjudicate each call.
+- **No human in the loop, and therefore nothing landed** — the wrapper passes
+  `--dev-auto-approve`, so every recommendation in the store is stamped `approver="dev-auto"`.
+  That refreshes measurement (observations, thresholds), which carries no judgment. It is
+  **not** a funding decision, and `fpm land` now raises `UnadjudicatedVerdictError` on such a
+  batch rather than publishing it. To land verdicts, review teams individually (§2) and
+  adjudicate each call.
+- **A partial run exits non-zero** — if any team's review failed, the uploaded series is
+  missing that team, so the script fails rather than reporting a clean run.
 
 The production target (recorded decision) is a `ScheduledIngestionSink` where OSO pulls
 verdict JSON on its own schedule, replacing the push in step 3.

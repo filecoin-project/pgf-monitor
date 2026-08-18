@@ -2,8 +2,8 @@
 #
 # run_full_review.sh — the canonical FULL monitoring run, as one reproducible command.
 #
-# Reviews every registry team, lands the verdicts to the warehouse, and appends + uploads
-# both the thresholds and observations time series. The INVOCATION is deterministic (fixed
+# Reviews every registry team and appends + uploads both the thresholds and observations time
+# series. It does NOT land verdicts — see below. The INVOCATION is deterministic (fixed
 # team order + fixed flags), so an agent can run it identically every time. The RESULTS are not
 # deterministic, by design:
 #   - live readings change run-to-run (that is what monitoring is);
@@ -13,10 +13,15 @@
 #   - with --synth live the advisory narrative is model-generated (varies); --synth fake
 #     (the default here) is deterministic and writes no narrative.
 #
-# UNATTENDED RUNS SKIP HUMAN ADJUDICATION. This wrapper always passes --dev-auto-approve, so
-# every recommendation is auto-approved. That is correct for refreshing the dashboard /
-# warehouse, but it is NOT a human-adjudicated funding decision — for that, review teams
-# individually per docs/guide-reviewers.md §2 and adjudicate each call yourself.
+# THIS WRAPPER LANDS NOTHING. It passes --dev-auto-approve, so every recommendation in $STORE
+# is stamped approver="dev-auto" — a development convenience, not an adjudication. It used to
+# run `fpm land` anyway, which meant the PUBLIC verdict table could carry rows no human ever
+# read, and a partial table whenever a team failed. `fpm land` now REFUSES a dev-auto batch
+# (fpm.land.assert_adjudicated), so landing verdicts means reviewing teams individually per
+# docs/guide-reviewers.md §2 and adjudicating each call yourself.
+#
+# What it does refresh is measurement, not judgment: the observations and thresholds series,
+# which carry no verdict.
 #
 # Usage:
 #   export OSO_API_KEY=<org-scoped key>        # required
@@ -70,9 +75,6 @@ for t in "${TEAMS[@]}"; do
   fi
 done
 
-echo "== land verdicts =="
-uv run fpm land --store "$STORE" --oso-org "$OSO_ORG_ID"
-
 # Upload order is load-bearing, not incidental (see docs/guide-reviewers.md §4):
 #   1. upload-thresholds FIRST — creates/refreshes filpgf_sla_thresholds.
 #   2. publish the notebook (a separate, held step this script does not run) — safe
@@ -89,8 +91,11 @@ uv run python scripts/observations.py upload-thresholds --oso-org "$OSO_ORG_ID"
 uv run python scripts/observations.py upload --oso-org "$OSO_ORG_ID"
 
 echo "== DONE: ${TEAMS[*]}"
-echo "== reviewed ${#TEAMS[@]} teams ($fails review failure(s)); verdicts landed; thresholds and observations uploaded =="
+echo "== reviewed ${#TEAMS[@]} teams ($fails review failure(s)); no verdicts landed; thresholds and observations uploaded =="
 if [[ $fails -gt 0 ]]; then
   echo "NOTE: $fails team(s) failed review — usually the GitHub 60/hr unauth rate limit;" >&2
   echo "      provision a committee GitHub token via a source auth.secret_ref to reduce it." >&2
+  # A partial run must not read as a clean one: the uploaded series is missing those teams.
+  # The count is the useful part, so exit with it rather than a bare 1.
+  exit "$fails"
 fi

@@ -64,6 +64,8 @@ Prerequisites:
    ```
    Defaults land `filpgf_sla_verdicts` (public) + `filpgf_sla_verdicts_private`.
    NEVER use `--public-name filpgf_public` — that name belongs to a pre-existing UDM.
+   A store built with `--dev-auto-approve` raises `UnadjudicatedVerdictError` and lands
+   nothing: re-run the review and adjudicate the calls, rather than reaching for a flag.
 
 5. **Report**: query `filecoin.filpgf_sla_verdicts.filpgf_sla_verdicts` (team,
    function_id, metric, observed_value, sla_outcome, adjudicated_status) and summarize
