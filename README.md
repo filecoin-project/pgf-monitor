@@ -6,12 +6,15 @@ Machine-verifiable health monitoring for the Filecoin kernel functions, from pub
 
 [Live dashboard →](https://www.oso.xyz/filecoin/propgf-kernel-health)
 
-<!-- counts read live from badges.json via shields.io; regenerate it with: uv run python scripts/kernel_coverage.py --badges -->
+<!-- counts read live from badges.json via shields.io; regenerate it with: uv run python scripts/kernel_coverage.py --badges
+     ADOPTED = a metric in registry/, so a team is held to it today. MODELLED also counts registry/drafts/,
+     which nobody has committed to yet. tests/test_kernel_coverage.py fails if either drifts. -->
 <p>
   <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.kernel_functions&label=kernel%20functions&color=0D9488" alt="kernel functions">
   <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.monitored_metrics&label=monitored%20metrics&color=0D9488" alt="monitored metrics">
   <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.teams&label=teams&color=0D9488" alt="teams">
-  <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.coverage&label=coverage&color=16A34A" alt="coverage">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.coverage_adopted&label=kernel%20coverage%20(adopted)&color=16A34A" alt="kernel coverage, adopted">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/badges.json&query=%24.coverage_with_drafts&label=modelled%20(incl.%20drafts)&color=64748B" alt="kernel coverage including drafts">
   <a href="https://github.com/filecoin-project/pgf-monitor/actions/workflows/validate.yml"><img src="https://github.com/filecoin-project/pgf-monitor/actions/workflows/validate.yml/badge.svg" alt="Validate"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 </p>
