@@ -37,6 +37,12 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 - Exactly one of `source.extract` / `transform` per http-json function. Transform SQL:
   single SELECT, single scalar, only the `raw` table (structural exfiltration guard).
 - New source hosts require a `registry/_allowlist.txt` addition in the same PR.
+- Any field added to `Manifest`/`FunctionSpec` MUST be classified in
+  `src/fpm/governance/fields.py::FIELD_BUCKETS` — `tests/test_governance_fields.py` fails
+  otherwise. That one map is what the goalpost diff compares AND what selects functions for the
+  live dry-run, so an unclassified field would silently escape both. `trivial` means a change
+  provably cannot alter what is measured, how the number is read, or who is accountable; the
+  default is `material`.
 - Thresholds are human commitments: the report drafter deliberately omits them; drafts
   mark ours `PLACEHOLDER`. Don't invent tight thresholds without probe evidence.
 - Secrets never enter the repo; live smokes read `OSO_API_KEY` from the environment.
