@@ -23,7 +23,7 @@ functions:
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    funded_project_oso_slug: curio-filecoin-project
+    funded_project_oso_slug: filozone
     repos:
       - filecoin-project/curio
     sla:
@@ -55,7 +55,7 @@ functions:
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    funded_project_oso_slug: curio-filecoin-project
+    funded_project_oso_slug: filozone
     sla:
       statement: "Win-count health: network average blocks per tipset >= 4.5 (of 5 expected), measured daily"
       metric: avg_blocks_per_tipset
@@ -83,7 +83,7 @@ functions:
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    funded_project_oso_slug: curio-filecoin-project
+    funded_project_oso_slug: filozone
     sla:
       statement: "PDP live on mainnet: active proof sets >= 500, measured daily"
       metric: pdp_active_proof_sets

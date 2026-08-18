@@ -101,7 +101,7 @@ functions:
     tier: essential
     category: 'UX/DX'
     sub_category: 'Explorers and Tooling'
-    funded_project_oso_slug: filfox
+    funded_project_oso_slug: unfunded   # filfox is a third-party source, not a grantee: both the FilOz and Plumbline Appendix 1 s4 tables record it as 'Filfox (third party), ProPGF funded? N'
     sla:
       statement: "Explorer keeps pace with the chain: the largest gap between consecutive indexed tipsets stays <= 90s (3 epochs), measured daily"
       metric: explorer_max_tipset_gap_seconds
