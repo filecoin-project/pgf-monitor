@@ -43,7 +43,7 @@ def validate_manifest(
                 problems.append(f"{fn.function_id}: transform SQL rejected ({exc})")
     kernel = load_kernel()
     for fn in head.functions:
-        err = conformance_error(fn.tier, fn.category, fn.sub_category, kernel, fn.kernel_function)
+        err = conformance_error(fn.tier, fn.category, fn.sub_category, kernel, fn.kernel_id)
         if err is not None:
             problems.append(f"{fn.function_id}: {err}")
     report = render_report(classify(manifest_diff(base, head), head) if base else [])

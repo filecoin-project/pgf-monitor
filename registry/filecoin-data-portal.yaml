@@ -16,12 +16,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): pipeline is scheduled daily; 3 days tolerates two
   # consecutive failed runs before alerting.
   - function_id: network-data-portal-pipeline-freshness
-    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    kernel_id: open-network-datasets
     origin: oso
     tier: essential
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
-    oso_project_slug: filecoin-data-portal-davidgasquez
+    funded_project_oso_slug: filecoin-data-portal-davidgasquez
+    repos:
+      - davidgasquez/filecoin-data-portal
     sla:
       statement: "Datasets stay fresh: most recent successful daily Pipeline run <= 3 days old, measured daily"
       metric: pipeline_success_age_days

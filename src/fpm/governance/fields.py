@@ -37,11 +37,13 @@ FIELD_BUCKETS: dict[str, Bucket] = {
     # --- function identity and kernel placement
     "function_id": "material",
     "origin": "material",  # lineage of the commitment: oso / karma / external-pr
-    "kernel_function": "material",  # which kernel function this SLA evidences
+    "kernel_id": "material",  # which kernel function this SLA evidences
     "tier": "material",
     "category": "material",
     "sub_category": "material",
-    "oso_project_slug": "material",
+    # who is paid, and what code the work covers: two facts, two fields, both material
+    "funded_project_oso_slug": "material",
+    "repos": "material",
     # --- the commitment
     # Prose restating the SLA. Does not change the number or the bar; a wording fix should not
     # read as a moved goalpost. Still diffed, so it still triggers a dry-run.

@@ -2,11 +2,11 @@ team: chainsafe
 maintainers: ["@lemmih"]
 functions:
   - function_id: filecoin-tvl
-    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    kernel_id: open-network-datasets
     tier: essential
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
-    oso_project_slug: forest
+    funded_project_oso_slug: forest-chainsafe
     sla:
       statement: "Filecoin chain TVL >= 1,000,000 USD, measured monthly"
       metric: chain_tvl_usd

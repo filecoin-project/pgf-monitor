@@ -26,12 +26,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): observed ~36d avg for stable releases; 60
   # leaves headroom for the between-network-upgrade lull.
   - function_id: lotus-consensus-client-release-cadence
-    kernel_function: "Consensus/validation client: fork-choice, state validation, message pool"
+    kernel_id: consensus-validation-client
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
-    oso_project_slug: filozone
+    funded_project_oso_slug: filozone
+    repos:
+      - filecoin-project/lotus
     sla:
       statement: "Lotus ships a stable (non-RC) release at least every 60 days on average (consensus-client maintenance signal), measured monthly"
       metric: avg_days_between_stable_releases
@@ -54,12 +56,12 @@ functions:
   # election / block assembly is failing network-wide (null tipsets, missed epochs). 70%+ of
   # block producers run lotus-miner, making this the closest live network signal.
   - function_id: lotus-miner-winningpost-block-production
-    kernel_function: "Block production - WinningPoSt leader election & block assembly"
+    kernel_id: block-production
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    oso_project_slug: filozone
+    funded_project_oso_slug: filozone
     sla:
       statement: "Mainnet keeps its ~30s epoch cadence: average tipset interval <= 45s, measured daily"
       metric: mainnet_avg_tipset_interval_seconds
@@ -82,11 +84,14 @@ functions:
   # was found.
   # THRESHOLD (placeholder, confirm with team): observed ~32.7d avg; 60 gives ~2x headroom.
   - function_id: evm-eam-actor-maintenance
+    kernel_id: evm-eam-actors
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'VM & Programmability'
-    oso_project_slug: filozone
+    funded_project_oso_slug: filozone
+    repos:
+      - filecoin-project/builtin-actors
     sla:
       statement: "builtin-actors (home of the EVM + EAM actors) ships a release at least every 60 days on average, measured monthly"
       metric: avg_days_between_releases
@@ -110,12 +115,12 @@ functions:
   # target lives inside — attribution stays a review-time check.
   # THRESHOLD: >= 3 — the team's own Karma target as a network-level floor.
   - function_id: pdp-active-providers
-    kernel_function: "Deal-making + PDP + HTTP retrieval"
+    kernel_id: dealmaking-pdp-retrieval
     origin: karma
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    oso_project_slug: curio-filecoin-project
+    funded_project_oso_slug: curio-filecoin-project
     sla:
       statement: "PDP provider base holds: total registered PDP providers >= 3 (Curio Core's Karma target names >= 3 mainnet providers), measured weekly"
       metric: pdp_total_providers
@@ -135,12 +140,14 @@ functions:
   # Release-age check for builtin-actors (home of the storage market / miner / power /
   # system / reward / datacap actors).
   - function_id: builtin-actors
-    kernel_function: "Storage market / miner / power / system / reward / datacap actors"
+    kernel_id: builtin-actor-suite
     origin: oso
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'VM & Programmability'
-    oso_project_slug: builtin-actors
+    funded_project_oso_slug: filozone
+    repos:
+      - filecoin-project/builtin-actors
     sla:
       statement: "A tagged builtin-actors release <= 90 days old, measured monthly"
       metric: release_age_days

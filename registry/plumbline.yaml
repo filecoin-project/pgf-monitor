@@ -10,11 +10,12 @@ functions:
   # transform.
   # THRESHOLD: 0.3334 — the team's own committed target, not a placeholder.
   - function_id: calibnet-sp-power-share
+    kernel_id: calibnet-miners
     origin: karma
     tier: essential
     category: 'Coordination & Hardening'
     sub_category: 'Testnets - miners'
-    oso_project_slug: plumbline
+    funded_project_oso_slug: reiers-filecoin
     sla:
       statement: "Plumbline's calibnet SP t0143103 stays decentralization-friendly: its share of calibnet quality-adjusted power < 1/3 (the team's own Karma target), measured weekly"
       metric: calibnet_miner_qap_share

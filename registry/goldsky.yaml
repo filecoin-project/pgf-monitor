@@ -15,12 +15,12 @@ functions:
   # catch-up while failing a genuinely stalled FEVM indexing backend. Public endpoints are
   # rate-limited (50 req / 10s) — a daily probe is far under that.
   - function_id: fevm-chain-indexing-freshness
-    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    kernel_id: open-network-datasets
     origin: oso
     tier: essential
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
-    oso_project_slug: goldsky
+    funded_project_oso_slug: goldsky
     sla:
       statement: "Goldsky-hosted Filecoin FEVM subgraph indexes at chain head: wall clock minus indexed block timestamp <= 600s, measured daily — stale chain ETL breaks every downstream consumer at once"
       metric: fevm_subgraph_indexing_lag_seconds
@@ -46,12 +46,12 @@ functions:
   # normalizes hasIndexingErrors -> has_indexing_errors.
   # THRESHOLD: self-evident — any indexing error is a failure, so the boolean must be 0.
   - function_id: fevm-chain-indexing-errors
-    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    kernel_id: open-network-datasets
     origin: oso
     tier: essential
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
-    oso_project_slug: goldsky
+    funded_project_oso_slug: goldsky
     sla:
       statement: "Goldsky-hosted Filecoin FEVM subgraph reports zero indexing errors (hasIndexingErrors == false), measured daily"
       metric: fevm_subgraph_indexing_errors

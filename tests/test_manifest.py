@@ -64,6 +64,8 @@ def _raw_function(**sla_overrides):
         "functions": [
             {
                 "function_id": "acme-release-cadence",
+                "kernel_id": "chain-sync-state",
+                "funded_project_oso_slug": "drand",
                 "tier": "essential",
                 "category": "UX/DX",
                 "sub_category": "Tooling",

@@ -11,11 +11,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): 100 flags a ~25% collapse of the indexed
   # provider set without flapping on routine churn.
   - function_id: content-routing-ipni-provider-count
+    kernel_id: content-routing-ads
     origin: oso
     tier: essential
     category: 'Storage Market Middleware'
     sub_category: 'Content routing'
-    oso_project_slug: ipni
+    funded_project_oso_slug: ipni
     sla:
       statement: "IPNI keeps a broad provider set indexed: >= 100 providers listed on cid.contact, measured daily"
       metric: ipni_provider_count
@@ -38,11 +39,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): 15 catches an ingestion stall or mass
   # publisher outage while tolerating normal day-to-day variance.
   - function_id: content-routing-ipni-ingest-liveness
+    kernel_id: content-routing-ads
     origin: oso
     tier: essential
     category: 'Storage Market Middleware'
     sub_category: 'Content routing'
-    oso_project_slug: ipni
+    funded_project_oso_slug: ipni
     sla:
       statement: "Ad-chain ingestion is live: >= 15 providers show a LastAdvertisementTime within the past 24h, measured daily"
       metric: ipni_providers_advertised_24h
@@ -60,11 +62,12 @@ functions:
 
   # Correctness axis: providers report no LastError.
   - function_id: content-routing-ipni
+    kernel_id: content-routing-ads
     origin: oso
     tier: essential
     category: 'Storage Market Middleware'
     sub_category: 'Content routing'
-    oso_project_slug: ipni
+    funded_project_oso_slug: ipni
     sla:
       statement: "IPNI providers error-free: >= 90% of providers report no LastError, measured daily"
       metric: ipni_error_free_ratio

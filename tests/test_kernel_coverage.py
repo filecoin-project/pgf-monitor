@@ -10,13 +10,13 @@ from __future__ import annotations
 
 import ast
 import json
-from collections import Counter
 from pathlib import Path
 
 import pytest
 
 from fpm.kernel import load_kernel
 from fpm.manifest import FunctionSpec, SlaSpec, SourceSpec
+from fpm.kernel import NON_KERNEL_ID
 from scripts.kernel_coverage import (
     BADGES_JSON,
     DASHBOARD,
@@ -27,16 +27,15 @@ from scripts.kernel_coverage import (
     collect,
     counts,
     coverage_json,
-    kernel_slots,
     render,
-    resolve_kernel_function,
+    resolve_kernel_id,
 )
 
 
-def _fn(kernel_function="", tier="irreplaceable", category="", sub_category=""):
+def _fn(kernel_id="", tier="irreplaceable", category="", sub_category=""):
     return FunctionSpec(
         function_id="probe",
-        kernel_function=kernel_function,
+        kernel_id=kernel_id,
         tier=tier,
         category=category,
         sub_category=sub_category,
@@ -45,57 +44,61 @@ def _fn(kernel_function="", tier="irreplaceable", category="", sub_category=""):
     )
 
 
-def _a_shared_slot():
-    """A (tier, category, sub_category) that several kernel functions live in."""
-    for slot, names in kernel_slots(load_kernel()).items():
-        if len(names) > 1:
-            return slot, names
-    pytest.skip("no shared slot in the kernel inventory")
+def _ids():
+    return {e.id for e in load_kernel().entries}
 
 
-def test_kernel_function_names_are_unique():
-    """The generator keys coverage by function NAME, so a duplicate name would silently merge
-    two kernel functions into one row."""
-    dupes = [n for n, c in Counter(e.function for e in load_kernel().entries).items() if c > 1]
-    assert dupes == []
-
-
-def test_a_named_kernel_function_resolves_to_itself_in_a_shared_slot():
-    slot, names = _a_shared_slot()
-    fn = _fn(kernel_function=names[1], tier=slot[0], category=slot[1], sub_category=slot[2])
-    assert resolve_kernel_function(fn, kernel_slots(load_kernel())) == (names[1], None)
-
-
-def test_a_shared_slot_without_kernel_function_resolves_to_nothing():
-    """This is the bug: keyed on the slot alone, one metric was credited to every function in it,
-    which is how 27 covered functions were published as 29/29."""
-    slot, names = _a_shared_slot()
-    name, why = resolve_kernel_function(
-        _fn(tier=slot[0], category=slot[1], sub_category=slot[2]), kernel_slots(load_kernel())
+def test_a_known_id_resolves_to_itself():
+    assert resolve_kernel_id(_fn(kernel_id="chain-sync-state"), _ids()) == (
+        "chain-sync-state",
+        None,
     )
-    assert name is None
-    assert "kernel_function is unset" in why
 
 
-def test_a_kernel_function_from_another_slot_is_refused():
-    slot, names = _a_shared_slot()
-    other = next(
-        e.function
-        for e in load_kernel().entries
-        if (e.tier, e.category, e.sub_category) != slot and e.function not in names
-    )
-    name, why = resolve_kernel_function(
-        _fn(kernel_function=other, tier=slot[0], category=slot[1], sub_category=slot[2]),
-        kernel_slots(load_kernel()),
-    )
-    assert name is None and "is not in slot" in why
+def test_an_unknown_id_is_reported_not_guessed():
+    name, why = resolve_kernel_id(_fn(kernel_id="not-a-real-id"), _ids())
+    assert name is None and "not in the kernel inventory" in why
 
 
-def test_every_registry_entry_resolves_to_one_kernel_function():
-    """The PR gate already requires this (fpm.kernel.conformance_error), so nothing shipped
-    should land in the unresolved bucket."""
+def test_an_unset_id_is_reported():
+    name, why = resolve_kernel_id(_fn(), _ids())
+    assert name is None and "unset" in why
+
+
+def test_non_kernel_resolves_to_nothing_without_being_an_error():
+    """The metric is real; it is simply not evidence for a catalogued kernel function, so it must
+    inflate no coverage number and must not read as a mistake."""
+    assert resolve_kernel_id(_fn(kernel_id=NON_KERNEL_ID), _ids()) == (None, None)
+
+
+def test_every_registry_entry_resolves_to_one_kernel_id():
     _, _, unresolved = collect()
     assert unresolved == []
+
+
+def test_the_payload_is_keyed_by_kernel_id():
+    payload = coverage_json()
+    by_id = {f["id"]: f for f in payload["functions"]}
+    assert len(by_id) == len(payload["functions"])
+    ankr = {e["function_id"] for e in by_id["chain-sync-state"]["entries"] if e["team"] == "ankr"}
+    assert "chain-sync-rpc-mainnet-head-lag" in ankr
+    assert "ankr" not in {e["team"] for e in by_id["forest-full-node"]["entries"]}
+
+
+def _a_shared_slot():
+    """A (tier, category, sub_category) slot several kernel functions live in, plus their ids.
+
+    Shared slots are what made the old triple-keyed join wrong, and they are still where a draft
+    can propose moving a metric from one kernel function to a sibling without changing anything
+    else about it.
+    """
+    by_slot: dict[tuple[str, str, str], list[str]] = {}
+    for e in load_kernel().entries:
+        by_slot.setdefault((e.tier, e.category, e.sub_category), []).append(e.id)
+    for slot, ids in by_slot.items():
+        if len(ids) > 1:
+            return slot, ids
+    pytest.skip("no shared slot in the kernel inventory")
 
 
 def test_an_adopted_metric_is_never_reported_as_a_draft():
@@ -160,7 +163,7 @@ def test_the_generator_is_the_only_writer_of_the_derived_artifacts():
     assert "regenerate it with" in Path("README.md").read_text()
 
 
-def _manifest_yaml(kernel_function: str, slot, metric="probe_metric") -> str:
+def _manifest_yaml(kernel_id: str, slot, metric="probe_metric") -> str:
     import yaml
 
     return yaml.safe_dump(
@@ -170,7 +173,8 @@ def _manifest_yaml(kernel_function: str, slot, metric="probe_metric") -> str:
             "functions": [
                 {
                     "function_id": "probe-fn",
-                    "kernel_function": kernel_function,
+                    "kernel_id": kernel_id,
+                    "funded_project_oso_slug": "drand",
                     "origin": "oso",
                     "tier": slot[0],
                     "category": slot[1],
@@ -195,7 +199,7 @@ def _manifest_yaml(kernel_function: str, slot, metric="probe_metric") -> str:
     )
 
 
-def test_a_draft_that_moves_a_metric_to_another_kernel_function_keeps_both(tmp_path):
+def test_a_draft_that_moves_a_metric_to_another_kernel_id_keeps_both(tmp_path):
     """A draft may PROPOSE reassigning a metric to a different kernel function. Deduping on
     (team, function_id, metric) alone treated that as a pending update to the adopted entry, so
     the proposed function got no draft coverage at all and the move was invisible."""
@@ -230,3 +234,54 @@ def test_a_draft_identical_to_the_adopted_entry_is_only_a_pending_flag(tmp_path)
     mine = [e for e in entries.get(names[0], []) if e["team"] == "probeteam"]
     assert len(mine) == 1
     assert mine[0]["state"] == "adopted" and mine[0]["pending_draft"] is True
+
+
+def test_kernel_ids_do_not_collide_with_sla_ids_or_team_names():
+    """Kernel ids are immutable; an SLA `function_id` is part of the primary key of every row in
+    observations.csv and thresholds.csv. When the two namespaces collide the SLA side has to move,
+    which is the expensive direction, so keep them disjoint from the start."""
+    import glob
+
+    import yaml
+
+    kernel_ids = {e.id for e in load_kernel().entries}
+    teams, fids = set(), set()
+    for scope in ("registry/*.yaml", "registry/drafts/*.yaml"):
+        for path in sorted(glob.glob(scope)):
+            if Path(path).name.startswith("_"):
+                continue
+            raw = yaml.safe_load(Path(path).read_text())
+            teams.add(raw["team"])
+            fids |= {f["function_id"] for f in raw["functions"]}
+    assert kernel_ids & fids == set(), "a kernel id doubles as an SLA function_id"
+    assert kernel_ids & teams == set(), "a kernel id doubles as a team name"
+
+
+def test_every_entry_declares_who_is_funded():
+    """`funded_project_oso_slug` is required, and `unfunded` is the explicit way to say nobody is
+    paid for this kernel function yet."""
+    entries, _, _ = collect()
+    slugs = {e["funded_project"] for items in entries.values() for e in items}
+    assert "" not in slugs and None not in slugs
+
+
+def test_a_source_that_fetches_a_repo_enumerates_it():
+    """15 metrics read a GitHub repository directly. If the URL and the enumeration disagree, one
+    of them is wrong about what is being measured."""
+    import glob
+
+    from fpm.drafts import split_draft
+    from fpm.governance.repos import source_repo_error
+    from fpm.manifest import load_manifest
+
+    problems = []
+    for scope, is_draft in (("registry/*.yaml", False), ("registry/drafts/*.yaml", True)):
+        for path in sorted(glob.glob(scope)):
+            if Path(path).name.startswith("_"):
+                continue
+            m = split_draft(path)[0] if is_draft else load_manifest(path)
+            for fn in m.functions:
+                err = source_repo_error(fn)
+                if err:
+                    problems.append(f"{m.team}/{fn.function_id}: {err}")
+    assert problems == []

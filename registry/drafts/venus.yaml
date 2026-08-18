@@ -28,12 +28,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): <= 120 days flags an unstaffed release
   # train without flapping between network upgrades.
   - function_id: sophon-miner-maintenance
-    kernel_function: "Pooled block production (sophon-miner) + distributed sealing cluster (Damocles)"
+    kernel_id: venus-pooled-mining
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    oso_project_slug: ipfs-force-community-venus-hub
+    funded_project_oso_slug: ipfs-force-community-venus-hub
+    repos:
+      - ipfs-force-community/sophon-miner
     sla:
       statement: "sophon-miner has a commit <= 120 days old, measured monthly — the Venus pooled block-production path must keep pace with network upgrades or Venus SPs lose their independent block-winning route"
       metric: sophon_miner_days_since_last_commit
@@ -52,12 +54,14 @@ functions:
   # how Venus SPs onboard committed capacity and data.
   # THRESHOLD (placeholder, confirm with team): same 120-day stall detector as sophon-miner.
   - function_id: damocles-maintenance
-    kernel_function: "Pooled block production (sophon-miner) + distributed sealing cluster (Damocles)"
+    kernel_id: venus-pooled-mining
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    oso_project_slug: ipfs-force-community-venus-hub
+    funded_project_oso_slug: ipfs-force-community-venus-hub
+    repos:
+      - ipfs-force-community/damocles
     sla:
       statement: "Damocles has a commit <= 120 days old, measured monthly — the Venus distributed sealing cluster must remain maintained for SP-side client diversity"
       metric: damocles_days_since_last_commit

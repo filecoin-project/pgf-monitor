@@ -3,7 +3,8 @@ import pytest
 from fpm.manifest import ManifestError, load_manifest
 
 _HEAD = (
-    "team: x\nmaintainers: [a]\nfunctions:\n  - function_id: f\n    tier: essential\n"
+    "team: x\nmaintainers: [a]\nfunctions:\n  - function_id: f\n    kernel_id: chain-sync-state\n"
+    "    funded_project_oso_slug: drand\n    tier: essential\n"
     "    category: 'UX/DX'\n    sub_category: 'Explorers and Tooling'\n"
 )
 _SLA = "    sla: {statement: s, metric: m, threshold: {op: '<=', value: 500}, cadence: daily}\n"

@@ -26,12 +26,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): 5 epochs (150s) tolerates fetch-timing noise
   #   and brief block-delivery delays while still catching a genuinely stalled backing node.
   - function_id: chain-sync-rpc-mainnet-head-lag
-    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    kernel_id: chain-sync-state
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
-    oso_project_slug: chain-love
+    funded_project_oso_slug: chain-love
     sla:
       statement: "Public mainnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily — a stale head means the endpoint's backing node has stopped syncing"
       metric: rpc_head_lag_epochs
@@ -63,12 +63,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): 10 epochs (300s) = the mainnet-head allowance
   #   plus slack for the eth view's structural ~1-epoch trail and indexer catch-up.
   - function_id: chain-sync-rpc-fevm-eth-head-lag
-    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    kernel_id: chain-sync-state
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
-    oso_project_slug: chain-love
+    funded_project_oso_slug: chain-love
     sla:
       statement: "FEVM/Eth RPC surface keeps pace: wall-clock expected epoch minus decoded eth_blockNumber <= 10 epochs (300s), measured daily — the eth_* API is what FEVM dApps depend on and can stall independently of the native API"
       metric: fevm_eth_head_lag_epochs

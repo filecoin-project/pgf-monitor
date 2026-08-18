@@ -10,6 +10,10 @@ from fpm.kernel import (
 )
 
 
+#: a real slot: (tier, category, sub_category) of chain-sync-state
+_LC = ("essential", "Blockchain Core & Physical Storage", "Ledger & Consensus")
+
+
 def test_loads_real_inventory():
     k = load_kernel()
     assert len(k.entries) >= 20
@@ -17,58 +21,6 @@ def test_loads_real_inventory():
     assert ("irreplaceable", "Blockchain Core & Physical Storage", "Randomness") in trips
     assert ("essential", "UX/DX", "Explorers and Tooling") in trips
     assert ("essential", "Storage Market Middleware", "Content routing") in trips
-
-
-def test_conformance_error_none_for_catalogued():
-    k = load_kernel()
-    assert (
-        conformance_error("irreplaceable", "Blockchain Core & Physical Storage", "Randomness", k)
-        is None
-    )
-
-
-def test_conformance_error_message_for_uncatalogued():
-    k = load_kernel()
-    err = conformance_error("essential", "UX/DX", "made-up-subcat", k)
-    assert err is not None and "not a catalogued" in err
-
-
-_LC = (
-    "essential",
-    "Blockchain Core & Physical Storage",
-    "Ledger & Consensus",
-)  # shared slot (3 fns)
-_CHAIN_SYNC = "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
-
-
-def test_ambiguous_slot_requires_kernel_function():
-    k = load_kernel()
-    err = conformance_error(*_LC, k)
-    assert err is not None and "maps to" in err and "kernel_function" in err
-
-
-def test_kernel_function_resolves_ambiguous_slot():
-    k = load_kernel()
-    assert conformance_error(*_LC, k, kernel_function=_CHAIN_SYNC) is None
-
-
-def test_kernel_function_in_wrong_slot_is_rejected():
-    k = load_kernel()
-    # a real function name, but not the one in the declared (beacon) slot
-    err = conformance_error(
-        "irreplaceable",
-        "Blockchain Core & Physical Storage",
-        "Randomness",
-        k,
-        kernel_function=_CHAIN_SYNC,
-    )
-    assert err is not None and "is in slot" in err
-
-
-def test_unknown_kernel_function_is_rejected():
-    k = load_kernel()
-    err = conformance_error(*_LC, k, kernel_function="Not A Real Function")
-    assert err is not None and "not in the kernel inventory" in err
 
 
 def test_bad_category_raises(tmp_path):
@@ -181,8 +133,7 @@ def test_load_rejects_a_missing_id(tmp_path):
         load_kernel(p)
 
 
-# --- id-first conformance (Plan 9 task 2). Prose matching still works until the migration
-# (task 4) removes the last kernel_function from the registry, so every commit stays green.
+# --- id-first conformance. The prose display name is never matched: it is presentation text.
 
 NON_KERNEL = "non-kernel"
 
@@ -213,13 +164,25 @@ def test_conformance_accepts_non_kernel_and_skips_the_slot_check():
     )
 
 
-def test_a_kernel_id_beats_a_prose_name_when_both_are_given():
-    """During the migration an entry may carry both. The slug is the join key, so it wins."""
-    err = conformance_error(
-        *_LC, load_kernel(), kernel_function="Not A Real Function", kernel_id="chain-sync-state"
-    )
-    assert err is None
-
-
 def test_non_kernel_is_not_an_inventory_id():
     assert NON_KERNEL not in {e.id for e in load_kernel().entries}
+
+
+def test_conformance_requires_a_kernel_id():
+    err = conformance_error(*_LC, load_kernel())
+    assert err and "kernel_id is required" in err
+
+
+def test_conformance_error_names_the_slot_when_the_id_is_elsewhere():
+    err = conformance_error(
+        "essential", "UX/DX", "Explorers and Tooling", load_kernel(), kernel_id="chain-sync-state"
+    )
+    assert err and "Ledger & Consensus" in err
+
+
+def test_an_uncatalogued_slot_is_caught_through_its_id():
+    """The slot is still checked, but against the inventory row the id names."""
+    err = conformance_error(
+        "essential", "UX/DX", "made-up-subcat", load_kernel(), kernel_id="chain-sync-state"
+    )
+    assert err and "made-up-subcat" in err

@@ -78,59 +78,34 @@ def conformance_error(
     category: str,
     sub_category: str,
     kernel: Kernel,
-    kernel_function: str = "",
     kernel_id: str = "",
 ) -> str | None:
     """None if the entry conforms to the kernel inventory; else a legible reason.
 
-    Id-first. ``kernel_id`` names the exact inventory entry this SLA evidences, and the declared
+    ``kernel_id`` names the exact inventory entry this SLA evidences, and the declared
     (tier, category, sub_category) must equal that entry's slot, which catches a slug that names a
     real function in the wrong part of the tree. ``NON_KERNEL_ID`` conforms by definition and skips
-    the slot check.
-
-    ``kernel_function`` is the legacy prose name and is still accepted so that every commit of the
-    Plan 9 migration stays green; the slug wins when both are present, and the prose path goes away
-    once no manifest carries it.
+    the slot check. The prose display name is never matched: it is presentation text, it gets
+    reworded, and two inventory rows once differed only in punctuation.
     """
-    if kernel_id:
-        if kernel_id == NON_KERNEL_ID:
-            return None
-        entry = by_id(kernel).get(kernel_id)
-        if entry is None:
-            return (
-                f"kernel_id {kernel_id!r} is not in the kernel inventory "
-                f"(registry/_kernel.yaml lists {len(kernel.entries)} ids; "
-                f"{NON_KERNEL_ID!r} is reserved for a metric no kernel function covers)"
-            )
-        if (entry.tier, entry.category, entry.sub_category) != (tier, category, sub_category):
-            return (
-                f"kernel_id {kernel_id!r} sits in slot "
-                f"({entry.tier}, {entry.category}, {entry.sub_category}), "
-                f"not ({tier}, {category}, {sub_category})"
-            )
-        return None
-    matches = [
-        e
-        for e in kernel.entries
-        if (e.tier, e.category, e.sub_category) == (tier, category, sub_category)
-    ]
-    if not matches:
-        return f"({tier}, {category}, {sub_category}) is not a catalogued kernel slot"
-    if kernel_function:
-        if any(e.function == kernel_function for e in matches):
-            return None
-        elsewhere = next((e for e in kernel.entries if e.function == kernel_function), None)
-        if elsewhere is None:
-            return f"kernel_function {kernel_function!r} is not in the kernel inventory"
+    if not kernel_id:
         return (
-            f"kernel_function {kernel_function!r} is in slot "
-            f"({elsewhere.tier}, {elsewhere.category}, {elsewhere.sub_category}), "
-            f"not ({tier}, {category}, {sub_category})"
+            "kernel_id is required: name the registry/_kernel.yaml entry this SLA evidences, or "
+            f"{NON_KERNEL_ID!r} if the kernel inventory does not name what it measures"
         )
-    if len(matches) > 1:
-        names = ", ".join(repr(e.function) for e in matches)
+    if kernel_id == NON_KERNEL_ID:
+        return None
+    entry = by_id(kernel).get(kernel_id)
+    if entry is None:
         return (
-            f"slot ({tier}, {category}, {sub_category}) maps to {len(matches)} kernel functions; "
-            f"set kernel_function to one of: {names}"
+            f"kernel_id {kernel_id!r} is not in the kernel inventory "
+            f"(registry/_kernel.yaml lists {len(kernel.entries)} ids; "
+            f"{NON_KERNEL_ID!r} is reserved for a metric no kernel function covers)"
+        )
+    if (entry.tier, entry.category, entry.sub_category) != (tier, category, sub_category):
+        return (
+            f"kernel_id {kernel_id!r} sits in slot "
+            f"({entry.tier}, {entry.category}, {entry.sub_category}), "
+            f"not ({tier}, {category}, {sub_category})"
         )
     return None

@@ -78,14 +78,20 @@ class FunctionSpec(_Model):
     # "karma" = harvested from the team's Karma application; "external-pr" = a team or
     # community member submitted it via pull request. Defaults to OSO-authored.
     origin: str = "oso"
-    # exact registry/_kernel.yaml function name this SLA evidences. Optional when the
-    # (tier, category, sub_category) slot maps to a single kernel function; required (by the
-    # kernel conformance check) when the slot is shared by several functions.
-    kernel_function: str = ""
+    # slug of the registry/_kernel.yaml entry this SLA evidences. Required by the schema; the
+    # model defaults to "" so directly-constructed specs in tests stay valid. "non-kernel" says
+    # the metric measures something the kernel inventory does not name.
+    kernel_id: str = ""
     tier: Tier
     category: str = ""
     sub_category: str = ""
-    oso_project_slug: str | None = None
+    # OSO project slug of the party RECEIVING PAYMENT for this work. Not the code's project and
+    # not the team's org: those are different things, and one field used to carry all three.
+    funded_project_oso_slug: str = ""
+    # GitHub repositories the funded work covers, as lowercase owner/name -- OSO's GITHUB_REPO
+    # artifact identity, so the list joins straight to artifacts_by_project. Empty is honest for
+    # work measured through an RPC endpoint, an explorer or a status page.
+    repos: list[str] = []
     sla: SlaSpec
     source: SourceSpec
     transform: TransformSpec | None = None
@@ -126,11 +132,12 @@ def manifest_from_raw(raw: object) -> Manifest:
         FunctionSpec(
             function_id=f["function_id"],
             origin=f.get("origin", "oso"),
-            kernel_function=f.get("kernel_function", ""),
+            kernel_id=f.get("kernel_id", ""),
             tier=f["tier"],
             category=f.get("category", ""),
             sub_category=f.get("sub_category", ""),
-            oso_project_slug=f.get("oso_project_slug"),
+            funded_project_oso_slug=f.get("funded_project_oso_slug", ""),
+            repos=list(f.get("repos") or []),
             sla=SlaSpec(
                 statement=f["sla"]["statement"],
                 metric=f["sla"]["metric"],

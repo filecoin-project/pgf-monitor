@@ -14,13 +14,15 @@ AS_OF = datetime(2026, 7, 1, tzinfo=timezone.utc)
 # ran. The good function's host is allowed and the fake client returns a value.
 _MANIFEST = (
     "team: t\nmaintainers: [a]\nfunctions:\n"
-    "  - function_id: bad-egress\n    tier: essential\n"
+    "  - function_id: bad-egress\n    kernel_id: chain-sync-state\n"
+    "    funded_project_oso_slug: drand\n    tier: essential\n"
     "    category: 'Blockchain Core & Physical Storage'\n"
     "    sub_category: 'Ledger & Consensus'\n"
     "    sla: {statement: s, metric: m, threshold: {op: '>=', value: 0.5}, cadence: daily}\n"
     "    source: {adapter: oso, kind: http-json, base_url: 'https://blocked.example',"
     " query: /q, extract: {column: v, reduce: single}}\n"
-    "  - function_id: good\n    tier: essential\n"
+    "  - function_id: good\n    kernel_id: chain-sync-state\n"
+    "    funded_project_oso_slug: drand\n    tier: essential\n"
     "    category: 'Blockchain Core & Physical Storage'\n"
     "    sub_category: 'Ledger & Consensus'\n"
     "    sla: {statement: s, metric: m, threshold: {op: '>=', value: 0.5}, cadence: daily}\n"

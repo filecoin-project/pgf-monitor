@@ -2,10 +2,11 @@ team: kernel-demo
 maintainers: ["@filecoin-core"]
 functions:
   - function_id: randomness-beacon
+    kernel_id: distributed-randomness-beacon
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
-    oso_project_slug: drand
+    funded_project_oso_slug: drand
     sla:
       statement: "drand beacon relay not lagging: expected - current <= 1 round, measured daily"
       metric: beacon_round_lag
@@ -20,10 +21,11 @@ functions:
       extract: { column: expected, column2: current, reduce: single, derive: diff, unit: rounds }
 
   - function_id: mainnet-block-explorer
+    kernel_id: mainnet-explorer
     tier: essential
     category: 'UX/DX'
     sub_category: 'Explorers and Tooling'
-    oso_project_slug: filfox
+    funded_project_oso_slug: filfox
     sla:
       statement: "Explorer indexed head fresh: latest tipset <= 90s stale, measured daily"
       metric: explorer_head_age_seconds
@@ -38,10 +40,13 @@ functions:
       extract: { column: timestamp, timestamp_column: height, reduce: latest, derive: age_seconds, unit: seconds }
 
   - function_id: builtin-actors
+    kernel_id: builtin-actor-suite
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'VM & Programmability'
-    oso_project_slug: builtin-actors
+    funded_project_oso_slug: filozone
+    repos:
+      - filecoin-project/builtin-actors
     sla:
       statement: "A tagged builtin-actors release <= 90 days old, measured monthly"
       metric: release_age_days
@@ -56,10 +61,11 @@ functions:
       extract: { column: published_at, timestamp_column: published_at, cast: date, reduce: latest, derive: age_days, unit: days }
 
   - function_id: content-routing-ipni
+    kernel_id: content-routing-ads
     tier: essential
     category: 'Storage Market Middleware'
     sub_category: 'Content routing'
-    oso_project_slug: ipni
+    funded_project_oso_slug: ipni
     sla:
       statement: "IPNI providers error-free: >= 95% of providers report no LastError, measured daily"
       metric: ipni_error_free_ratio

@@ -21,12 +21,12 @@ functions:
   # THRESHOLD: not a placeholder — equality with the requested height is the definition of
   #   success. A pruned or degraded node errors out (failed fetch) or cannot answer at all.
   - function_id: zondax-node-rpc-archival-depth
-    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    kernel_id: chain-sync-state
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
-    oso_project_slug: zondax
+    funded_project_oso_slug: zondax
     sla:
       statement: "Zondax archival RPC serves genesis-deep chain history: ChainGetTipSetByHeight(100000) returns the tipset at exactly height 100000 (Sep 2020), measured weekly — pruned nodes cannot answer this"
       metric: archival_tipset_height_served
@@ -55,12 +55,14 @@ functions:
   #   missed window).
   # THRESHOLD (placeholder, confirm with team): pending the cross-repo comparison above.
   - function_id: rosetta-release-currency
-    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    kernel_id: chain-sync-state
     origin: karma
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
-    oso_project_slug: zondax
+    funded_project_oso_slug: zondax
+    repos:
+      - zondax/rosetta-filecoin-proxy
     sla:
       statement: "Rosetta stack stays current with node releases: latest rosetta-filecoin-proxy release <= 60 days old (proxy for the team's <7d-after-Lotus Karma commitment), measured weekly"
       metric: rosetta_release_age_days

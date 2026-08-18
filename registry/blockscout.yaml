@@ -35,12 +35,12 @@ functions:
   #   lag runs 60-100s — the same band this sits in. Tighten from accrued
   #   data/observations.csv readings; 300s (10 epochs) is the obvious first step.
   - function_id: fevm-mainnet-explorer-blockscout
-    kernel_function: "Mainnet block explorer (Lotus archive, indexing, NV maintenance)"
+    kernel_id: mainnet-explorer
     origin: oso
     tier: essential
     category: 'UX/DX'
     sub_category: 'Explorers and Tooling'
-    oso_project_slug: blockscout
+    funded_project_oso_slug: blockscout
     sla:
       statement: "Blockscout Filecoin mainnet explorer indexes at chain head: newest indexed block <= 3600s old, measured daily — a stale explorer is not an observability surface"
       metric: blockscout_mainnet_head_age_seconds
@@ -66,11 +66,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): <= 3600s, same as mainnet and equally
   #   loose; tighten both together once observations accrue.
   - function_id: calibnet-explorer-blockscout
+    kernel_id: calibnet-explorer
     origin: oso
     tier: essential
     category: 'Coordination & Hardening'
     sub_category: 'Testnets - explorer'
-    oso_project_slug: blockscout
+    funded_project_oso_slug: blockscout
     sla:
       statement: "Blockscout Calibration testnet explorer indexes at chain head: newest indexed block <= 3600s old, measured daily — upgrade rehearsal needs a working explorer to analyse"
       metric: blockscout_calibnet_head_age_seconds
@@ -95,12 +96,12 @@ functions:
   # Independent reference metric: explorer freshness via Filfox, complementing the
   # Blockscout-native checks above with a second, independently-operated data source.
   - function_id: mainnet-block-explorer
-    kernel_function: "Mainnet block explorer (Lotus archive, indexing, NV maintenance)"
+    kernel_id: mainnet-explorer
     origin: oso
     tier: essential
     category: 'UX/DX'
     sub_category: 'Explorers and Tooling'
-    oso_project_slug: filfox
+    funded_project_oso_slug: filfox
     sla:
       statement: "Explorer keeps pace with the chain: the largest gap between consecutive indexed tipsets stays <= 90s (3 epochs), measured daily"
       metric: explorer_max_tipset_gap_seconds

@@ -12,15 +12,16 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["function_id", "tier", "category", "sub_category", "sla", "source"],
+        "required": ["function_id", "kernel_id", "tier", "category", "sub_category", "funded_project_oso_slug", "sla", "source"],
         "properties": {
           "function_id": {"type": "string", "minLength": 1},
           "origin": {"enum": ["oso", "karma", "external-pr"]},
-          "kernel_function": {"type": "string", "minLength": 1},
+          "kernel_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "minLength": 2, "maxLength": 64},
           "tier": {"enum": ["irreplaceable", "essential", "important", "nice-to-have"]},
           "category": {"enum": ["Blockchain Core & Physical Storage", "Coordination & Hardening", "Coordination & Incentives", "UX/DX", "Storage Market Middleware"]},
           "sub_category": {"type": "string", "minLength": 1},
-          "oso_project_slug": {"type": "string"},
+          "funded_project_oso_slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "minLength": 2},
+          "repos": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$"}},
           "sla": {
             "type": "object",
             "additionalProperties": false,

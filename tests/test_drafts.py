@@ -22,6 +22,8 @@ DRAFT = textwrap.dedent(
     functions:
       # PROBED 2026-07-15: curl https://example.org/health -> 200
       - function_id: example-fn
+        kernel_id: distributed-randomness-beacon
+        funded_project_oso_slug: drand
         tier: irreplaceable
         category: 'Blockchain Core & Physical Storage'
         sub_category: 'Randomness'

@@ -19,12 +19,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): 5 epochs (150s) tolerates fetch-timing noise
   #   and brief block-delivery delays while still catching a genuinely stalled backing node.
   - function_id: chain-sync-rpc-mainnet-head-lag
-    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    kernel_id: chain-sync-state
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
-    oso_project_slug: ankr-network
+    funded_project_oso_slug: ankr-network
     sla:
       statement: "Public mainnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily — a stale head means the endpoint's backing node has stopped syncing"
       metric: rpc_head_lag_epochs
@@ -54,12 +54,12 @@ functions:
   #   30s epochs. Same JSON shape/flattening reasoning as the mainnet entry above.
   # THRESHOLD (placeholder, confirm with team): 5 epochs, same rationale as mainnet.
   - function_id: chain-sync-rpc-calibnet-head-lag
-    kernel_function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
+    kernel_id: chain-sync-state
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
-    oso_project_slug: ankr-network
+    funded_project_oso_slug: ankr-network
     sla:
       statement: "Public calibnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily"
       metric: rpc_calibnet_head_lag_epochs

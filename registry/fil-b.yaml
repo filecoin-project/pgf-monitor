@@ -9,12 +9,14 @@ functions:
   # is normal, but a 2-month silence on the canonical network docs repo is a real abandonment
   # signal.
   - function_id: network-documentation-commit-recency
-    kernel_function: "Network-wide documentation along with source code availability and source control"
+    kernel_id: network-documentation
     origin: oso
     tier: essential
     category: 'UX/DX'
     sub_category: 'Explorers and Tooling'
-    oso_project_slug: fil-builders
+    funded_project_oso_slug: fil-builders
+    repos:
+      - filecoin-project/filecoin-docs
     sla:
       statement: "Docs repo not abandoned: most recent commit on filecoin-project/filecoin-docs <= 60 days old, measured weekly"
       metric: docs_last_commit_age_days
