@@ -96,8 +96,23 @@ def main(argv: list[str] | None = None) -> int:
             ok, md = validate_removal(load_manifest(args.base), args.head)
         else:
             head = load_manifest(args.head)
-            base = load_manifest(args.base) if args.base else None
+            base, base_note = None, ""
+            if args.base:
+                try:
+                    base = load_manifest(args.base)
+                except ManifestError as exc:
+                    # The base predates a schema migration in this PR, so the current loader
+                    # cannot read it. A goalpost diff against an unreadable base is impossible,
+                    # but the HEAD manifest is still fully validated below -- so this is a
+                    # missing comparison, not an invalid PR. Say so instead of failing.
+                    base_note = (
+                        "> **No goalpost diff.** The base manifest does not validate against this "
+                        f"PR's schema (`{exc}`), which is what a schema migration looks like. "
+                        "Head is validated in full; the before/after comparison is unavailable "
+                        "and every function should be read as new.\n\n"
+                    )
             ok, md = validate_manifest(base, head, allowlist, as_of)
+            md = base_note + md
     except ManifestError as exc:
         md = f"### Validation failed\n\nschema error: {exc}"
         ok = False

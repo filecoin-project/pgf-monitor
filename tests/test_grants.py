@@ -29,11 +29,16 @@ def test_loads_the_bridge():
 def test_every_grant_points_at_files_that_exist():
     """The bridge is only useful if its pointers resolve: a manifest that instruments the grant and
     a facts file that carries its contract terms."""
+    # contracts/ is gitignored on purpose -- the facts files carry contract terms and stay local
+    # -- so a checkout that has none is normal, and asserting they exist would only pass on a
+    # machine that happens to hold them. Check the facts pointers only when the directory is
+    # populated; the manifest pointers are tracked and always checked.
+    have_facts = any(Path("contracts").glob("*.facts.yaml"))
     missing = []
     for g in load_grants().grants:
         if g.manifest and not Path(g.manifest).exists():
             missing.append(f"{g.app_ref}: manifest {g.manifest}")
-        if g.facts and not Path(g.facts).exists():
+        if have_facts and g.facts and not Path(g.facts).exists():
             missing.append(f"{g.app_ref}: facts {g.facts}")
     assert missing == []
 
@@ -88,7 +93,9 @@ def test_the_slug_agrees_with_the_manifest_it_points_at():
 def test_every_facts_file_is_claimed_by_the_bridge():
     """A facts file with no grant row is a leftover from pre-award drafting, and those exist
     (js-libp2p, synaps3 were never funded). The bridge has to account for them explicitly."""
-    claimed = {g.facts for g in load_grants().grants if g.facts}
     on_disk = {p for p in glob.glob("contracts/*.facts.yaml") if "example" not in p}
+    if not on_disk:
+        pytest.skip("contracts/ is gitignored and absent from this checkout")
+    claimed = {g.facts for g in load_grants().grants if g.facts}
     unclaimed = sorted(on_disk - claimed)
     assert unclaimed == [], f"facts files no grant row claims: {unclaimed}"
