@@ -158,3 +158,75 @@ def test_the_generator_is_the_only_writer_of_the_derived_artifacts():
     """A reminder in the artifacts themselves, so a hand-edit looks wrong to a reader too."""
     assert "do not edit by hand" in OUT.read_text()
     assert "regenerate it with" in Path("README.md").read_text()
+
+
+def _manifest_yaml(kernel_function: str, slot, metric="probe_metric") -> str:
+    import yaml
+
+    return yaml.safe_dump(
+        {
+            "team": "probeteam",
+            "maintainers": ["@someone"],
+            "functions": [
+                {
+                    "function_id": "probe-fn",
+                    "kernel_function": kernel_function,
+                    "origin": "oso",
+                    "tier": slot[0],
+                    "category": slot[1],
+                    "sub_category": slot[2],
+                    "sla": {
+                        "statement": "a probe",
+                        "metric": metric,
+                        "threshold": {"op": "<=", "value": 1},
+                        "cadence": "daily",
+                    },
+                    "source": {
+                        "adapter": "oso",
+                        "kind": "http-json",
+                        "base_url": "https://api.llama.fi",
+                        "query": "/v2/x",
+                        "extract": {"column": "v", "reduce": "single"},
+                    },
+                }
+            ],
+        },
+        sort_keys=False,
+    )
+
+
+def test_a_draft_that_moves_a_metric_to_another_kernel_function_keeps_both(tmp_path):
+    """A draft may PROPOSE reassigning a metric to a different kernel function. Deduping on
+    (team, function_id, metric) alone treated that as a pending update to the adopted entry, so
+    the proposed function got no draft coverage at all and the move was invisible."""
+    slot, names = _a_shared_slot()
+    adopted_fn, proposed_fn = names[0], names[1]
+    registry = tmp_path / "registry"
+    drafts = registry / "drafts"
+    drafts.mkdir(parents=True)
+    (registry / "probeteam.yaml").write_text(_manifest_yaml(adopted_fn, slot))
+    (drafts / "probeteam.yaml").write_text(_manifest_yaml(proposed_fn, slot))
+
+    entries, _, unresolved = collect(registry_dir=registry)
+
+    assert unresolved == []
+    adopted = [e for e in entries.get(adopted_fn, []) if e["team"] == "probeteam"]
+    proposed = [e for e in entries.get(proposed_fn, []) if e["team"] == "probeteam"]
+    assert [e["state"] for e in adopted] == ["adopted"], "the adopted assignment must survive"
+    assert [e["state"] for e in proposed] == ["draft"], "the proposed reassignment must be visible"
+    assert adopted[0]["pending_draft"] is True
+
+
+def test_a_draft_identical_to_the_adopted_entry_is_only_a_pending_flag(tmp_path):
+    slot, names = _a_shared_slot()
+    registry = tmp_path / "registry"
+    drafts = registry / "drafts"
+    drafts.mkdir(parents=True)
+    (registry / "probeteam.yaml").write_text(_manifest_yaml(names[0], slot))
+    (drafts / "probeteam.yaml").write_text(_manifest_yaml(names[0], slot))
+
+    entries, _, _ = collect(registry_dir=registry)
+
+    mine = [e for e in entries.get(names[0], []) if e["team"] == "probeteam"]
+    assert len(mine) == 1
+    assert mine[0]["state"] == "adopted" and mine[0]["pending_draft"] is True

@@ -61,18 +61,27 @@ def resolve_kernel_function(fn, slots) -> tuple[str | None, str | None]:
     return None, f"slot {slot} maps to {len(names)} kernel functions and kernel_function is unset"
 
 
-def collect():
+def collect(registry_dir: Path = Path("registry"), drafts_dir: Path | None = None):
     """kernel function name -> [entry dicts]; plus declared gaps and unresolvable entries.
 
-    A (team, function_id, metric) declared in BOTH registry/ and registry/drafts/ is ONE entry,
-    state `adopted`, flagged `pending_draft`: a draft is how a team's next version is proposed,
-    so it must not overwrite what is adopted today (it did, because both were written into one
-    dict keyed by slot — ankr's two live metrics were published as `draft` that way).
+    Merge rules for the same logical metric — (team, function_id, metric) — declared in both
+    registry/ and registry/drafts/, which is how a team proposes its next version:
+
+    * SAME kernel function: one entry, state `adopted`, flagged `pending_draft`. A draft must not
+      overwrite what is adopted today (it did, because both files were written into one dict keyed
+      by slot — ankr's two live metrics were published as `draft` that way).
+    * DIFFERENT kernel function: BOTH are kept — adopted under the function it is assigned to
+      today, draft under the one it proposes moving to, and the adopted entry is flagged
+      `pending_draft`. Collapsing these would hide a proposed reassignment entirely: the proposed
+      function would show no draft coverage at all.
     """
+    drafts_dir = registry_dir / "drafts" if drafts_dir is None else drafts_dir
     kernel = load_kernel()
     slots = kernel_slots(kernel)
     entries = defaultdict(list)  # kernel function -> [entry]
-    index: dict[tuple[str, str, str], dict] = {}  # (team, function_id, metric) -> entry
+    # (team, function_id, metric) -> {kernel function -> entry}. The kernel function is part of
+    # the identity, not a property of the record: a draft may move a metric between functions.
+    index: dict[tuple[str, str, str], dict[str, dict]] = defaultdict(dict)
     unresolved = []  # (team, function_id, reason)
 
     def add(team: str, fn, state: str) -> None:
@@ -81,8 +90,8 @@ def collect():
             unresolved.append((team, fn.function_id, why))
             return
         host = host_of(fn.source.base_url) if fn.source.kind == "http-json" else "fixture"
-        key = (team, fn.function_id, fn.sla.metric)
-        seen = index.get(key)
+        by_function = index[(team, fn.function_id, fn.sla.metric)]
+        seen = by_function.get(name)
         if seen is not None:
             # adopted always wins; the loser only records that an update is waiting
             if state == "adopted":
@@ -90,6 +99,11 @@ def collect():
             else:
                 seen["pending_draft"] = True
             return
+        if state == "draft":
+            # a draft assignment elsewhere is a proposed move: say so on what is adopted today
+            for other in by_function.values():
+                if other["state"] == "adopted":
+                    other["pending_draft"] = True
         entry = {
             "team": team,
             "function_id": fn.function_id,
@@ -97,17 +111,17 @@ def collect():
             "host": host or "?",
             "state": state,
         }
-        index[key] = entry
+        by_function[name] = entry
         entries[name].append(entry)
 
-    for path in sorted(Path("registry").glob("*.yaml")):
+    for path in sorted(registry_dir.glob("*.yaml")):
         if path.name.startswith("_"):
             continue
         m = load_manifest(path)
         for fn in m.functions:
             add(m.team, fn, "adopted")
     gaps = []  # (team, function, reason)
-    for path in sorted(Path("registry/drafts").glob("*.yaml")):
+    for path in sorted(drafts_dir.glob("*.yaml")):
         m, x = split_draft(path)
         for fn in m.functions:
             add(m.team, fn, "draft")
