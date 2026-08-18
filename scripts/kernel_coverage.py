@@ -1,7 +1,17 @@
 """Generate docs/kernel-coverage.md: every catalogued kernel function x who monitors it.
 
 Joins registry/_kernel.yaml against adopted manifests (registry/*.yaml) and drafts
-(registry/drafts/*.yaml) on the (tier, category, sub_category) triple.
+(registry/drafts/*.yaml) on the EXACT kernel function, resolved the same way
+`fpm.kernel.conformance_error` resolves it: `kernel_function` when set, otherwise the sole
+function in the entry's (tier, category, sub_category) slot. Keying on the triple alone — which
+this script used to do — credits every metric in a shared slot to every function in it: 6 of the
+17 slots are shared, which is how a published 29/29 came out of a registry that exactly covers
+27. An entry that cannot be resolved is reported, never silently spread.
+
+Two coverage numbers, because both are real and they are not the same claim:
+  * ADOPTED    — the function has a metric in registry/, so some team is held to it today.
+  * WITH DRAFTS— the function has a metric in registry/ or registry/drafts/, i.e. it is modelled
+                 but possibly not yet committed to by anyone.
 
 Usage:
   uv run python scripts/kernel_coverage.py [--write]   # docs/kernel-coverage.md
@@ -24,33 +34,120 @@ from fpm.manifest import load_manifest
 OUT = Path("docs/kernel-coverage.md")
 
 
-def collect():
-    entries = defaultdict(list)  # triple -> [(team, function_id, metric, host, state)]
-    for path in sorted(Path("registry").glob("*.yaml")):
+def kernel_slots(kernel) -> dict[tuple[str, str, str], list[str]]:
+    """(tier, category, sub_category) -> the kernel functions catalogued in that slot."""
+    slots: dict[tuple[str, str, str], list[str]] = defaultdict(list)
+    for e in kernel.entries:
+        slots[(e.tier, e.category, e.sub_category)].append(e.function)
+    return slots
+
+
+def resolve_kernel_function(fn, slots) -> tuple[str | None, str | None]:
+    """The exact kernel function an entry evidences, or (None, why not).
+
+    Deliberately the same rule as `fpm.kernel.conformance_error`, which the PR gate already
+    enforces: if the gate can name the one function an entry is about, so can this.
+    """
+    slot = (fn.tier, fn.category, fn.sub_category)
+    names = slots.get(slot)
+    if not names:
+        return None, f"{slot} is not a catalogued kernel slot"
+    if fn.kernel_function:
+        if fn.kernel_function in names:
+            return fn.kernel_function, None
+        return None, f"kernel_function {fn.kernel_function!r} is not in slot {slot}"
+    if len(names) == 1:
+        return names[0], None
+    return None, f"slot {slot} maps to {len(names)} kernel functions and kernel_function is unset"
+
+
+def collect(registry_dir: Path = Path("registry"), drafts_dir: Path | None = None):
+    """kernel function name -> [entry dicts]; plus declared gaps and unresolvable entries.
+
+    Merge rules for the same logical metric — (team, function_id, metric) — declared in both
+    registry/ and registry/drafts/, which is how a team proposes its next version:
+
+    * SAME kernel function: one entry, state `adopted`, flagged `pending_draft`. A draft must not
+      overwrite what is adopted today (it did, because both files were written into one dict keyed
+      by slot — ankr's two live metrics were published as `draft` that way).
+    * DIFFERENT kernel function: BOTH are kept — adopted under the function it is assigned to
+      today, draft under the one it proposes moving to, and the adopted entry is flagged
+      `pending_draft`. Collapsing these would hide a proposed reassignment entirely: the proposed
+      function would show no draft coverage at all.
+    """
+    drafts_dir = registry_dir / "drafts" if drafts_dir is None else drafts_dir
+    kernel = load_kernel()
+    slots = kernel_slots(kernel)
+    entries = defaultdict(list)  # kernel function -> [entry]
+    # (team, function_id, metric) -> {kernel function -> entry}. The kernel function is part of
+    # the identity, not a property of the record: a draft may move a metric between functions.
+    index: dict[tuple[str, str, str], dict[str, dict]] = defaultdict(dict)
+    unresolved = []  # (team, function_id, reason)
+
+    def add(team: str, fn, state: str) -> None:
+        name, why = resolve_kernel_function(fn, slots)
+        if name is None:
+            unresolved.append((team, fn.function_id, why))
+            return
+        host = host_of(fn.source.base_url) if fn.source.kind == "http-json" else "fixture"
+        by_function = index[(team, fn.function_id, fn.sla.metric)]
+        seen = by_function.get(name)
+        if seen is not None:
+            # adopted always wins; the loser only records that an update is waiting
+            if state == "adopted":
+                seen["state"] = "adopted"
+            else:
+                seen["pending_draft"] = True
+            return
+        if state == "draft":
+            # a draft assignment elsewhere is a proposed move: say so on what is adopted today
+            for other in by_function.values():
+                if other["state"] == "adopted":
+                    other["pending_draft"] = True
+        entry = {
+            "team": team,
+            "function_id": fn.function_id,
+            "metric": fn.sla.metric,
+            "host": host or "?",
+            "state": state,
+        }
+        by_function[name] = entry
+        entries[name].append(entry)
+
+    for path in sorted(registry_dir.glob("*.yaml")):
         if path.name.startswith("_"):
             continue
         m = load_manifest(path)
         for fn in m.functions:
-            host = host_of(fn.source.base_url) if fn.source.kind == "http-json" else "fixture"
-            entries[(fn.tier, fn.category, fn.sub_category)].append(
-                (m.team, fn.function_id, fn.sla.metric, host or "?", "adopted")
-            )
-    unmeasured = []  # (team, function, reason)
-    for path in sorted(Path("registry/drafts").glob("*.yaml")):
+            add(m.team, fn, "adopted")
+    gaps = []  # (team, function, reason)
+    for path in sorted(drafts_dir.glob("*.yaml")):
         m, x = split_draft(path)
         for fn in m.functions:
-            host = host_of(fn.source.base_url) if fn.source.kind == "http-json" else "fixture"
-            entries[(fn.tier, fn.category, fn.sub_category)].append(
-                (m.team, fn.function_id, fn.sla.metric, host or "?", "draft")
-            )
+            add(m.team, fn, "draft")
         for u in x.get("unmeasured") or []:
-            unmeasured.append((m.team, u.get("function", "?"), u.get("reason", "")))
-    return entries, unmeasured
+            gaps.append((m.team, u.get("function", "?"), u.get("reason", "")))
+    return entries, gaps, unresolved
+
+
+def counts(entries, kernel) -> dict:
+    """The coverage numbers, each named for exactly what it counts."""
+    names = [e.function for e in kernel.entries]
+    adopted = sum(1 for n in names if any(x["state"] == "adopted" for x in entries.get(n, [])))
+    with_drafts = sum(1 for n in names if entries.get(n))
+    live = sum(
+        1
+        for n in names
+        if any(x["state"] == "adopted" and x["host"] != "fixture" for x in entries.get(n, []))
+    )
+    return {"functions": len(names), "adopted": adopted, "with_drafts": with_drafts, "live": live}
 
 
 def render() -> str:
     kernel = load_kernel()
-    entries, unmeasured = collect()
+    entries, gaps, unresolved = collect()
+    c = counts(entries, kernel)
+    n = c["functions"]
     lines = [
         "# Kernel coverage matrix",
         "",
@@ -59,37 +156,50 @@ def render() -> str:
         "monitor it, from adopted manifests (registry/) plus any pending drafts",
         "(registry/drafts/). `fixture` sources are placeholders awaiting a real feed.",
         "",
+        f"**{c['adopted']}/{n} functions are adopted** — a metric in `registry/`, so a team is "
+        f"held to it today, and {c['live']} of those read from a live, non-fixture source. "
+        f"**{c['with_drafts']}/{n} are modelled** — adopted or drafted. A metric is credited to "
+        "the ONE kernel function it names (`kernel_function`, or the sole function in its slot), "
+        "never to every function sharing a slot.",
+        "",
+        "🟢 adopted, live source · 🟡 drafted, or fixture-only · 🔴 nothing yet.",
+        "",
     ]
-    covered = live = 0
     cur_tier = None
     for e in kernel.entries:
-        triple = (e.tier, e.category, e.sub_category)
         if e.tier != cur_tier:
             cur_tier = e.tier
             lines += [f"## {e.tier.upper()}", ""]
-        matches = entries.get(triple, [])
-        real = [m for m in matches if m[4] != "" and m[3] != "fixture"]
-        mark = "🟢" if real else ("🟡" if matches else "🔴")
-        covered += bool(matches)
-        live += bool(real)
+        matches = entries.get(e.function, [])
+        adopted_live = [m for m in matches if m["state"] == "adopted" and m["host"] != "fixture"]
+        mark = "🟢" if adopted_live else ("🟡" if matches else "🔴")
         lines += [f"### {mark} {e.function}", ""]
         if e.value:
             lines += [f"> {e.value}", ""]
         if matches:
             lines += ["| team | metric | source | state |", "|---|---|---|---|"]
-            for team, fid, metric, host, state in matches:
-                lines.append(f"| {team} | `{metric}` ({fid}) | {host} | {state} |")
+            for m in matches:
+                state = m["state"] + (" (draft update pending)" if m.get("pending_draft") else "")
+                lines.append(
+                    f"| {m['team']} | `{m['metric']}` ({m['function_id']}) | {m['host']} | {state} |"
+                )
             lines.append("")
         else:
             lines += ["_No monitoring entry yet._", ""]
-    n = len(kernel.entries)
-    lines[6:6] = [
-        f"**{covered}/{n} functions have at least one entry; "
-        f"{live}/{n} have at least one live (non-fixture) source.** "
-        "🟢 live · 🟡 fixture/placeholder only · 🔴 nothing.",
-        "",
-    ]
-    if unmeasured:
+    if unresolved:
+        lines += [
+            "## Entries that name no single kernel function",
+            "",
+            "These are counted toward NOTHING — the generator will not spread a metric across a",
+            "shared slot. Set `kernel_function` to the exact inventory name to place them.",
+            "",
+            "| team | function_id | why |",
+            "|---|---|---|",
+        ]
+        for team, fid, why in unresolved:
+            lines.append(f"| {team} | `{fid}` | {why} |")
+        lines.append("")
+    if gaps:
         lines += [
             "## Declared unmeasurable / candidate gaps",
             "",
@@ -98,7 +208,7 @@ def render() -> str:
             "| team | aspect | reason |",
             "|---|---|---|",
         ]
-        for team, fn_text, reason in unmeasured:
+        for team, fn_text, reason in gaps:
             lines.append(f"| {team} | {fn_text[:70]} | {reason[:110]} |")
         lines.append("")
     return "\n".join(lines)
@@ -112,10 +222,10 @@ EMBED_END = "    # COVERAGE-EMBED-END"
 
 
 def coverage_json() -> dict:
-    """The dashboard's embedded coverage payload: 29 functions x monitoring entries."""
+    """The dashboard's embedded coverage payload: every kernel function x its entries."""
 
     kernel = load_kernel()
-    entries, _ = collect()
+    entries, _, _ = collect()
     # lineage per (team, function_id): "oso" | "karma" | "external-pr"
     origins: dict[tuple[str, str], str] = {}
     for path in sorted(Path("registry").glob("*.yaml")):
@@ -126,23 +236,26 @@ def coverage_json() -> dict:
             origins[(m.team, fn.function_id)] = fn.origin
     functions = []
     for e in kernel.entries:
+        payload_entries = []
+        for x in entries.get(e.function, []):
+            item = {
+                "team": x["team"],
+                "function_id": x["function_id"],
+                "metric": x["metric"],
+                "host": x["host"],
+                "state": x["state"],
+                "origin": origins.get((x["team"], x["function_id"]), "oso"),
+            }
+            if x.get("pending_draft"):
+                item["pending_draft"] = True
+            payload_entries.append(item)
         functions.append(
             {
                 "tier": e.tier,
                 "category": e.category,
                 "sub_category": e.sub_category,
                 "function": e.function,
-                "entries": [
-                    {
-                        "team": t,
-                        "function_id": f,
-                        "metric": m,
-                        "host": h,
-                        "state": s,
-                        "origin": origins.get((t, f), "oso"),
-                    }
-                    for t, f, m, h, s in entries.get((e.tier, e.category, e.sub_category), [])
-                ],
+                "entries": payload_entries,
             }
         )
     team_app_refs = {}
@@ -154,9 +267,9 @@ def coverage_json() -> dict:
         slates = x.get("slates")
         if isinstance(slates, list):
             team_app_refs.setdefault(m.team, [])
-            for s in slates:
-                if s.get("app_ref"):
-                    team_app_refs[m.team].append(s["app_ref"])
+            for s2 in slates:
+                if s2.get("app_ref"):
+                    team_app_refs[m.team].append(s2["app_ref"])
     return {"functions": functions, "team_app_refs": team_app_refs}
 
 
@@ -182,22 +295,35 @@ def embed() -> None:
 BADGES_JSON = Path("badges.json")
 
 
-def badges() -> None:
-    """Write badges.json — the counts shields.io reads at render time, so no numbers are
-    hardcoded in README.md (the README's shields URLs point at this file on the main branch)."""
-    import json as _json
+def badges_data() -> dict:
+    """The counts shields.io reads, each key naming exactly what it counts.
 
+    `coverage` — the key the README's headline badge points at — is the ADOPTED number: what
+    some team is held to today. The draft-inclusive number is published beside it under its own
+    key and its own badge, so 27/29 can never be read as 29/29 of anything.
+    """
     kernel = load_kernel()
-    n_fn = len(kernel.entries)
+    entries, _, _ = collect()
+    c = counts(entries, kernel)
     teams = [p for p in sorted(Path("registry").glob("*.yaml")) if not p.name.startswith("_")]
     n_metrics = sum(len(load_manifest(p).functions) for p in teams)
-    n_cov = sum(1 for f in coverage_json()["functions"] if f["entries"])
-    data = {
-        "kernel_functions": n_fn,
+    n = c["functions"]
+    return {
+        "kernel_functions": n,
         "monitored_metrics": n_metrics,
         "teams": len(teams),
-        "coverage": f"{n_cov}/{n_fn}",
+        "coverage": f"{c['adopted']}/{n}",
+        "coverage_adopted": f"{c['adopted']}/{n}",
+        "coverage_with_drafts": f"{c['with_drafts']}/{n}",
+        "coverage_live": f"{c['live']}/{n}",
     }
+
+
+def badges() -> None:
+    """Write badges.json (the README's shields URLs point at this file on the main branch)."""
+    import json as _json
+
+    data = badges_data()
     BADGES_JSON.write_text(_json.dumps(data, indent=2) + "\n")
     print(f"wrote {BADGES_JSON}: {data}")
 
