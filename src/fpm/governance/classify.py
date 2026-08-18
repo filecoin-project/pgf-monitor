@@ -6,9 +6,8 @@ from typing import Literal
 
 from fpm.domain import _Model
 from fpm.governance.diff import Change
+from fpm.governance.fields import bucket_for
 from fpm.manifest import Manifest
-
-_TRIVIAL = {"sla.statement", "maintainers"}
 
 
 class ClassifiedChange(_Model):
@@ -41,7 +40,7 @@ def classify(changes: list[Change], new: Manifest) -> list[ClassifiedChange]:
         if c.kind == "removed":
             out.append(ClassifiedChange(**base, bucket="material", reason="function removed"))
             continue
-        if c.field_path in _TRIVIAL:
+        if bucket_for(c.field_path) == "trivial":
             out.append(ClassifiedChange(**base, bucket="trivial", reason="non-committal change"))
             continue
         direction: Literal["loosened", "tightened", "n/a"] = "n/a"

@@ -69,11 +69,9 @@ def test_transform_sql_change_is_material():
         load_manifest("tests/fixtures/chainsafe_oso.yaml"), "SELECT max(v) FROM raw"
     )
     changes = manifest_diff(m, m2)
-    assert any(c.field_path == "source.transform.sql" and c.kind == "modified" for c in changes)
+    assert any(c.field_path == "transform.sql" and c.kind == "modified" for c in changes)
     classified = classify(changes, m2)
-    assert any(
-        c.field_path == "source.transform.sql" and c.bucket == "material" for c in classified
-    )
+    assert any(c.field_path == "transform.sql" and c.bucket == "material" for c in classified)
 
 
 def test_extract_to_transform_swap_detected():
@@ -81,7 +79,7 @@ def test_extract_to_transform_swap_detected():
     m2 = _with_transform(m, "SELECT avg(v) FROM raw")
     changes = manifest_diff(m, m2)
     paths = {c.field_path for c in changes}
-    assert "source.transform.sql" in paths  # transform appeared
+    assert "transform.sql" in paths  # transform appeared
     assert any(p.startswith("source.extract.") for p in paths)  # extract fields dropped
 
 

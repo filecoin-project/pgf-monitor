@@ -20,6 +20,7 @@ from pathlib import Path
 from fpm.adapters.oso import OsoAdapter
 from fpm.domain import window_for
 from fpm.governance.diff import manifest_diff
+from fpm.governance.fields import bucket_for
 from fpm.manifest import Manifest
 from fpm.provision import EgressError, MissingSecretError, dataset_name
 
@@ -27,13 +28,18 @@ _TAG = re.compile(r"^[a-z0-9][a-z0-9_]*$")
 
 
 def changed_function_ids(base: Manifest | None, head: Manifest) -> set[str]:
+    """Which functions this PR needs live proof for, derived from the semantic diff.
+
+    A manifest-level change (a `team` rename) carries no function_id and would otherwise select
+    nothing — but `team` names the OSO dataset and keys every observation and threshold row, so it
+    re-points every measurement the manifest makes. Those changes select ALL functions.
+    """
     if base is None:
         return {f.function_id for f in head.functions}
-    ids = set()
-    for c in manifest_diff(base, head):
-        if c.function_id:
-            ids.add(c.function_id)
-    return ids
+    changes = manifest_diff(base, head)
+    if any(not c.function_id and bucket_for(c.field_path) == "material" for c in changes):
+        return {f.function_id for f in head.functions}
+    return {c.function_id for c in changes if c.function_id}
 
 
 def ephemeral_name(team: str, function_id: str, run_tag: str) -> str:
