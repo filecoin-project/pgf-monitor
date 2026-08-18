@@ -1,148 +1,182 @@
 # The Filecoin Kernel inventory: the canonical taxonomy ProPGF prioritizes against.
-# Evolves via reviewed PR. Validated against _kernel_schema.json. Fields: tier, category,
+# Evolves via reviewed PR. Validated against _kernel_schema.json. Fields: id, tier, category,
 # sub_category, function, value. Irreplaceable + Essential are the in-scope tiers.
+#
+# `id` is the stable join key: every manifest SLA points at one via `kernel_id`, coverage joins
+# on it, and it is IMMUTABLE once merged. A rename is a new id plus a migration, never an edit
+# in place -- tests/test_kernel.py::test_kernel_ids_are_frozen enforces that. Ids are also kept
+# disjoint from SLA function_ids and team names, so a bare slug is never ambiguous.
 entries:
-  - tier: irreplaceable
+  - id: fvm-execution-engine
+    tier: irreplaceable
     category: "Blockchain Core & Physical Storage"
     sub_category: "VM & Programmability"
     function: "FVM execution engine (deterministic WASM actor execution)"
     value: "Shared execution engine that produces gas spent; a divergence here forks execution across all clients. Co-maintained by Lotus and Forest."
-  - tier: irreplaceable
+  - id: builtin-actor-suite
+    tier: irreplaceable
     category: "Blockchain Core & Physical Storage"
     sub_category: "VM & Programmability"
     function: "Storage market / miner / power / system / reward / datacap actors"
     value: "Storage market, miner, power and reward logic at protocol level. FIPs may propose modifications. Co-maintained by Lotus and Forest."
-  - tier: irreplaceable
+  - id: proving-subsystem
+    tier: irreplaceable
     category: "Blockchain Core & Physical Storage"
     sub_category: "Proving"
     function: "Proving subsystem - PoRep (StackedDRG sealing), WinningPoSt/WindowPoSt, crypto primitives (BLST, bellperson, neptune)"
     value: "Storage proofs make physical storage trustless and gate block production and sector onboarding; a regression halts proving network-wide."
-  - tier: irreplaceable
+  - id: p2p-networking-stack
+    tier: irreplaceable
     category: "Blockchain Core & Physical Storage"
     sub_category: "Networking"
     function: "GossipSub propagation, Kademlia DHT peer/content discovery, transports (TCP/QUIC) + NAT traversal"
     value: "Blocks must propagate within ~30s; precondition for propagation, discovery and every connection - failure threatens consensus."
-  - tier: irreplaceable
+  - id: distributed-randomness-beacon
+    tier: irreplaceable
     category: "Blockchain Core & Physical Storage"
     sub_category: "Randomness"
     function: "Distributed randomness beacon (threshold-BLS, League of Entropy)"
     value: "If the beacon stops, the chain halts instantly and (without months of R&D) irrecoverably. Governance and on-call support required."
-  - tier: essential
+  - id: consensus-validation-client
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Ledger & Consensus"
     function: "Consensus/validation client: fork-choice, state validation, message pool"
     value: "Most widely-deployed full node with broadest feature coverage; the client most of the network currently runs."
-  - tier: essential
+  - id: chain-sync-state
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Ledger & Consensus"
     function: "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)"
     value: "A correct, fast sync path keeps nodes in consensus rather than forking. Read/write surface used by miners, wallets, explorers, RPC providers and FEVM dApps."
-  - tier: essential
+  - id: forest-full-node
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Ledger & Consensus"
     function: "Independent Rust full node (sync, validation, RPC, snapshot export)"
     value: "Second production client bounds the blast radius of a Lotus bug - client diversity is a security property; ~30% lighter footprint, efficient snapshots, more performant Eth RPC."
-  - tier: essential
+  - id: block-production
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Block Production (mining)"
     function: "Block production - WinningPoSt leader election & block assembly"
     value: "Without miners running WinningPoSt there is no block production; the chain stops advancing. Majority of block producers run this (70%+)."
-  - tier: essential
+  - id: sealing-pipeline
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Block Production (mining)"
     function: "Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)"
     value: "How SPs onboard committed capacity and data onto the network."
-  - tier: essential
+  - id: proving-scheduler
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Block Production (mining)"
     function: "Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility"
     value: "Recurring liveness proofs and block production; missed windows mean fault penalties and power loss."
-  - tier: essential
+  - id: venus-pooled-mining
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Block Production (mining)"
     function: "Pooled block production (sophon-miner) + distributed sealing cluster (Damocles)"
     value: "Independent block-winning and sealing path for Venus SPs - SP-side client diversity. Dominant stack for China-based SPs (~15% of miners)."
-  - tier: essential
+  - id: evm-eam-actors
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "VM & Programmability"
     function: "EVM + EAM actor"
     value: "Enables smart contract programmability. Requires keeping shared VM/actors/finality libraries consistent across clients through upgrades. Co-maintained by Lotus, Forest and Fil-B."
-  - tier: essential
+  - id: randomness-relays
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Randomness"
     function: "High-SLA HTTP + gossipsub relays & quarterly resharing"
     value: "Keeps randomness reachable and the threshold group healthy as members rotate. Infrastructure and on-call support required."
-  - tier: essential
+  - id: validated-snapshots
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Mainnet Infrastructure"
     function: "Validated snapshot generation & hosting (~2h cadence)"
     value: "New/recovering nodes cannot sync from genesis in reasonable time; fresh snapshots keep operators off bad forks. Forest produces them; Lotus can, with more resources."
-  - tier: essential
+  - id: bootstrap-seed-nodes
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Mainnet Infrastructure"
     function: "Operation of seed nodes a new peer contacts on startup"
     value: "Without reachable bootstrap nodes a fresh node 'starts and just sits there'."
-  - tier: essential
+  - id: groth16-params
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Mainnet Infrastructure"
     function: "Serving Groth16 trusted-setup parameters to every node and SP (go-paramfetch)"
     value: "The network cannot generate/verify proofs without these present and unaltered; impacts all nodes (verifiers) and miners (sealers and provers)."
-  - tier: essential
+  - id: calibnet-upgrade-rehearsal
+    tier: essential
     category: "Coordination & Hardening"
     sub_category: "Testnets"
     function: "Mainnet-realistic testnet for rehearsing every network-version upgrade"
     value: "Required rehearsal path that catches consensus-breaking issues before mainnet."
-  - tier: essential
+  - id: infra-stewardship
+    tier: essential
     category: "Coordination & Hardening"
     sub_category: "Shared infra stewardship"
     function: "Vendor/access governance, runbooks, Slack/Workspace/GitHub stewardship"
     value: "Connective infra the ecosystem relies on; reduces systemic and key-person risk."
-  - tier: essential
+  - id: calibnet-miners
+    tier: essential
     category: "Coordination & Hardening"
     sub_category: "Testnets - miners"
     function: "Calibnet miners (Lotus-Miner / Curio / Venus) for upgrade rehearsal"
     value: "Makes Calibnet a faithful rehearsal; degraded coverage if missing."
-  - tier: essential
+  - id: calibnet-explorer
+    tier: essential
     category: "Coordination & Hardening"
     sub_category: "Testnets - explorer"
     function: "Explorer for Calibration testnet"
     value: "Supports rehearsal and analysis (need at least one)."
-  - tier: essential
+  - id: network-monitoring-ir
+    tier: essential
     category: "Coordination & Hardening"
     sub_category: "Network data & monitoring"
     function: "Monitoring, archival access and incident response (Grafana, OpsGenie, IR coordination)"
     value: "Observability and rapid response/recovery through upgrades and outages. Critical for network security; any provider can populate it."
-  - tier: essential
+  - id: open-network-datasets
+    tier: essential
     category: "Coordination & Incentives"
     sub_category: "Network data & monitoring"
     function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
     value: "Prepares and presents network KPI metrics; free, vendor-neutral network data anyone can reuse - no rebuilding their own pipeline."
-  - tier: essential
+  - id: chain-etl-spacescope
+    tier: essential
     category: "Coordination & Incentives"
     sub_category: "Network data & monitoring"
     function: "Chain ETL, indexing, normalization & parameter matching (BigQuery, Spacescope API)"
     value: "Free, vendor-neutral chain data anyone can reuse - no rebuilding their own pipeline."
-  - tier: essential
+  - id: chain-etl-indexing
+    tier: essential
     category: "Coordination & Incentives"
     sub_category: "Network data & monitoring"
     function: "Chain ETL and indexing"
     value: ""
-  - tier: essential
+  - id: mainnet-explorer
+    tier: essential
     category: "UX/DX"
     sub_category: "Explorers and Tooling"
     function: "Mainnet block explorer (Lotus archive, indexing, NV maintenance)"
     value: "Primary accessibility/observability surface for users and SPs."
-  - tier: essential
+  - id: network-documentation
+    tier: essential
     category: "UX/DX"
     sub_category: "Explorers and Tooling"
     function: "Network-wide documentation along with source code availability and source control"
     value: "Onboarding to the ecosystem."
-  - tier: essential
+  - id: content-routing-ads
+    tier: essential
     category: "Storage Market Middleware"
     sub_category: "Content routing"
     function: "System to advertise CID content records"
     value: "An adopted solution for content routing is essential. The network doesn't halt, but it stops being a useful storage network."
-  - tier: essential
+  - id: dealmaking-pdp-retrieval
+    tier: essential
     category: "Blockchain Core & Physical Storage"
     sub_category: "Block Production (mining)"
     function: "Deal-making + PDP + HTTP retrieval"

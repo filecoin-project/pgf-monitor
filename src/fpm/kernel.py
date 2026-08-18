@@ -1,8 +1,14 @@
 """Load and validate the Filecoin Kernel inventory.
 
 The kernel inventory (registry/_kernel.yaml) is the canonical taxonomy of kernel functions that
-registry submissions must conform to: a submission classifies itself into a catalogued
-(tier, category, sub_category) slot. Fields: tier, category, sub_category, function, value.
+registry submissions must conform to: a submission names the exact kernel function it evidences
+via its slug `id`, and declares the (tier, category, sub_category) slot that function sits in.
+Fields: id, tier, category, sub_category, function, value.
+
+`id` is the join key. The display name (`function`) is presentation text and must never be joined
+on: it is long, it gets reworded, and two functions once differed only in punctuation. Ids are
+immutable once merged, so `load_kernel` refuses duplicates rather than letting two rows fight
+over one key.
 """
 
 from __future__ import annotations
@@ -20,10 +26,11 @@ _KERNEL_PATH = Path(__file__).resolve().parents[2] / "registry" / "_kernel.yaml"
 
 
 class KernelError(ValueError):
-    """Raised when the kernel inventory fails schema validation."""
+    """Raised when the kernel inventory fails schema validation or id uniqueness."""
 
 
 class KernelEntry(_Model):
+    id: str
     tier: str
     category: str
     sub_category: str
@@ -43,7 +50,17 @@ def load_kernel(path: str | Path = _KERNEL_PATH) -> Kernel:
     )
     if errors:
         raise KernelError("; ".join(e.message for e in errors))
-    return Kernel(entries=[KernelEntry(**e) for e in raw["entries"]])
+    kernel = Kernel(entries=[KernelEntry(**e) for e in raw["entries"]])
+    seen: set[str] = set()
+    dupes = sorted({e.id for e in kernel.entries if e.id in seen or seen.add(e.id)})
+    if dupes:
+        raise KernelError(f"duplicate kernel id(s): {', '.join(dupes)}")
+    return kernel
+
+
+def by_id(kernel: Kernel) -> dict[str, KernelEntry]:
+    """The inventory indexed by its join key."""
+    return {e.id: e for e in kernel.entries}
 
 
 def catalogued_triples(kernel: Kernel) -> set[tuple[str, str, str]]:
