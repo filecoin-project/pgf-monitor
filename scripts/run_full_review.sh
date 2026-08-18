@@ -96,5 +96,6 @@ if [[ $fails -gt 0 ]]; then
   echo "NOTE: $fails team(s) failed review — usually the GitHub 60/hr unauth rate limit;" >&2
   echo "      provision a committee GitHub token via a source auth.secret_ref to reduce it." >&2
   # A partial run must not read as a clean one: the uploaded series is missing those teams.
-  exit 1
+  # The count is the useful part, so exit with it rather than a bare 1.
+  exit "$fails"
 fi

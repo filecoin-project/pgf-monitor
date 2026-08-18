@@ -175,7 +175,7 @@ def assert_adjudicated(bundles: list[ReviewBundle]) -> None:
         raise UnadjudicatedVerdictError(
             f"{len(offenders)} verdict(s) carry approver={DEV_AUTO_APPROVER!r} and were never "
             f"adjudicated by a human: {', '.join(sorted(offenders))}. Re-run `fpm review` without "
-            "--dev-auto-approve, or land to a table you have named as experimental."
+            "--dev-auto-approve and adjudicate each call."
         )
 
 
