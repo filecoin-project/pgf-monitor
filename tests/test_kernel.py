@@ -179,3 +179,47 @@ def test_load_rejects_a_missing_id(tmp_path):
     p.write_text(yaml.safe_dump(raw))
     with pytest.raises(KernelError):
         load_kernel(p)
+
+
+# --- id-first conformance (Plan 9 task 2). Prose matching still works until the migration
+# (task 4) removes the last kernel_function from the registry, so every commit stays green.
+
+NON_KERNEL = "non-kernel"
+
+
+def test_conformance_accepts_a_matching_kernel_id():
+    assert conformance_error(*_LC, load_kernel(), kernel_id="chain-sync-state") is None
+
+
+def test_conformance_rejects_an_unknown_kernel_id():
+    err = conformance_error(*_LC, load_kernel(), kernel_id="not-a-real-id")
+    assert err and "not-a-real-id" in err
+
+
+def test_conformance_rejects_a_kernel_id_from_another_slot():
+    err = conformance_error(
+        "essential", "UX/DX", "Explorers and Tooling", load_kernel(), kernel_id="chain-sync-state"
+    )
+    assert err and "chain-sync-state" in err and "Ledger & Consensus" in err
+
+
+def test_conformance_accepts_non_kernel_and_skips_the_slot_check():
+    """A metric that evidences no catalogued kernel function says so explicitly, the same way an
+    omitted threshold says 'measured, not scored'."""
+    assert conformance_error(*_LC, load_kernel(), kernel_id=NON_KERNEL) is None
+    assert (
+        conformance_error("essential", "UX/DX", "made-up", load_kernel(), kernel_id=NON_KERNEL)
+        is None
+    )
+
+
+def test_a_kernel_id_beats_a_prose_name_when_both_are_given():
+    """During the migration an entry may carry both. The slug is the join key, so it wins."""
+    err = conformance_error(
+        *_LC, load_kernel(), kernel_function="Not A Real Function", kernel_id="chain-sync-state"
+    )
+    assert err is None
+
+
+def test_non_kernel_is_not_an_inventory_id():
+    assert NON_KERNEL not in {e.id for e in load_kernel().entries}

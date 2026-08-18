@@ -67,20 +67,48 @@ def catalogued_triples(kernel: Kernel) -> set[tuple[str, str, str]]:
     return {(e.tier, e.category, e.sub_category) for e in kernel.entries}
 
 
+#: Reserved `kernel_id`: this metric measures something real that the kernel inventory does not
+#: name. Explicit, greppable absence, the same shape as an omitted threshold meaning "measured,
+#: not scored". It is deliberately not an inventory id.
+NON_KERNEL_ID = "non-kernel"
+
+
 def conformance_error(
     tier: str,
     category: str,
     sub_category: str,
     kernel: Kernel,
     kernel_function: str = "",
+    kernel_id: str = "",
 ) -> str | None:
     """None if the entry conforms to the kernel inventory; else a legible reason.
 
-    Conformance means: (tier, category, sub_category) is a catalogued slot, and the specific
-    kernel function is identifiable. When a slot is shared by several functions, ``kernel_function``
-    (the exact inventory name) is required to say which one; when it names a function, that function
-    must actually live in the declared slot.
+    Id-first. ``kernel_id`` names the exact inventory entry this SLA evidences, and the declared
+    (tier, category, sub_category) must equal that entry's slot, which catches a slug that names a
+    real function in the wrong part of the tree. ``NON_KERNEL_ID`` conforms by definition and skips
+    the slot check.
+
+    ``kernel_function`` is the legacy prose name and is still accepted so that every commit of the
+    Plan 9 migration stays green; the slug wins when both are present, and the prose path goes away
+    once no manifest carries it.
     """
+    if kernel_id:
+        if kernel_id == NON_KERNEL_ID:
+            return None
+        entry = by_id(kernel).get(kernel_id)
+        if entry is None:
+            return (
+                f"kernel_id {kernel_id!r} is not in the kernel inventory "
+                f"(registry/_kernel.yaml lists {len(kernel.entries)} ids; "
+                f"{NON_KERNEL_ID!r} is reserved for a metric no kernel function covers)"
+            )
+        if (entry.tier, entry.category, entry.sub_category) != (tier, category, sub_category):
+            return (
+                f"kernel_id {kernel_id!r} sits in slot "
+                f"({entry.tier}, {entry.category}, {entry.sub_category}), "
+                f"not ({tier}, {category}, {sub_category})"
+            )
+        return None
     matches = [
         e
         for e in kernel.entries
