@@ -71,11 +71,21 @@ ORDER BY team, function_id;
    `MATERIAL`/`loosened` lines are the ones that need committee eyes. A threshold
    appearing or disappearing classifies as `MATERIAL` too (`tightened` for appearing,
    `loosened` for disappearing), same as any other goalpost move.
+   A goalpost move never *fails* the job: material changes are reported and the gate still
+   exits 0, because withdrawing or loosening a commitment is a governance decision for the
+   committee, not a rule violation for CI to block. The gate goes red only on things no
+   committee vote can make safe — schema errors, a kernel slot that doesn't match, a source
+   whose config won't translate, transform SQL outside the single-SELECT guard, or a host that
+   isn't on the allowlist.
 2. If the entry looks right, apply the **`dry-run-ok` label**: the live dry-run
    provisions the source in OSO, fetches once, posts the observed value, and cleans up.
    A FAILED run blocks merge — this is what catches "works on my machine" sources.
-3. Host additions to `registry/_allowlist.txt` ride in the same PR — approving the PR
-   approves the egress.
+3. Host additions to `registry/_allowlist.txt` must land in an **earlier** PR than the
+   manifest that uses them. Both `validate.yml` and `dry-run.yml` read the allowlist from the
+   BASE branch, never the PR head, so a host added in the same PR is not yet trusted when its
+   metric is checked: the static gate reports `base_url host not on allowlist` and the live
+   dry-run cannot prove the metric at all. Approve the host PR first (approving it approves the
+   egress), then the metric PR.
 4. CODEOWNERS enforces that the team's own maintainers sign off on their file.
 
 ## 4b. Keep the time series accruing

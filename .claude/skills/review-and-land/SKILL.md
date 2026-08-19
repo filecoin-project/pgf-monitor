@@ -76,5 +76,7 @@ Prerequisites:
 
 Static gate output → goalpost report (`MATERIAL`/`loosened` lines need committee eyes)
 → if sound, the committee applies the `dry-run-ok` label for the live pre-merge fetch →
-CODEOWNERS approval. Allowlist additions ride the same PR and are part of what is
-being approved.
+CODEOWNERS approval. A material or loosened goalpost does NOT fail the gate — it is reported and
+the job exits 0, because that call belongs to the committee. Red means schema, kernel slot,
+config translation, transform SQL or allowlist. New allowlist hosts must land in an EARLIER PR
+than the metric that uses them: both gates read the allowlist from the base branch.
