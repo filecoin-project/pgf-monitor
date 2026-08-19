@@ -42,7 +42,7 @@ separate tab.
 | `1.6 Open Source Status` | string — e.g. `"Fully Open Source"` |
 | `2.1 Project Summary` | prose, several paragraphs; the main narrative field |
 | `2.2  Who does this work support?` | **array** — note the **two spaces** after `2.2` |
-| `2.3 Total Funding Requested (USD)` | string, e.g. `"USD $240,000 (over a 6-month term, Oct 2026 – Mar 2027)"` |
+| `2.3 Total Funding Requested (USD)` | string, e.g. `"USD $<total> (over a 6-month term, Oct 2026 – Mar 2027)"` |
 | `2.4 Milestones & Budget` | **array of objects** — see below |
 | `Objective 1` / `Objective 2` / `Objective 3` | string: `"Direct"` / `"Indirect"` — three separate fields |
 | `3.1 Impact pathway` | prose, conventionally `Output:` / `Outcome:` / `Impact:` bullet blocks |
@@ -58,9 +58,9 @@ separate tab.
 ```yaml
 title: "Milestone 1 — <theme> (<months>) · $<amount>"
 dueDate: "2026-12-31"              # ISO; must fall inside the stated term
-fundingRequested: "USD $120,000"
+fundingRequested: "USD $<amount>"
 completionCriteria: |              # newline-separated bullets, each with its $ share
-  - <workstream>, 3 months of service — $45k
+  - <workstream>, 3 months of service — $<share>
   - ...
 milestoneUID: "0x…"                # assigned by Karma; omit when drafting
 description: "$2d"                 # unresolved RSC ref when read back — ignore it

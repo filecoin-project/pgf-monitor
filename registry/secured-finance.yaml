@@ -1,22 +1,10 @@
-# Secured Finance's USDFC stablecoin: this manifest tracks the USDFC–axlUSDC liquidity
-# pool's TVL and 24h trading volume on GeckoTerminal.
+# Secured Finance operates USDFC, an overcollateralized stablecoin on FVM, and the
+# settlement rails that price paid storage in a stable unit. This manifest tracks the
+# USDFC-axlUSDC pool's depth and trading flow on GeckoTerminal.
 #
-# HONESTY NOTE: _kernel.yaml catalogues no stablecoin/DeFi/liquidity function. The entries
-# below borrow the ONE defensible catalogued triple — essential / 'Coordination &
-# Incentives' / 'Network data & monitoring'. They evidence that USDFC has LIVE on-chain
-# liquidity (depth + flow) — they do NOT evidence a kernel function, because none is
-# catalogued. Informational input to the reject-vs-fund decision until the committee
-# catalogues (or declines) a DeFi/liquidity function, at which point these get re-homed
-# under the real triple.
-#
-# APPENDIX STATUS (checked 2026-08-15): the signed §3 (agreement doc 1YzUQqPK…, mod
-# 2026-08-03) matches this manifest exactly, so there is no drift — but read Exhibit A before
-# adjudicating a breach. The Work Plan states: "Liquidity capital itself is explicitly not
-# part of this request; it is being arranged separately with PL-FIF." The grant funds
-# onboarding docs, Squid integration support, and MEASUREMENT/REPORTING of settlement depth —
-# not provision of it. Both thresholds are still marked "(to confirm)" in the signed document
-# and 170,000 is described there as a "Phase 1 target". Pool TVL therefore scores the
-# recipient on a third party's undeployed capital. Committee call, not a registry fix.
+# Both entries are measured and NOT scored: the agreement places liquidity provision outside this
+# grant's scope, so a depth bar would score the recipient on capital they do not supply.
+# Detail in contracts/secured-finance.facts.yaml (maintainer-local).
 team: secured-finance
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -34,24 +22,23 @@ functions:
   #   extract vocab has no WHERE, so a transform (not extract) is required to isolate the pool.
   # ---------------------------------------------------------------------------
 
-  # THRESHOLD/POOL (placeholder, confirm with team): the team committed pool TVL
-  #   >= $170,000 (Phase 1); Phase 2 target is $300,000. Value below is set to the Phase 1
-  #   figure BUT is a placeholder: the only pool literally named USDFC/axlUSDC has
-  #   observed depth well below that target, so the team must confirm the intended pool
-  #   address before this threshold is meaningful. reserve_in_usd is the pool's total
-  #   value locked in USD.
+  # UNSCORED as out-of-scope: the pool-depth figure this once scored against appears in the
+  #   signed appendix only as a tier for READING the peg band, never as a bar to clear, and the
+  #   agreement places liquidity provision outside this grant. reserve_in_usd is still measured --
+  #   it is the honest evidence that USDFC is liquid. See contracts/secured-finance.facts.yaml.
   - function_id: usdfc-axlusdc-pool-tvl
-    kernel_id: open-network-datasets
+    kernel_id: stablecoin-settlement
     origin: karma
-    tier: essential
-    category: 'Coordination & Incentives'
-    sub_category: 'Network data & monitoring'
+    tier: important
+    category: 'UX/DX'
+    sub_category: 'Stablecoin & yield'
     funded_project_oso_slug: secured-finance
+    grant_ref: APP-Z1L7URG7-TJ3G5D
     sla:
-      statement: "The USDFC–axlUSDC liquidity pool holds meaningful depth: GeckoTerminal reserve_in_usd >= 170,000 USD (Phase 1 target; Phase 2 300,000), measured weekly — thin pool liquidity means USDFC cannot be traded at scale"
+      statement: "USDFC–axlUSDC pool depth: GeckoTerminal reserve_in_usd, measured weekly. Reported for context — the agreement places liquidity provision outside this grant's scope"
       metric: usdfc_pool_tvl_usd
-      threshold: { op: ">=", value: 170000 }   # PLACEHOLDER — confirm pool address + target with team
       cadence: weekly
+      unscored_reason: out-of-scope
     source:
       adapter: oso
       kind: http-json
@@ -68,17 +55,18 @@ functions:
   #   placeholder is-it-trading floor. volume_usd.h24 is the rolling 24-hour trade volume
   #   in USD, which dlt flattens to attributes__volume_usd__h24.
   - function_id: usdfc-axlusdc-pool-volume
-    kernel_id: open-network-datasets
+    kernel_id: stablecoin-settlement
     origin: karma
-    tier: essential
-    category: 'Coordination & Incentives'
-    sub_category: 'Network data & monitoring'
+    tier: important
+    category: 'UX/DX'
+    sub_category: 'Stablecoin & yield'
     funded_project_oso_slug: secured-finance
+    grant_ref: APP-Z1L7URG7-TJ3G5D
     sla:
-      statement: "The USDFC–axlUSDC pool sees real trading flow: GeckoTerminal 24h volume_usd >= 1,000 USD, measured daily — a pool with liquidity but no volume is not serving swaps"
+      statement: "USDFC–axlUSDC pool trading flow: GeckoTerminal 24h volume_usd, measured daily. Reported for context — the team commits to publishing this figure, not to reaching a level"
       metric: usdfc_pool_volume_usd
-      threshold: { op: ">=", value: 1000 }   # PLACEHOLDER — no committed volume floor; confirm with team
       cadence: daily
+      unscored_reason: out-of-scope
     source:
       adapter: oso
       kind: http-json

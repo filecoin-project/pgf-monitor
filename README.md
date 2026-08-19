@@ -147,3 +147,20 @@ evolves by reviewed PR.
 
 What a funded team owes, and how an SLA is structured, is spelled out in the
 [project guide](docs/guide-projects.md).
+
+## A note on `contracts/`
+
+`registry/` is the whole of what gets measured, and it is complete in this repository: a clone can
+run the tests, validate a manifest and read every commitment.
+
+`contracts/<team>.facts.yaml` is different. Those files carry grant contract terms -- recipient,
+committed amount, the §4 dependency evidence -- so they are **gitignored and maintainer-local**, and
+they are not needed to run or review anything the pipeline does. `registry/_grants.yaml` points at
+them so a maintainer can find them; on a clean clone those pointers simply do not resolve, which is
+expected. `fpm contract` is therefore a maintainer-only command and says so when the file is absent.
+`contracts/example.facts.yaml` documents the shape.
+
+Where an entry carries no threshold, `sla.unscored_reason` says why in one word; the reasoning
+behind it lives in the facts file rather than in this public repository, because it quotes signed
+agreements.
+

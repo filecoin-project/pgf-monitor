@@ -13,16 +13,42 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "app_ref",
-          "label",
-          "status"
+          "application_funding_round",
+          "application_funding_category",
+          "application_ref_id",
+          "application_name",
+          "funded_project_name",
+          "funded_project_oso_slug",
+          "metrics_registry"
         ],
         "properties": {
-          "app_ref": {
+          "application_funding_round": {
+            "type": "string",
+            "minLength": 1
+          },
+          "application_funding_category": {
+            "enum": [
+              "Kernel"
+            ]
+          },
+          "application_ref_id": {
             "type": "string",
             "pattern": "^APP-[A-Z0-9]+-[A-Z0-9]+$"
           },
-          "label": {
+          "application_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "application_karma_project_slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "minLength": 2
+          },
+          "application_karma_project_id": {
+            "type": "string",
+            "pattern": "^0x[0-9a-f]{64}$"
+          },
+          "funded_project_name": {
             "type": "string",
             "minLength": 1
           },
@@ -31,14 +57,7 @@
             "pattern": "^[a-z0-9][a-z0-9-]*$",
             "minLength": 2
           },
-          "status": {
-            "enum": [
-              "funded",
-              "on-slate-unresolved",
-              "not-funded"
-            ]
-          },
-          "manifest": {
+          "metrics_registry": {
             "type": "string",
             "pattern": "^registry/(drafts/)?[a-z0-9-]+\\.yaml$"
           },
@@ -53,6 +72,14 @@
           "note": {
             "type": "string"
           }
+        },
+        "dependencies": {
+          "application_karma_project_id": [
+            "application_karma_project_slug"
+          ],
+          "application_karma_project_slug": [
+            "application_karma_project_id"
+          ]
         }
       }
     }

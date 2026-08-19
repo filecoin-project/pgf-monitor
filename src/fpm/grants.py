@@ -1,4 +1,4 @@
-"""The grant bridge: Karma application id <-> OSO project slug <-> the files that instrument it.
+"""The grant bridge: Karma application <-> funded project <-> the files that instrument it.
 
 `registry/_grants.yaml` is the only place that says "this grant is the one funding these metrics".
 Before it, three sources each held a fragment and none was authoritative:
@@ -11,12 +11,21 @@ Before it, three sources each held a fragment and none was authoritative:
 * `contracts/<team>.facts.yaml`, one per team, carrying the app_ref and the contract terms.
 
 A project holding two grants (zondax: Core Infra and Beryx; reiers-filecoin: Curio and Plumbline)
-could not be expressed by any of them, so "is grant X instrumented?" had no answer. It does now.
+could not be expressed by any of them, so "is grant X instrumented?" had no answer. It does now,
+and each manifest entry names its payer via `grant_ref` -> `application_ref_id`.
 
-Money deliberately does NOT live here. The same grant reads $300,000 on the slate, $320,000 plus
-67,200 FIL in its signed Exhibit B, and 213,332 in its facts file (the through-December tranches).
-Those are three different claims and the facts file is where a reconciled figure belongs; a fourth
-copy here would just be a fourth number to disagree with.
+Every field is spelled out rather than inferred, because the old shape conflated three different
+questions. `application_*` is what was applied for and where that application lives on Karma;
+`funded_project_*` is who is being paid, as named in the signed agreement; `metrics_registry` is
+the manifest that instruments the grant. Karma identity is per-APPLICATION, so the slug is mutable
+(it follows the application title) while `application_karma_project_id` is the stable key --
+cross-batch team identity rides on `funded_project_oso_slug` alone.
+
+Money deliberately does NOT live here. For several grants the committee slate, the signed Exhibit B
+and the facts file each carry a different figure, and one grant is part-denominated in FIL. Those
+are different claims about different questions, and the facts file -- which is gitignored, because
+contract terms are not public -- is where a reconciled figure belongs. A copy here would be one more
+number to disagree with.
 """
 
 from __future__ import annotations
@@ -34,22 +43,34 @@ _GRANTS_PATH = Path(__file__).resolve().parents[2] / "registry" / "_grants.yaml"
 
 
 class GrantError(ValueError):
-    """Raised when the grant bridge fails schema validation or app_ref uniqueness."""
+    """Raised when the grant bridge fails schema validation or application_ref_id uniqueness."""
 
 
 class Grant(_Model):
-    #: the Karma application id: the grant's identity everywhere else in the program
-    app_ref: str
-    #: committee-facing project name. The slate's team_name is often a person; this is the label
-    #: a reviewer recognises.
-    label: str
-    #: OSO project slug of the party receiving payment, taken from the signed agreement. Empty
-    #: only when nobody is being paid: Pyth sits on the slate with no amount and no OSO project.
-    funded_project_oso_slug: str = ""
-    status: str
-    #: the registry file whose metrics instrument this grant. Empty means not instrumented yet,
-    #: which is the gap list.
-    manifest: str = ""
+    #: the funding round this grant belongs to, e.g. "Filecoin ProPGF Batch 3"
+    application_funding_round: str
+    #: the track. Kernel-only today: a non-kernel grant gets no monitored commitments, so a row
+    #: here would imply an instrumentation gap that is not one.
+    application_funding_category: str
+    #: the Karma application id: the grant's identity everywhere else in the program, and the
+    #: target of every manifest entry's `grant_ref`
+    application_ref_id: str
+    #: the application's own title, verbatim from Karma. Often unlike the funded project's name.
+    application_name: str
+    #: the Karma project the application is attached to. MUTABLE -- Karma derives it from the
+    #: application title, and collisions take a numeric suffix (filponto-1). Empty when the
+    #: applicant never linked a profile, which is the case for Curio.
+    application_karma_project_slug: str = ""
+    #: the Karma project's stable 0x id. Prefer this over the slug as a join key.
+    application_karma_project_id: str = ""
+    #: committee-facing project name, verbatim from the ProPGF Batch 3 Funded list. The slate's
+    #: team_name is often a person; this is the name a reviewer recognises.
+    funded_project_name: str
+    #: OSO project slug of the party receiving payment, taken from the SIGNED AGREEMENT rather
+    #: than from the slate's identity resolution
+    funded_project_oso_slug: str
+    #: the registry file whose functions[] instrument this grant
+    metrics_registry: str
     #: the contract facts used to render the grant agreement appendix
     facts: str = ""
     #: Drive file id of the signed agreement, so a reviewer can get to the source
@@ -71,29 +92,26 @@ def load_grants(path: str | Path = _GRANTS_PATH) -> Grants:
         raise GrantError("; ".join(e.message for e in errors))
     grants = Grants(grants=[Grant(**g) for g in raw["grants"]])
     seen: set[str] = set()
-    dupes = sorted({g.app_ref for g in grants.grants if g.app_ref in seen or seen.add(g.app_ref)})
+    dupes = sorted(
+        {
+            g.application_ref_id
+            for g in grants.grants
+            if g.application_ref_id in seen or seen.add(g.application_ref_id)
+        }
+    )
     if dupes:
-        raise GrantError(f"duplicate app_ref(s): {', '.join(dupes)}")
-    # A funded grant pays someone, so it must name them. An unresolved or unfunded row need not:
-    # Pyth sits on the slate with no amount and no OSO project, and forcing a slug there would be
-    # inventing a payee.
-    unpaid = [
-        g.app_ref for g in grants.grants if g.status == "funded" and not g.funded_project_oso_slug
-    ]
-    if unpaid:
-        raise GrantError(f"funded grant(s) with no funded_project_oso_slug: {', '.join(unpaid)}")
+        raise GrantError(f"duplicate application_ref_id(s): {', '.join(dupes)}")
     return grants
 
 
 def by_app_ref(grants: Grants) -> dict[str, Grant]:
-    return {g.app_ref: g for g in grants.grants}
+    return {g.application_ref_id: g for g in grants.grants}
 
 
-def by_manifest(grants: Grants) -> dict[str, list[Grant]]:
+def by_metrics_registry(grants: Grants) -> dict[str, list[Grant]]:
     """Manifest path -> the grants it instruments. More than one means that file covers two
-    grants, which is legal but means its entries must say which grant funds which metric."""
+    grants, so its entries must say which grant funds which metric via `grant_ref`."""
     out: dict[str, list[Grant]] = {}
     for g in grants.grants:
-        if g.manifest:
-            out.setdefault(g.manifest, []).append(g)
+        out.setdefault(g.metrics_registry, []).append(g)
     return out

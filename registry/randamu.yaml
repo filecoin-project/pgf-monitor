@@ -1,7 +1,9 @@
-# Randamu operates drand, the randomness beacon Filecoin consensus depends on. This manifest
-# tracks the essential HTTP relay distribution network — randomness staying reachable across
-# multiple independent relays — plus the beacon's own freshness, drand's operator-reported
-# status page, and software-stack release cadence.
+# Randamu operates the drand distributed randomness beacon and its HTTP/gossipsub relay
+# network. Filecoin consensus reads beacon entries for leader election and block validation.
+#
+# Appendix reconciliation 2026-08-18: the best-aligned manifest in the batch -- five of five
+# metrics match the signed s3, and four bars are confirmed by it. The status-page bar is unscored
+# because the document contradicts itself. Detail in contracts/randamu.facts.yaml.
 team: randamu
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -16,6 +18,7 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
     funded_project_oso_slug: drand
+    grant_ref: APP-KOZT1PS1-T25XTE
     sla:
       statement: "An independent drand HTTP relay (Cloudflare) stays in sync: expected - current <= 2 rounds, measured daily — randomness must be reachable even if the primary relay fails"
       metric: relay_mirror_round_lag
@@ -42,6 +45,7 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
     funded_project_oso_slug: drand
+    grant_ref: APP-KOZT1PS1-T25XTE
     sla:
       statement: "Randamu relay mirror serves fresh quicknet rounds: wall-clock expected round minus served round <= 20 rounds (60s), measured daily"
       metric: relay_quicknet_round_lag
@@ -67,6 +71,7 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
     funded_project_oso_slug: drand
+    grant_ref: APP-KOZT1PS1-T25XTE
     sla:
       statement: "drand beacon relay not lagging: expected - current <= 1 round, measured daily"
       metric: beacon_round_lag
@@ -91,11 +96,12 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
     funded_project_oso_slug: drand
+    grant_ref: APP-KOZT1PS1-T25XTE
     sla:
-      statement: "drand's own status page reports no active relay incident (status indicator 'none'), measured daily — the operator-reported health of the HTTP relay network Filecoin SPs consume randomness from"
+      statement: "drand's own status-page incident indicator, measured daily — the operator-reported health of the HTTP relay network Filecoin SPs consume randomness from"
       metric: statuspage_impact_level
-      threshold: { op: "<=", value: 0 }
       cadence: daily
+      unscored_reason: doc-conflict
     source:
       adapter: oso
       kind: http-json
@@ -118,12 +124,13 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
     funded_project_oso_slug: drand
+    grant_ref: APP-KOZT1PS1-T25XTE
     repos:
       - drand/drand
     sla:
       statement: "drand ships a software-stack release at least every 45 days on average (active-maintenance signal), measured monthly"
       metric: avg_days_between_releases
-      threshold: { op: "<=", value: 45 }   # placeholder — confirm with team
+      threshold: { op: "<=", value: 45 }   # confirmed against the signed s3
       cadence: monthly
     source:
       adapter: oso

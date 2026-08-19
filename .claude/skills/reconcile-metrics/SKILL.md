@@ -152,11 +152,12 @@ Goldsky and Zondax had no Batch 3 agreement on the Drive at all as of 2026-08-13
       *Current $ Projection* is the award total, *Initial Request* is the ask.
 
    Where two sources disagree, check whether they are answering different questions before picking.
-   Ankr looked like a contradiction ($28k in the agreement, $14k in the sheet) and was not: $14k is
-   due by December, $28k is the contract. Both were right.
+   One team's figures looked like a contradiction between the agreement and the sheet and were not:
+   the smaller was the amount due by December, the larger the whole contract. Both were right, and
+   they were answering different questions. Check which question before picking.
 
-   Omit the field to render "TODO" rather than a misleading `$0` — and note `0` is falsy, so a real
-   `$0` renders as "no award this batch", which is how a funded team came to look unfunded.
+   Omit the field to render "TODO" rather than a misleading zero — and note `0` is falsy, so a real
+   zero renders as "no award this batch", which is how a funded team came to look unfunded.
 
 9. **Render.**
    ```bash
@@ -198,7 +199,7 @@ funded teams with no manifest at all. 18 vs 20 is not a bug.
 ## Failure modes seen in the wild
 
 - **Someone else's appendix.** On 2026-07-30, 4 of 12 agreements carried a different grantee's §3
-  and §4 — one drand render pasted into Forest ($504k), Ankr and Secured Finance, and Beryx's into
+  and §4 — one drand render pasted into Forest, Ankr and Secured Finance, and Beryx's into
   Goldsky. Always check the §3 metrics belong to the recipient named at the top of the doc.
 - **A team rewrote §3 themselves.** Treat it as the new source of truth and repoint the registry,
   rather than reverting them. Check whether their endpoint is *better*: Blockscout moved us to

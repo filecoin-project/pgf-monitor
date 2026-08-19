@@ -1,203 +1,281 @@
-# The grant bridge: Karma application id <-> OSO project slug <-> the files that instrument it.
+# The grant bridge: one row per ProPGF Batch 3 KERNEL grant.
 #
-# One row per ProPGF grant on the committee slate, plus rows for applications we drafted against
-# that were never funded. Validated against _grants_schema.json; loaded by src/fpm/grants.py.
+# Every field is spelled out rather than inferred, because each one answers a different question
+# and they were previously being conflated:
 #
-# WHY THIS FILE EXISTS. Three sources each held a fragment of this mapping and none was
-# authoritative:
-#   * the slate in the warehouse (funding_model_static.decisions, csnap-% events at the latest
-#     snapshot) has app_ref, amount, and an identity-resolved slug that is often a PERSON -- the
-#     Curio grant reads "Reiersen" there;
-#   * a _LABEL dict inside dashboards/propgf-kernel-health.py mapped app_ref to the
-#     committee-facing project name, and that correction lived nowhere else;
-#   * contracts/<team>.facts.yaml carries app_ref + contract terms, one file per team.
-# None of them could express a project holding two grants (zondax: Core Infra and Beryx;
-# reiers-filecoin: Curio and Plumbline), so "is this grant instrumented?" had no answer.
+#   application_*          what was applied for, and where that application lives on Karma
+#   funded_project_*       who is being paid, as named in the SIGNED AGREEMENT
+#   metrics_registry       the manifest whose functions[] instrument this grant
+#   facts / agreement_*    the contract terms, and the document they come from
 #
-# MONEY IS NOT HERE, deliberately. The Curio grant reads $300,000 on the slate, $320,000 + 67,200
-# FIL in its signed Exhibit B, and 213,332 in its facts file (the through-December tranches). A
-# fourth copy would be a fourth number to disagree with. The facts file is where a reconciled
-# figure belongs.
+# Validated against _grants_schema.json; loaded by src/fpm/grants.py. `application_ref_id` is the
+# join key: manifests point back at it via each entry's `grant_ref`.
+#
+# SCOPE: Kernel track only, 16 grants. The three Non-Kernel/RFP lines on the Funded list
+# (Open Model, js-libp2p, Synaps3) and Pyth (on the slate, never funded) are deliberately absent -
+# they get no monitored commitments, so a row here would imply an instrumentation gap that is not
+# one. `application_funding_category` is Kernel on every row for that reason, and is kept explicit
+# so a later batch can add another track without the file's scope becoming implicit.
+#
+# MONEY IS NOT HERE, deliberately. For several grants the committee slate, the signed Exhibit B
+# and the facts file each carry a different figure, and one grant is part-denominated in FIL. Those
+# are different claims about different questions; the facts file is where a reconciled figure
+# belongs, and a copy here would be one more number to disagree with. contracts/ is also
+# maintainer-local, which is the right place for contract terms.
 #
 # `funded_project_oso_slug` is the payee as named in the SIGNED AGREEMENT, not as resolved by the
-# slate's applicant_identity: for Curio the agreement is addressed "Dear Filoz Team" and signed
-# "Blueshift Foundation Filoz", so the slug is filozone even though the slate says reiers-filecoin.
+# slate's applicant_identity: for Curio the agreement is addressed "Dear Filoz Team", so the slug
+# is filozone even though the slate says reiers-filecoin. Note also that
+# filpgf_private.propgf_applications.oso_project_slug is UNRELIABLE (it resolves Chain.Love to
+# filecoin-project and both Blockscout and Pyth to ankr-network) and must not be used here.
+#
+# Karma identity is per-APPLICATION, not per-team: every Batch 3 Karma project carries the
+# application's title and collisions take a numeric suffix (filponto-1, and a second drand project
+# distinct from Batch 2's). So application_karma_project_slug is MUTABLE - it follows the title -
+# while application_karma_project_id is the stable key. Cross-batch team identity rides on
+# funded_project_oso_slug alone. All 16 ids were verified live against gapapi.karmahq.xyz on
+# 2026-08-18; they resolve in the UI at https://app.filpgf.io/project/<id>.
 grants:
-  - app_ref: APP-P3NAPR7O-TSQ67Q
-    label: Curio (FilOz)
-    funded_project_oso_slug: filozone
-    status: funded
-    manifest: registry/filoz.yaml
-    facts: contracts/filoz.facts.yaml
-    agreement_doc_id: 1wdQmU721v0zcyj0fQ4JxLRl8xI7zftfs
-    note: >-
-      Slate applicant_identity resolves this to reiers-filecoin (a person); the signed agreement
-      is addressed to the FilOz Team. Its Appendix 1 s3 thresholds all read "(to confirm)".
 
-  - app_ref: APP-O66TN87V-3MDZFT
-    label: IPNI (OIF)
-    funded_project_oso_slug: ipni
-    status: funded
-    manifest: registry/oif-ipni.yaml
-    facts: contracts/oif-ipni.facts.yaml
-    agreement_doc_id: 1LSw0hk1i1z22wg03kSkGM3753IKYRCAK
 
-  - app_ref: APP-P0UD8I92-78VVRM
-    label: Forest (ChainSafe)
-    funded_project_oso_slug: forest-chainsafe
-    status: funded
-    manifest: registry/chainsafe.yaml
-    facts: contracts/chainsafe.facts.yaml
-    agreement_doc_id: 193C2hY7K8sN-WbgpSYfYino1YarMy3qS
-    note: >-
-      chainsafe.yaml instruments BOTH ChainSafe grants (see APP-VQC3PIBY-G2UDZJ), so its entries
-      need per-metric grant attribution. The team rewrote s3: 2 new metrics, 4 of ours absent.
-
-  - app_ref: APP-OFZ5ILTO-QC1XCM
-    label: Filecoin Docs (FIL-B)
-    funded_project_oso_slug: fil-builders
-    status: funded
-    manifest: registry/fil-b.yaml
-    facts: contracts/fil-b.facts.yaml
-    agreement_doc_id: 1tSOPovqsA0iZ1vBfc0Hk8_NunpbF8xi0
-
-  - app_ref: APP-WVTOW236-LUGH7Y
-    label: Zondax Core Infra
-    funded_project_oso_slug: zondax
-    status: funded
-    manifest: registry/zondax.yaml
-    facts: contracts/zondax.facts.yaml
-    note: no Batch 3 agreement found on the Drive. zondax.yaml also instruments Beryx.
-
-  - app_ref: APP-0QLIOMS2-JSK1EM
-    label: Filecoin Data Portal
-    funded_project_oso_slug: filecoin-data-portal-davidgasquez
-    status: funded
-    manifest: registry/filecoin-data-portal.yaml
-    note: >-
-      No facts file and no signed agreement on the Drive (only a June dossier), so `fpm contract`
-      cannot render an appendix for it yet.
-
-  - app_ref: APP-9PTCWEQL-HVKGV8
-    label: FIL Ponto
-    funded_project_oso_slug: filponto
-    status: funded
-    manifest: registry/drafts/fil-ponto.yaml
-    facts: contracts/fil-ponto.facts.yaml
-    agreement_doc_id: 1O5sf4rXPsgGUu_DY_UHzERPrq_7MTmT4
-    note: >-
-      Funded but DRAFT ONLY: no adopted metric, so nothing is scored. Its signed s3 is empty by
-      design (nothing measurable was agreed yet).
-
-  - app_ref: APP-Z1L7URG7-TJ3G5D
-    label: USDFC (Secured Finance)
-    funded_project_oso_slug: secured-finance
-    status: funded
-    manifest: registry/secured-finance.yaml
-    facts: contracts/secured-finance.facts.yaml
-    agreement_doc_id: 1YzUQqPK0yQeaYrbF5jvjD0va2PFpS6Ld
-    note: >-
-      The team replaced s3 wholesale in a later copy (1Dtm1dvEQH53EgpyQC2ZYJ5WqyUcgqKK5gHNoM4e37V4,
-      kenji@): neither of our 2 adopted metrics appears in it. Unreconciled.
-
-  - app_ref: APP-RRMZE7XC-XAVG4W
-    label: Goldsky
-    funded_project_oso_slug: goldsky
-    status: funded
-    manifest: registry/goldsky.yaml
-    facts: contracts/goldsky.facts.yaml
-    note: no Batch 3 agreement found on the Drive.
-
-  - app_ref: APP-KOZT1PS1-T25XTE
-    label: drand (Randamu)
-    funded_project_oso_slug: drand
-    status: funded
-    manifest: registry/randamu.yaml
-    facts: contracts/randamu.facts.yaml
-    agreement_doc_id: 1KAG8of4vY0KXDAqWvWtu6BVCuLMZDBCt
-    note: registry and doc s3 match exactly (5 metrics).
-
-  - app_ref: APP-ZGCSXHWL-8PJG01
-    label: Beryx (Zondax)
-    funded_project_oso_slug: zondax
-    status: funded
-    manifest: registry/zondax.yaml
-    facts: contracts/beryx.facts.yaml
-    note: >-
-      Second Zondax grant. Shares zondax.yaml with Core Infra, so neither grant's metrics can be
-      told apart today. No agreement on the Drive.
-
-  - app_ref: APP-U5CX297Z-XKDQDZ
-    label: Plumbline (calibnet)
-    funded_project_oso_slug: reiers-filecoin
-    status: funded
-    manifest: registry/plumbline.yaml
-    facts: contracts/plumbline.facts.yaml
-    agreement_doc_id: 1tiKERnsbxxerjmMac8AgZK968IsNtY2r
-    note: >-
-      Recipient is TSE Reiersen (Org. 929 074 912) per the signed agreement; registry and doc s3
-      match exactly (calibnet_miner_qap_share < 0.3334, weekly).
-
-  - app_ref: APP-ICVR43KL-H0P3K6
-    label: Ankr
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-ICVR43KL-H0P3K6
+    application_name: "Ankr - Filecoin Public Endpoint Infrastructure"
+    application_karma_project_slug: ankr---filecoin-public-endpoint-infrastructure
+    application_karma_project_id: "0xc9525e787e544413e77ec135758b035ffdac4c391fcbf6ed3b1dfbe13791ff24"
+    funded_project_name: Ankr
     funded_project_oso_slug: ankr-network
-    status: funded
-    manifest: registry/ankr.yaml
+    metrics_registry: registry/ankr.yaml
     facts: contracts/ankr.facts.yaml
     agreement_doc_id: 14ORv_PCkvT8N47mif1kwchEs6y2fZZmZ
     note: >-
-      Newest agreement copy lives OUTSIDE the Batch 3 folder; the in-folder copy
-      (13KCGNKGmb06ZCosMA4HWDs67Prz_hbAD) is stale. The team expanded s3 from 2 to 5 metrics and
-      added a null-round exemption we do not implement. Unreconciled.
+      Its s3 commits five metrics, none sharing a name with ours, and never names the host we
+      poll. Mainnet head lag follows the document; the calibnet entry appears in no appendix.
 
-  - app_ref: APP-P706QNLF-NLQPG5
-    label: Chain.Love
-    funded_project_oso_slug: chain-love
-    status: funded
-    manifest: registry/chain-love.yaml
-    facts: contracts/chain-love.facts.yaml
-    agreement_doc_id: 1u_7hLjXMXks5j6x8ISDOqp9e-l_hdnkz
-
-  - app_ref: APP-VQC3PIBY-G2UDZJ
-    label: Infra Services (ChainSafe)
-    funded_project_oso_slug: filecoin-community-services-chainsafe
-    status: funded
-    manifest: registry/chainsafe.yaml
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-ZGCSXHWL-8PJG01
+    application_name: "Beryx: Filecoin Explorer, Public API and Traces"
+    application_karma_project_slug: beryx-filecoin-explorer-public-api-and-traces
+    application_karma_project_id: "0xf19aa1c5771a63e3d7223523ef13833dd86c6ce0339c126a55e0e46d8d3f17b4"
+    funded_project_name: Beryx
+    funded_project_oso_slug: zondax
+    metrics_registry: registry/zondax.yaml
+    facts: contracts/beryx.facts.yaml
     note: >-
-      The second ChainSafe grant (snapshots, faucet, bootstrap nodes). No facts file and no
-      agreement on the Drive; its metrics currently sit in chainsafe.yaml under the Forest grant's
-      slug, so the two grants are indistinguishable.
+      Second Zondax grant, and UNINSTRUMENTED: with grant_ref in place both zondax.yaml entries
+      resolve to Core Infra, so Beryx's own scope is measured nowhere. No agreement located
+      either. Same maintainer and team as Core Infra, so one agreement may cover both.
 
-  - app_ref: APP-J8CF3XJY-CG03HL
-    label: Blockscout
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-J8CF3XJY-CG03HL
+    application_name: "Blockscout block explorer"
+    application_karma_project_slug: blockscout-block-explorer
+    application_karma_project_id: "0x508d9befc51c2582bb6f347991e4df3fbfb346dde02fce47d7c058f21ea8cb15"
+    funded_project_name: BlockScout
     funded_project_oso_slug: blockscout
-    status: funded
-    manifest: registry/blockscout.yaml
+    metrics_registry: registry/blockscout.yaml
     facts: contracts/blockscout.facts.yaml
     agreement_doc_id: 1dotjw_iNbzqlSzWZ4cXWIfHMPzrX3C43
     note: >-
-      The doc's s3 lists two endpoints and NO thresholds, so our 3 metrics are ProPGF-proposed
-      rather than agreed. One of them reads filfox, a third party.
+      The team replaced its s3 with two health endpoints and no thresholds, so both explorer
+      metrics are unscored. The grant term also begins after these readings start.
 
-  - app_ref: APP-US5QDXQP-FOCBY4
-    label: Pyth Network
-    status: on-slate-unresolved
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-P706QNLF-NLQPG5
+    application_name: "Chain.Love"
+    application_karma_project_slug: chainlove
+    application_karma_project_id: "0xc2eda7715129182fa651b7c5900e73c2b9dea5c5ef8c13cfdf864220c985f732"
+    funded_project_name: Chain.Love
+    funded_project_oso_slug: chain-love
+    metrics_registry: registry/chain-love.yaml
+    facts: contracts/chain-love.facts.yaml
+    agreement_doc_id: 1u_7hLjXMXks5j6x8ISDOqp9e-l_hdnkz
     note: >-
-      On the slate with no committed amount, no resolved OSO project, and no manifest. The Pyth
-      FIL/USD feed is referenced only in registry comments.
+      Every metric here is named in the team's own signed s3, and every threshold there is
+      marked "(to confirm)", so all are unscored. Three were adopted from its
+      requested-additions block after probing the sources live.
 
-  # --- applications we drafted against that were never funded. Kept so the facts files on disk
-  # are all accounted for, and so a later round can pick them up.
-  - app_ref: APP-8SSKSC9X-NYY1GT
-    label: js-libp2p (volunteer maintainers)
-    funded_project_oso_slug: libp2p
-    status: not-funded
-    facts: contracts/js-libp2p.facts.yaml
-    agreement_doc_id: 1d0OZQQ-IY0xZ_SH-X8uqC1NAAtbpW4IS
-    note: an agreement doc exists on the Drive but the slate carries no commitment.
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-HDYJESMD-2WLL00
+    application_name: "Curio"
+    application_karma_project_slug: curio
+    application_karma_project_id: "0xff90efdd8d003005f162c645c5ffbd65f403839853d8fc278d5e566cc7ad1388"
+    funded_project_name: Curio (FilOz)
+    funded_project_oso_slug: filozone
+    metrics_registry: registry/filoz.yaml
+    facts: contracts/filoz.facts.yaml
+    agreement_doc_id: 1wdQmU721v0zcyj0fQ4JxLRl8xI7zftfs
+    note: >-
+      app_ref CORRECTED 2026-08-18: the previous one is an application that was never approved
+      and is not FilOz. This one is approved and its amount matches the Funded list and the
+      signed Exhibit B. All three Curio thresholds are unscored (see each unscored_reason).
 
-  - app_ref: APP-UEB8YF3J-9QMLS2
-    label: SynapS3
-    status: not-funded
-    facts: contracts/synaps3.facts.yaml
-    note: no OSO project, no commitment on the slate.
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-KOZT1PS1-T25XTE
+    application_name: "drand: improving the gossipsub (libp2p) distribution network and relays services"
+    application_karma_project_slug: drand-improving-the-gossipsub-libp2p-distribution-network-and-relays-services
+    application_karma_project_id: "0xf30384267e9c5a546cbc1fa21f3f34ca2248f45a7eefb96043dd60b9e5d3035c"
+    funded_project_name: Drand (Randamu)
+    funded_project_oso_slug: drand
+    metrics_registry: registry/randamu.yaml
+    facts: contracts/randamu.facts.yaml
+    agreement_doc_id: 1KAG8of4vY0KXDAqWvWtu6BVCuLMZDBCt
+    note: >-
+      Best-aligned manifest in the batch: five of five metrics match the signed s3 and four bars
+      are confirmed by it. The status-page bar is unscored because the document contradicts
+      itself.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-9PTCWEQL-HVKGV8
+    application_name: "FilPonto"
+    application_karma_project_slug: filponto-1
+    application_karma_project_id: "0xe2446c1c0345018104a057845262f0fc6e4b0eb11c9397bbf090d2efe68a20aa"
+    funded_project_name: FIL Ponto
+    funded_project_oso_slug: filponto
+    metrics_registry: registry/drafts/fil-ponto.yaml
+    facts: contracts/fil-ponto.facts.yaml
+    agreement_doc_id: 1O5sf4rXPsgGUu_DY_UHzERPrq_7MTmT4
+    note: >-
+      Funded but DRAFT ONLY: no adopted metric, so nothing is scored, and its signed s3 is empty
+      by design. Do NOT promote the draft's cuzk entry without agreeing a bar -- the document
+      lists it as a requested addition. Its kernel function is ecosystem-coordination.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-Z1L7URG7-TJ3G5D
+    application_name: "FVM Stablecoin Settlement Infrastructure Program"
+    application_karma_project_slug: secured-finance
+    application_karma_project_id: "0x8dde476a5e0b221a1bd168df2ccea030df7b81cc55825da21c9e1ff1f7e116a1"
+    funded_project_name: FVM Stablecoin Settlement
+    funded_project_oso_slug: secured-finance
+    metrics_registry: registry/secured-finance.yaml
+    facts: contracts/secured-finance.facts.yaml
+    agreement_doc_id: 1YzUQqPK0yQeaYrbF5jvjD0va2PFpS6Ld
+    note: >-
+      The team replaced its s3 and neither adopted metric appears in it. Both are unscored as
+      out-of-scope: the agreement places liquidity provision outside this grant.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-0QLIOMS2-JSK1EM
+    application_name: "Filecoin Data Portal"
+    application_karma_project_slug: filecoin-data-portal
+    application_karma_project_id: "0x1ee539ac73ec080cdb6fec077c1ba1fd99690c0d744a8ccce5cd4e05ad6625cd"
+    funded_project_name: Filecoin Data Portal
+    funded_project_oso_slug: filecoin-data-portal-davidgasquez
+    metrics_registry: registry/filecoin-data-portal.yaml
+    note: >-
+      No agreement and no facts file located, so `fpm contract` cannot render an appendix. The
+      missing facts file is downstream of the missing agreement, not separate work.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-OFZ5ILTO-QC1XCM
+    application_name: "Filecoin Docs"
+    application_karma_project_slug: filecoin-docs
+    application_karma_project_id: "0xbc5c4226ca4f694a01471491d698d35f8e1d9e6e2086317f5354f65475fd00d7"
+    funded_project_name: Filecoin Docs
+    funded_project_oso_slug: fil-builders
+    metrics_registry: registry/fil-b.yaml
+    facts: contracts/fil-b.facts.yaml
+    agreement_doc_id: 1tSOPovqsA0iZ1vBfc0Hk8_NunpbF8xi0
+    note: >-
+      Its one signed threshold is marked "(to confirm)", so both metrics are unscored. Commit
+      recency is also a weak proxy: the Work Plan explicitly excludes content accuracy.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-VQC3PIBY-G2UDZJ
+    application_name: "Filecoin Infrastructure Services"
+    application_karma_project_slug: filecoin-infrastructure-services
+    application_karma_project_id: "0x75cc953769675bac82a08eb6d4ebb253824e1520cd880477f07923549a92e7a4"
+    funded_project_name: Filecoin Infrastructure Services (ChainSafe)
+    funded_project_oso_slug: filecoin-community-services-chainsafe
+    metrics_registry: registry/chainsafe.yaml
+    agreement_doc_id: 1gPtWZ4Db1Bf17Gw-FCzOKmP-3HzZr8Yq
+    note: >-
+      AGREEMENT FOUND 2026-08-18, outside the Batch 3 folder. Its Appendix 1 is the OLD
+      PRE-KERNEL version, so its commitments are Exhibit A SLOs instead -- one of which backs
+      calibnet-miner-power exactly. Still no facts file, and its money does not reconcile across
+      Exhibit A, Exhibit B and the Funded list.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-P0UD8I92-78VVRM
+    application_name: "Forest - an efficient and lightweight Filecoin Node"
+    application_karma_project_slug: forest---an-efficient-and-lightweight-filecoin-node
+    application_karma_project_id: "0x16bc3ee698d158aec7d1931c0254d4f7736aa300ddf64615348f9e4b30e4bb2a"
+    funded_project_name: Forest (ChainSafe)
+    funded_project_oso_slug: forest-chainsafe
+    metrics_registry: registry/chainsafe.yaml
+    facts: contracts/chainsafe.facts.yaml
+    agreement_doc_id: 193C2hY7K8sN-WbgpSYfYino1YarMy3qS
+    note: >-
+      chainsafe.yaml instruments BOTH ChainSafe grants; each functions[] entry names its payer
+      via grant_ref. The team rewrote its s3 to three metrics, of which one is measurable here.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-RRMZE7XC-XAVG4W
+    application_name: "Goldsky"
+    application_karma_project_slug: goldsky
+    application_karma_project_id: "0xe5610436fb780fc14224e2c60bc1515d8a77b16d6dcb387d94d74dd7134d41c2"
+    funded_project_name: Goldsky
+    funded_project_oso_slug: goldsky
+    metrics_registry: registry/goldsky.yaml
+    facts: contracts/goldsky.facts.yaml
+    note: >-
+      No Batch 3 agreement located, so both metrics are unscored. Goldsky is also the source for
+      FilOz's PDP metric, so an outage here darkens another grantee's reading.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-O66TN87V-3MDZFT
+    application_name: "IPNI: Interplanetary Network Indexer"
+    application_karma_project_slug: ipni-interplanetary-network-indexer-1
+    application_karma_project_id: "0x2fddd9c872bea0b4c0747e20b371682b598dc73c9b16785350b641b982e18567"
+    funded_project_name: IPNI
+    funded_project_oso_slug: ipni
+    metrics_registry: registry/oif-ipni.yaml
+    facts: contracts/oif-ipni.facts.yaml
+    agreement_doc_id: 1LSw0hk1i1z22wg03kSkGM3753IKYRCAK
+    note: >-
+      Three of three original metrics match the signed s3, including the error-free ratio, whose
+      bar is confirmed there. A fourth (readiness) was adopted once its endpoint began serving
+      JSON.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-U5CX297Z-XKDQDZ
+    application_name: "Plumbline : CalibrationNet Stability Project"
+    application_karma_project_slug: plumbline--calibrationnet-stability-project
+    application_karma_project_id: "0x143bc4d490c05ea98a88247cf25b687450f922ea6c6f2a386aef50bdf651795b"
+    funded_project_name: Plumbline — Calibration Net Stability
+    funded_project_oso_slug: reiers-filecoin
+    metrics_registry: registry/plumbline.yaml
+    facts: contracts/plumbline.facts.yaml
+    agreement_doc_id: 1tiKERnsbxxerjmMac8AgZK968IsNtY2r
+    note: >-
+      Registry and signed s3 match exactly, and the bar is the team's own -- the only
+      recipient-set threshold in the batch. It is currently being missed on every reading; see
+      the facts file.
+
+  - application_funding_round: Filecoin ProPGF Batch 3
+    application_funding_category: Kernel
+    application_ref_id: APP-WVTOW236-LUGH7Y
+    application_name: "Filecoin Core Infrastructure & Integration Support"
+    application_karma_project_slug: filecoin-core-infrastructure--integration-support
+    application_karma_project_id: "0x5c1f3a6ead9652f7960f4d3a35d6ec2e0229dfb25f8b91bac26387d8af553f3c"
+    funded_project_name: Zondax Core Infra
+    funded_project_oso_slug: zondax
+    metrics_registry: registry/zondax.yaml
+    facts: contracts/zondax.facts.yaml
+    note: >-
+      No agreement located. Both zondax.yaml entries belong to THIS grant, not Beryx.

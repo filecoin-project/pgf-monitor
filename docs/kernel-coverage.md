@@ -5,7 +5,7 @@ Every catalogued kernel function (registry/_kernel.yaml) and the metrics that
 monitor it, from adopted manifests (registry/) plus any pending drafts
 (registry/drafts/). `fixture` sources are placeholders awaiting a real feed.
 
-**16/29 functions are adopted** — a metric in `registry/`, so a team is held to it today, and 16 of those read from a live, non-fixture source. **27/29 are modelled** — adopted or drafted. A metric is credited to the ONE kernel function its `kernel_id` names, never to every function sharing a slot.
+**17/31 functions are adopted** — a metric in `registry/`, so a team is held to it today, and 17 of those read from a live, non-fixture source. **28/31 are modelled** — adopted or drafted. A metric is credited to the ONE kernel function its `kernel_id` names, never to every function sharing a slot.
 
 🟢 adopted, live source · 🟡 drafted, or fixture-only · 🔴 nothing yet.
 
@@ -81,13 +81,16 @@ _No monitoring entry yet._
 
 | team | metric | source | state |
 |---|---|---|---|
-| ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | adopted (draft update pending) |
-| ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | adopted (draft update pending) |
+| ankr | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | rpc.ankr.com | adopted |
+| ankr | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | rpc.ankr.com | adopted |
+| ankr | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | rpc.ankr.com | adopted |
 | chain-love | `rpc_head_lag_epochs` (chain-sync-rpc-mainnet-head-lag) | filecoin.chain.love | adopted |
 | chain-love | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | filecoin.chain.love | adopted |
+| chain-love | `rpc_calibnet_head_lag_epochs` (chain-sync-rpc-calibnet-head-lag) | calibration.filecoin.chain.love | adopted |
+| chain-love | `rpc_endpoint_uptime_pct` (rpc-endpoint-uptime) | uptimerobot.filecoin.chain.love | adopted |
+| chain-love | `rpc_p50_latency_seconds` (rpc-latency-p50) | uptimerobot.filecoin.chain.love | adopted |
 | zondax | `archival_tipset_height_served` (zondax-node-rpc-archival-depth) | api.zondax.ch | adopted |
 | zondax | `rosetta_release_age_days` (rosetta-release-currency) | api.github.com | adopted |
-| ankr | `fevm_eth_head_lag_epochs` (chain-sync-rpc-fevm-eth-head-lag) | rpc.ankr.com | draft |
 
 ### 🟢 Independent Rust full node (sync, validation, RPC, snapshot export)
 
@@ -259,8 +262,6 @@ _No monitoring entry yet._
 | filecoin-data-portal | `pipeline_success_age_days` (network-data-portal-pipeline-freshness) | api.github.com | adopted |
 | goldsky | `fevm_subgraph_indexing_lag_seconds` (fevm-chain-indexing-freshness) | api.goldsky.com | adopted |
 | goldsky | `fevm_subgraph_indexing_errors` (fevm-chain-indexing-errors) | api.goldsky.com | adopted |
-| secured-finance | `usdfc_pool_tvl_usd` (usdfc-axlusdc-pool-tvl) | api.geckoterminal.com | adopted |
-| secured-finance | `usdfc_pool_volume_usd` (usdfc-axlusdc-pool-volume) | api.geckoterminal.com | adopted |
 
 ### 🟡 Chain ETL, indexing, normalization & parameter matching (BigQuery, Spacescope API)
 
@@ -298,6 +299,7 @@ _No monitoring entry yet._
 | team | metric | source | state |
 |---|---|---|---|
 | fil-b | `docs_last_commit_age_days` (network-documentation-commit-recency) | api.github.com | adopted |
+| fil-b | `docs_open_issues` (docs-open-issues) | api.github.com | adopted |
 
 ### 🟢 System to advertise CID content records
 
@@ -310,6 +312,7 @@ _No monitoring entry yet._
 | oif-ipni | `ipni_provider_count` (content-routing-ipni-provider-count) | cid.contact | adopted |
 | oif-ipni | `ipni_providers_advertised_24h` (content-routing-ipni-ingest-liveness) | cid.contact | adopted |
 | oif-ipni | `ipni_error_free_ratio` (content-routing-ipni) | cid.contact | adopted |
+| oif-ipni | `ipni_indexer_ready` (content-routing-ipni-readiness) | cid.contact | adopted |
 
 ### 🟢 Deal-making + PDP + HTTP retrieval
 
@@ -322,15 +325,33 @@ _No monitoring entry yet._
 | filoz | `pdp_active_proof_sets` (curio-pdp-active-proofsets) | api.goldsky.com | adopted |
 | filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | draft |
 
+## IMPORTANT
+
+### 🟢 Overcollateralized stablecoin settlement rail for storage and service payments (USDFC)
+
+`stablecoin-settlement`
+
+> Storage and retrieval priced in a volatile native token cannot be quoted or invoiced across a multi-month term; a stable unit of account on FVM is what lets paid storage, Filecoin Pay rails and onchain-cloud services be sold to enterprises. If it depegs or its liquidity dries up, onchain payments lose their unit of account. Committee steward: Secured Finance (requirement usdfc-overcollateralised-stablecoin).
+
+| team | metric | source | state |
+|---|---|---|---|
+| secured-finance | `usdfc_pool_tvl_usd` (usdfc-axlusdc-pool-tvl) | api.geckoterminal.com | adopted |
+| secured-finance | `usdfc_pool_volume_usd` (usdfc-axlusdc-pool-volume) | api.geckoterminal.com | adopted |
+
+### 🔴 Technical program coordination, ecosystem technical support and discretionary grant administration across kernel teams
+
+`ecosystem-coordination`
+
+> The kernel is maintained by ~15 independent teams with no shared employer. Coordination is what sequences cross-team upgrades, gives SPs and integrators a support path, and funds gaps too small or too urgent for a funding round. Without it, gaps surface only when something breaks. Committee steward: Open Impact Foundation - FilPonto Cell (requirement public-goods-coordination-rpc-indexers-wallet-oracle).
+
+_No monitoring entry yet._
+
 ## Declared unmeasurable / candidate gaps
 
 Honest gaps recorded by drafts (`x_draft.unmeasured`):
 
 | team | aspect | reason |
 |---|---|---|
-| ankr | filecoin_lotus_version_lag_days <= 45 — endpoint-reported Lotus versio | Needs a two-source compare (Filecoin.Version on the endpoint vs api.github.com/repos/filecoin-project/lotus/re |
-| ankr | filecoin_endpoint_reachable — HTTP 200 + well-formed JSON-RPC from the | As the pipeline stands, an unreachable endpoint is recorded as unavailable rather than a miss (Section 2), so  |
-| ankr | filecoin_status_page_published — status page reachable with Filecoin l | status.ankr.com resolves to www.ankr.com/rpc/health (www.ankr.com is NOT allowlisted; only rpc.ankr.com is) an |
 | fil-ponto | §3.2 'Discretionary grants administered' — count and $ of grants issue | The application names the data source as 'FilPonto grant records', which are private. No public register exist |
 | fil-ponto | §3.2 'DeFi due-diligence reviews completed' — # of Filecoin DeFi/stabl | The application names the data source as 'Review reports'. Reviews are documents, not a countable endpoint, an |
 | fil-ponto | §3.2 'Contractor engagements' — number of teams supported / % of ecosy | Attested by FilPonto's own engagement records; 'as needed' is also not a fixed target a threshold can encode.  |

@@ -1,8 +1,8 @@
-# Goldsky's funded deliverable is a public FEVM archive; until that ships, the entries below
-# use a Goldsky-hosted public Filecoin FEVM subgraph (Secured Finance's, the only no-auth public
-# endpoint found) as a CANARY for the shared Goldsky Filecoin indexing backend — if Goldsky's
-# FEVM chain ETL stalls or errors, every subgraph it hosts goes stale with it. When the FEVM
-# archive ships, re-point these entries at its own endpoint.
+# Goldsky operates hosted Filecoin FEVM subgraphs: chain ETL and indexing that downstream
+# consumers read instead of running their own indexer.
+#
+# Appendix reconciliation 2026-08-18: no signed agreement has been located, so both metrics are
+# measured and not scored. Detail in contracts/goldsky.facts.yaml (maintainer-local).
 team: goldsky
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -21,11 +21,12 @@ functions:
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
     funded_project_oso_slug: goldsky
+    grant_ref: APP-RRMZE7XC-XAVG4W
     sla:
-      statement: "Goldsky-hosted Filecoin FEVM subgraph indexes at chain head: wall clock minus indexed block timestamp <= 600s, measured daily — stale chain ETL breaks every downstream consumer at once"
+      statement: "Goldsky-hosted Filecoin FEVM subgraph indexing lag: wall clock minus indexed block timestamp, measured daily — stale chain ETL breaks every downstream consumer at once"
       metric: fevm_subgraph_indexing_lag_seconds
-      threshold: { op: "<=", value: 600 }
       cadence: daily
+      unscored_reason: no-agreement
     source:
       adapter: oso
       kind: http-json
@@ -52,11 +53,12 @@ functions:
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
     funded_project_oso_slug: goldsky
+    grant_ref: APP-RRMZE7XC-XAVG4W
     sla:
-      statement: "Goldsky-hosted Filecoin FEVM subgraph reports zero indexing errors (hasIndexingErrors == false), measured daily"
+      statement: "Goldsky-hosted Filecoin FEVM subgraph indexing-error flag (hasIndexingErrors), measured daily"
       metric: fevm_subgraph_indexing_errors
-      threshold: { op: "==", value: 0 }
       cadence: daily
+      unscored_reason: no-agreement
     source:
       adapter: oso
       kind: http-json

@@ -1,13 +1,9 @@
-# Zondax builds Beryx (Filecoin explorer/API/traces) and Core Infra (archival RPC nodes,
-# Ledger firmware, Rosetta integrations). This manifest tracks what is currently
-# machine-checkable: the public archival RPC node's depth of served chain history, and the
-# Rosetta integration's release currency relative to Lotus. Beryx's own data API sits behind
-# a JWT and is not yet probeable without a provisioned token.
+# Zondax operates public Filecoin RPC with archival depth, and maintains the Rosetta
+# integration stack. This manifest tracks archival reachability and Rosetta release currency.
 #
-# APPENDIX STATUS (checked 2026-08-15): Zondax IS funded ($79,000 committed thru Dec on the
-# ProPGF Batch 3 Funded list) and that sheet names exactly these two metrics. But NO Batch 3
-# agreement for Zondax exists anywhere on the Drive, so there is no signed §3 to reconcile
-# against and the thresholds below are ours. FOLLOW-UP: obtain the agreement.
+# Appendix reconciliation 2026-08-18: no agreement has been located for either Zondax grant, so
+# both metrics are measured and not scored. Both entries belong to the Core Infra grant; the
+# Beryx grant has no metric at all. Detail in contracts/zondax.facts.yaml (maintainer-local).
 team: zondax
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -27,11 +23,12 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
     funded_project_oso_slug: zondax
+    grant_ref: APP-WVTOW236-LUGH7Y
     sla:
-      statement: "Zondax archival RPC serves genesis-deep chain history: ChainGetTipSetByHeight(100000) returns the tipset at exactly height 100000 (Sep 2020), measured weekly — pruned nodes cannot answer this"
+      statement: "Zondax archival RPC depth: the height returned by ChainGetTipSetByHeight(100000), Sep 2020, measured weekly — pruned nodes cannot answer this"
       metric: archival_tipset_height_served
-      threshold: { op: "==", value: 100000 }
       cadence: weekly
+      unscored_reason: no-agreement
     source:
       adapter: oso
       kind: http-json
@@ -61,13 +58,14 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
     funded_project_oso_slug: zondax
+    grant_ref: APP-WVTOW236-LUGH7Y
     repos:
       - zondax/rosetta-filecoin-proxy
     sla:
-      statement: "Rosetta stack stays current with node releases: latest rosetta-filecoin-proxy release <= 60 days old (proxy for the team's <7d-after-Lotus Karma commitment), measured weekly"
+      statement: "Rosetta stack currency: age of the latest rosetta-filecoin-proxy release, measured weekly"
       metric: rosetta_release_age_days
-      threshold: { op: "<=", value: 60 }
       cadence: weekly
+      unscored_reason: no-agreement
     source:
       adapter: oso
       kind: http-json

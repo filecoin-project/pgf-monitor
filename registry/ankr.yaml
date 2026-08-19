@@ -1,7 +1,11 @@
 # Ankr operates public Filecoin RPC endpoints (mainnet and calibnet). Its node-operations
-# stack is closed-source, so this manifest measures the SERVICE OUTPUT — public endpoint
-# freshness — rather than the code, which is the honest attestation available for a
+# stack is closed-source, so this manifest measures the SERVICE OUTPUT -- public endpoint
+# freshness -- rather than the code, which is the honest attestation available for a
 # closed-source operator.
+#
+# Appendix reconciliation 2026-08-18: mainnet head lag follows the signed s3; calibnet appears in
+# no appendix (see its unscored_reason). The host we poll is our inference -- the appendix never
+# names it. Detail in contracts/ankr.facts.yaml (maintainer-local).
 team: ankr
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -16,8 +20,9 @@ functions:
   # Expected epoch = floor((now - 1598306400) / 30): mainnet genesis 2020-08-24T22:00:00Z,
   #   30s epochs. Assumes the pipeline session runs in UTC so to_unixtime(:now) is genesis-
   #   comparable.
-  # THRESHOLD (placeholder, confirm with team): 5 epochs (150s) tolerates fetch-timing noise
-  #   and brief block-delivery delays while still catching a genuinely stalled backing node.
+  # THRESHOLD: 3 epochs (90s) -- the number in the signed s3 ("filecoin_chain_head_lag <= 3
+  #   epochs, cadence daily"), not marked "(to confirm)". Was 5 here until 2026-08-18; the
+  #   document is what they agreed to.
   - function_id: chain-sync-rpc-mainnet-head-lag
     kernel_id: chain-sync-state
     origin: oso
@@ -25,10 +30,11 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
     funded_project_oso_slug: ankr-network
+    grant_ref: APP-ICVR43KL-H0P3K6
     sla:
       statement: "Public mainnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily — a stale head means the endpoint's backing node has stopped syncing"
       metric: rpc_head_lag_epochs
-      threshold: { op: "<=", value: 5 }
+      threshold: { op: "<=", value: 3 }   # the signed s3 commits <= 3 epochs, not 5
       cadence: daily
     source:
       adapter: oso
@@ -46,6 +52,40 @@ functions:
       # parent row, MAX() only for aggregate form. 1598306400 = mainnet genesis unix ts.
       sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now) - 1598306400) / 30.0) - MAX(height)) FROM raw"
 
+  # FEVM/eth_* side of the same kernel function, adopted 2026-08-18 from registry/drafts/ankr.yaml
+  # because the signed s3 commits to it: "filecoin_fevm_block_lag <= 4 epochs, cadence daily",
+  # not marked "(to confirm)". Tracked separately from the native path because, in the document's
+  # own words, "the FEVM and native namespaces can fail independently of one another".
+  # THRESHOLD: 4 epochs -- the document's number, and its stated reason is that eth_blockNumber
+  #   "reports one epoch below the native chain head by construction", so 4 = native 3 + 1.
+  # PROBED 2026-08-18: POST eth_blockNumber -> "0x60056f" (6292847) against expected epoch
+  #   6292848, i.e. a lag of exactly 1 epoch. Confirms both the endpoint and the by-construction
+  #   one-epoch offset the threshold is built on.
+  # decode: from_base(substr(result, 3), 16) strips "0x" and parses base-16.
+  - function_id: chain-sync-rpc-fevm-eth-head-lag
+    kernel_id: chain-sync-state
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Ledger & Consensus'
+    funded_project_oso_slug: ankr-network
+    grant_ref: APP-ICVR43KL-H0P3K6
+    sla:
+      statement: "FEVM/Eth RPC surface keeps pace: wall-clock expected epoch minus decoded eth_blockNumber <= 4 epochs, measured daily — the eth_* API is what FEVM dApps depend on, runs ~1 epoch below the native head by construction (so 4 = native 3 + 1), and can stall independently of the native API"
+      metric: fevm_eth_head_lag_epochs
+      threshold: { op: "<=", value: 4 }
+      cadence: daily
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://rpc.ankr.com"
+      endpoint: "https://rpc.ankr.com/filecoin"
+      query: "/filecoin"
+      method: POST
+      params: { jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1 }
+    transform:
+      sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now) - 1598306400) / 30.0) - from_base(substr(MAX(result), 3), 16)) FROM raw"
+
   # Same kernel function, calibnet side: Ankr also operates a public calibration-testnet RPC,
   # part of the same chain-sync/RPC read surface (used for upgrade rehearsal by developers).
   # Distinct from other calibnet-liveness checks that measure the chain advancing rather than
@@ -60,11 +100,12 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Ledger & Consensus'
     funded_project_oso_slug: ankr-network
+    grant_ref: APP-ICVR43KL-H0P3K6
     sla:
-      statement: "Public calibnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily"
+      statement: "Public calibnet RPC chain-head lag: wall-clock expected epoch minus reported Height, measured daily"
       metric: rpc_calibnet_head_lag_epochs
-      threshold: { op: "<=", value: 5 }
       cadence: daily
+      unscored_reason: not-in-appendix
     source:
       adapter: oso
       kind: http-json

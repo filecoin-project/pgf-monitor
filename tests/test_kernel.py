@@ -74,6 +74,9 @@ FROZEN_KERNEL_IDS = frozenset(
         "network-documentation",
         "content-routing-ads",
         "dealmaking-pdp-retrieval",
+        # first two important-tier entries, added 2026-08-18
+        "stablecoin-settlement",
+        "ecosystem-coordination",
     }
 )
 

@@ -16,6 +16,7 @@ functions:
     category: 'Coordination & Hardening'
     sub_category: 'Testnets - miners'
     funded_project_oso_slug: reiers-filecoin
+    grant_ref: APP-U5CX297Z-XKDQDZ
     sla:
       statement: "Plumbline's calibnet SP t0143103 stays decentralization-friendly: its share of calibnet quality-adjusted power < 1/3 (the team's own Karma target), measured weekly"
       metric: calibnet_miner_qap_share

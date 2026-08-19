@@ -941,119 +941,119 @@
   {
    "app_ref": "APP-KOZT1PS1-T25XTE",
    "team_name": "drand / Randamu (Yolan Romailler)",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $~$33k (vs $110k ask), committed $31,000. Open: Strip scope already covered by the B2 contract through Dec",
+   "snapshot_note": "",
    "functions": "High-SLA HTTP + gossipsub relays & quarterly resharing",
    "committed_usd": 31000.0
   },
   {
    "app_ref": "APP-P0UD8I92-78VVRM",
    "team_name": "ChainSafe",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Unresolved, working $$300-400k, committed $252,000. Open: Client diversity vs sunset - split committee, stack-leads follow-up",
+   "snapshot_note": "",
    "functions": "EVM + EAM actor | FVM execution engine (deterministic WASM actor execution) | Independent Rust full node (sync, validation, RPC, snapshot export) | Operation of seed nodes a new peer contacts on startup | Storage market / miner / power / system / reward / datacap actors | Validated snapshot generation & hosting (~2h cadence)",
    "committed_usd": 252000.0
   },
   {
    "app_ref": "APP-P3NAPR7O-TSQ67Q",
    "team_name": "Reiersen",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $$250k + 67.2k FIL, committed $300,000. Open: PoRep research milestone; PDP (M1) possibly a Pods expense",
+   "snapshot_note": "",
    "functions": "Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility | Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC) | Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)",
    "committed_usd": 300000.0
   },
   {
    "app_ref": "APP-VQC3PIBY-G2UDZJ",
    "team_name": "ChainSafe",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Advance, working $$8.4k, committed $8,400. Open: Amendment to active B2 agreement (through Mar '27)",
+   "snapshot_note": "",
    "functions": "Calibnet miners (Lotus-Miner / Curio / Venus) for upgrade rehearsal | Mainnet-realistic testnet for rehearsing every network-version upgrade | Operation of seed nodes a new peer contacts on startup | Validated snapshot generation & hosting (~2h cadence)",
    "committed_usd": 8400.0
   },
   {
    "app_ref": "APP-P706QNLF-NLQPG5",
    "team_name": "Chain.Love (Arsenii Petrovich)",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Advance, working $$75-107k, committed $11,000. Open: Full ask (Eva) vs $75k (Molly); commercial-tier question",
+   "snapshot_note": "",
    "functions": "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)",
    "committed_usd": 11000.0
   },
   {
    "app_ref": "APP-U5CX297Z-XKDQDZ",
    "team_name": "Reiersen",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Advance, working $$17k, committed $17,000. Open: Steve's sign-off; refresh stale milestones (topology changed)",
+   "snapshot_note": "",
    "functions": "Calibnet miners (Lotus-Miner / Curio / Venus) for upgrade rehearsal | Mainnet-realistic testnet for rehearsing every network-version upgrade",
    "committed_usd": 17000.0
   },
   {
    "app_ref": "APP-ZGCSXHWL-8PJG01",
    "team_name": "Zondax",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $$36k, committed $21,000. Open: Traces/API only; hold open-sourcing of the indexer backend",
+   "snapshot_note": "",
    "functions": "Chain ETL and indexing | Mainnet block explorer (Lotus archive, indexing, NV maintenance)",
    "committed_usd": 21000.0
   },
   {
    "app_ref": "APP-J8CF3XJY-CG03HL",
    "team_name": "Blockscout",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Advance, working $$30-60k, committed $5,000. Open: Benchmark rate vs Filfox ($30k) before contracting",
+   "snapshot_note": "",
    "functions": "Explorer for Calibration testnet | Mainnet block explorer (Lotus archive, indexing, NV maintenance)",
    "committed_usd": 5000.0
   },
   {
    "app_ref": "APP-RRMZE7XC-XAVG4W",
    "team_name": "Goldsky (Jorge Bours)",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $$50-85k, committed $86,000. Open: Fund public FEVM archive; commercial hosting subsidy in question",
+   "snapshot_note": "",
    "functions": "Chain ETL and indexing",
    "committed_usd": 86000.0
   },
   {
    "app_ref": "APP-0QLIOMS2-JSK1EM",
    "team_name": "David Gasquez",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Advance, working $$120k, committed $140,000. Open: Reconcile $120k rec vs $140k in the commitment column",
+   "snapshot_note": "",
    "functions": "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards",
    "committed_usd": 140000.0
   },
   {
    "app_ref": "APP-OFZ5ILTO-QC1XCM",
    "team_name": "FIL-Builders (Sarah Thiam)",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $$100-150k, committed $150,000. Open: Committee target $100-120k vs Sarah's $150k floor; revision pending",
+   "snapshot_note": "",
    "functions": "Network-wide documentation along with source code availability and source control",
    "committed_usd": 150000.0
   },
   {
    "app_ref": "APP-O66TN87V-3MDZFT",
    "team_name": "Open Impact Foundation - IPNI (Alex Firmani)",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $$180k, committed $280,000. Open: Sustainability call pending - team disputes $180k covers salaries",
+   "snapshot_note": "",
    "functions": "System to advertise CID content records",
    "committed_usd": 280000.0
   },
   {
    "app_ref": "APP-WVTOW236-LUGH7Y",
    "team_name": "Zondax",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $$144-200k, committed $144,000. Open: Line-item unbundling requested; Ledger stack is the must-fund",
+   "snapshot_note": "",
    "functions": "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC) | Network-wide documentation along with source code availability and source control",
    "committed_usd": 144000.0
   },
   {
    "app_ref": "APP-ICVR43KL-H0P3K6",
    "team_name": "Ankr",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $~$50k, committed $14,000. Open: Closed-source verification question (Ken); rate vs prior FF terms",
+   "snapshot_note": "",
    "functions": "Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)",
    "committed_usd": 14000.0
   },
   {
    "app_ref": "APP-9PTCWEQL-HVKGV8",
    "team_name": "FilPonto",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Re-scope, working $$150-250k, committed $120,000. Open: Hugo's line likely moves to Pods; UCAN milestone under review",
+   "snapshot_note": "",
    "functions": "",
    "committed_usd": 120000.0
   },
   {
    "app_ref": "APP-Z1L7URG7-TJ3G5D",
    "team_name": "FVM Stablecoin Settlement Infrastructure Program",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Unresolved, working $$0-150k, committed $100,000. Open: Reject vs fund; $140k-to-liquidity-pool question outstanding",
+   "snapshot_note": "",
    "functions": "",
    "committed_usd": 100000.0
   },
   {
    "app_ref": "APP-US5QDXQP-FOCBY4",
    "team_name": "Pyth Network",
-   "snapshot_note": "Committee snapshot 2026-07-15: status=Unresolved, working $TBD. Open: Deprecates Jul 21 - alternative search + bridge funding live",
+   "snapshot_note": "",
    "functions": "",
    "committed_usd": null
   }

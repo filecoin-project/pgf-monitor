@@ -181,3 +181,34 @@ entries:
     sub_category: "Block Production (mining)"
     function: "Deal-making + PDP + HTTP retrieval"
     value: "Composable deal interface and hot-storage proving - the demand-side onramp for SPs."
+
+  # ---------------------------------------------------------------------------
+  # IMPORTANT tier. The first entries at this tier; the schema has always permitted it.
+  # Both adopt a requirement the committee already stewards in
+  # funding_model_static.requirement_stewards (status: approved, fds_tier: important,
+  # from_inventory: true) — they are not new judgements. sub_category is the committee's own
+  # wording verbatim; category collapses to the nearest enum member, since _kernel.yaml has no
+  # "UX / DX - Structural DeFi".
+  # ---------------------------------------------------------------------------
+  - id: stablecoin-settlement
+    tier: important
+    category: "UX/DX"
+    sub_category: "Stablecoin & yield"
+    function: "Overcollateralized stablecoin settlement rail for storage and service payments (USDFC)"
+    value: >-
+      Storage and retrieval priced in a volatile native token cannot be quoted or invoiced across a
+      multi-month term; a stable unit of account on FVM is what lets paid storage, Filecoin Pay
+      rails and onchain-cloud services be sold to enterprises. If it depegs or its liquidity dries
+      up, onchain payments lose their unit of account. Committee steward: Secured Finance
+      (requirement usdfc-overcollateralised-stablecoin).
+  - id: ecosystem-coordination
+    tier: important
+    category: "UX/DX"
+    sub_category: "Public-goods coordination"
+    function: "Technical program coordination, ecosystem technical support and discretionary grant administration across kernel teams"
+    value: >-
+      The kernel is maintained by ~15 independent teams with no shared employer. Coordination is
+      what sequences cross-team upgrades, gives SPs and integrators a support path, and funds gaps
+      too small or too urgent for a funding round. Without it, gaps surface only when something
+      breaks. Committee steward: Open Impact Foundation - FilPonto Cell (requirement
+      public-goods-coordination-rpc-indexers-wallet-oracle).
