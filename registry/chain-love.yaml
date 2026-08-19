@@ -97,9 +97,13 @@ functions:
   # source https://calibration.filecoin.chain.love/rpc/v1 and a proposed threshold of 5 epochs.
   # PROBED 2026-08-18: POST Filecoin.ChainHead -> HTTP 200 with a well-formed result.Height.
   # Expected epoch = floor((now - 1667326380) / 30): calibnet genesis 2022-11-01T18:13:00Z.
-  # Same JSON shape and flattening as the mainnet entry (result is a nested OBJECT, so
-  # result.Height flattens to `height`; Blocks/Cids are nested ARRAYS in child tables the
-  # transform cannot reach, which is why max_table_nesting must NOT be set to 0).
+  # Same JSON shape and flattening as the mainnet entry: with data_selector `result` the payload
+  # object becomes the parent row, so result.Height reads as column `height`; Blocks/Cids are
+  # nested ARRAYS in child tables the transform cannot reach, which is why max_table_nesting must
+  # NOT be set to 0. The selector is not optional -- the first live run of this entry (2026-08-19,
+  # observe run 32241214112) returned `transform_error: 400 Bad Request` because without it dlt
+  # auto-descends into the longest nested list (Cids) and the parent row, with it `height`, is
+  # never loaded.
   - function_id: chain-sync-rpc-calibnet-head-lag
     kernel_id: chain-sync-state
     origin: oso
@@ -121,6 +125,8 @@ functions:
       query: "/rpc/v1"
       method: POST
       params: { jsonrpc: "2.0", method: "Filecoin.ChainHead", params: [], id: 1 }
+      # as on the mainnet entry: select the JSON-RPC payload object, or dlt descends into Cids.
+      data_selector: result
     transform:
       sql: "SELECT GREATEST(0, FLOOR((to_unixtime(:now) - 1667326380) / 30.0) - MAX(height)) FROM raw"
 
