@@ -42,6 +42,10 @@ functions:
   #   {total_count, incomplete_results, items:[...]}; data_selector "$" lands it as one row so
   #   extract reads total_count off the parent, and the nested `items` array stays in an
   #   unreachable child table we do not need.
+  # AUTH: GH_API_TOKEN, like every other api.github.com source here. The live dry-run passed this
+  #   metric WITHOUT it, which is the trap: unauthenticated GitHub is 60 req/hour shared across
+  #   every GitHub metric in the registry, so an unauthenticated addition 403s its neighbours
+  #   rather than itself. Authenticated is 5000.
   # No threshold: an issue count has no obvious right level, and a bar here could just as easily
   #   punish triage as reward it. Measured for trend first.
   - function_id: docs-open-issues
@@ -63,6 +67,7 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.github.com"
+      auth: { secret_ref: GH_API_TOKEN }
       endpoint: "https://api.github.com/search/issues?q=repo:filecoin-project/filecoin-docs+is:issue+is:open&per_page=1"
       query: "/search/issues?q=repo:filecoin-project/filecoin-docs+is:issue+is:open&per_page=1"
       data_selector: "$"
