@@ -64,7 +64,8 @@ class SlaSpec(_Model):
     # Where the number came from. A team passing a bar we invented must not render like a team
     # passing one they signed.
     threshold_source: ThresholdSource = "provisional"
-    # Set only when threshold_value is None; the pair is asserted by tests/test_manifest.py.
+    # Set only when threshold_value is None; manifest_from_raw rejects a function that states
+    # both, since a scored bar and a reason for having none contradict each other.
     unscored_reason: UnscoredReason | None = None
     cadence: Cadence
 
@@ -142,6 +143,11 @@ def manifest_from_raw(raw: object) -> Manifest:
         if has_extract and has_transform:
             raise ManifestError(
                 f"function {f['function_id']} declares both source.extract and transform; choose one"
+            )
+        if f["sla"].get("threshold") and f["sla"].get("unscored_reason"):
+            raise ManifestError(
+                f"function {f['function_id']} states a threshold and an unscored_reason; "
+                "a scored bar has no reason for being unscored"
             )
         if f.get("source", {}).get("kind") == "http-json" and not (has_extract or has_transform):
             raise ManifestError(

@@ -100,3 +100,9 @@ def test_a_threshold_still_needs_both_op_and_value():
     raw = _raw_function(threshold={"op": "<="})
     with pytest.raises(ManifestError):
         manifest_from_raw(raw)
+
+
+def test_a_threshold_and_an_unscored_reason_cannot_coexist():
+    raw = _raw_function(unscored_reason="no-agreement")
+    with pytest.raises(ManifestError):
+        manifest_from_raw(raw)
