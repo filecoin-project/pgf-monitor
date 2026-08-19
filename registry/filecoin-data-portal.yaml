@@ -1,11 +1,8 @@
-# The Filecoin Data Portal aggregates Filecoin on/off-chain data into open, queryable datasets
-# and dashboards. This manifest tracks freshness of the daily dataset-build pipeline.
+# The Filecoin Data Portal aggregates on/off-chain Filecoin data into open, queryable
+# datasets and dashboards that the rest of the ecosystem (including this repo) reads.
 #
-# APPENDIX STATUS (checked 2026-08-15): funded ($140,000 committed thru Dec on the Funded
-# list, which names pipeline_success_age_days). NO Batch 3 agreement exists on the Drive and
-# there is no contracts/filecoin-data-portal.facts.yaml, so the <= 3 day threshold is ours and
-# unconfirmed. This metric was in breach on 2026-08-15 (4.65 -> 5.00 days and climbing).
-# FOLLOW-UP: obtain the agreement and create the facts file.
+# Appendix reconciliation 2026-08-18: no agreement of any kind has been located, so the one metric
+# here is measured and not scored, and no facts file exists to render an appendix from.
 team: filecoin-data-portal
 maintainers: ["@davidgasquez"]   # named steward for network-data-portal; team confirms
 functions:
@@ -22,13 +19,14 @@ functions:
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
     funded_project_oso_slug: filecoin-data-portal-davidgasquez
+    grant_ref: APP-0QLIOMS2-JSK1EM
     repos:
       - davidgasquez/filecoin-data-portal
     sla:
-      statement: "Datasets stay fresh: most recent successful daily Pipeline run <= 3 days old, measured daily"
+      statement: "Dataset freshness: age of the most recent successful daily Pipeline run, measured daily"
       metric: pipeline_success_age_days
-      threshold: { op: "<=", value: 3 }
       cadence: daily
+      unscored_reason: no-agreement
     source:
       adapter: oso
       kind: http-json

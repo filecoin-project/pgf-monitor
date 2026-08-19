@@ -10,6 +10,8 @@ rpc.ankr.com
 filecoin.blockscout.com
 filecoin-testnet.blockscout.com
 filecoin.chain.love
+calibration.filecoin.chain.love
+uptimerobot.filecoin.chain.love
 status.filecoin.io
 api.goldsky.com
 api.calibration.node.glif.io

@@ -1,11 +1,8 @@
-# FilOz's SIGNED Batch 3 Appendix 1 §3 (agreement doc 1wdQmU72…, 2026-08-13) commits to
-# exactly three metrics, all Curio: release cadence, blocks-per-tipset, and PDP active proof
-# sets. Those are the three below.
+# FilOz maintains Curio, the SP sealing/proving/PDP stack. This manifest tracks Curio's
+# release cadence, its WindowPoSt/WinningPoSt scheduler, and PDP proof sets on mainnet.
 #
-# Lotus, lotus-miner, EVM/EAM and builtin-actors are FilOz stewardship but are NOT in that
-# §3 — the agreement's Work Plan is Curio-scoped and names them only as §4 dependencies.
-# They moved to registry/drafts/filoz.yaml on 2026-08-15 rather than being scored as
-# commitments nobody signed. See docs/reconciliation-2026-08-15.md.
+# Appendix reconciliation 2026-08-18: all three thresholds are marked "(to confirm)" in the
+# signed s3, so all three are measured and not scored. Detail in contracts/filoz.facts.yaml.
 team: filoz
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -24,13 +21,14 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
     funded_project_oso_slug: filozone
+    grant_ref: APP-HDYJESMD-2WLL00
     repos:
       - filecoin-project/curio
     sla:
-      statement: "Curio ships a release at least every 45 days on average (sealing-pipeline maintenance signal), measured monthly"
+      statement: "Curio release cadence: average days between releases (a sealing-pipeline maintenance signal), measured monthly"
       metric: avg_days_between_releases
-      threshold: { op: "<=", value: 45 }
       cadence: monthly
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json
@@ -56,11 +54,12 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
     funded_project_oso_slug: filozone
+    grant_ref: APP-HDYJESMD-2WLL00
     sla:
-      statement: "Win-count health: network average blocks per tipset >= 4.5 (of 5 expected), measured daily"
+      statement: "Win-count health: network average blocks per tipset, of 5 expected, measured daily — a network-wide reading rather than a Curio-specific one"
       metric: avg_blocks_per_tipset
-      threshold: { op: ">=", value: 4.5 }
       cadence: daily
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       # CAVEAT: filfox 403s the default python-requests User-Agent on /overview (any other
@@ -84,11 +83,12 @@ functions:
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
     funded_project_oso_slug: filozone
+    grant_ref: APP-HDYJESMD-2WLL00
     sla:
-      statement: "PDP live on mainnet: active proof sets >= 500, measured daily"
+      statement: "PDP on mainnet: count of active proof sets, measured daily"
       metric: pdp_active_proof_sets
-      threshold: { op: ">=", value: 500 }
       cadence: daily
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json

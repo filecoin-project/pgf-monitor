@@ -17,6 +17,7 @@ Output is a single markdown appendix:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import yaml
@@ -239,6 +240,20 @@ def load_team_functions(team: str, registry: str = "registry") -> list[FunctionS
 
 
 def run_contract_cli(team: str, facts_path: str, registry: str, out: str | None) -> int:
+    # contracts/ is gitignored: the facts files carry contract terms (recipient, money, the §4
+    # evidence) and stay maintainer-local. A collaborator working from a clean clone has none of
+    # them, and used to get a bare FileNotFoundError traceback here. Say what is missing instead.
+    if not Path(facts_path).exists():
+        print(
+            f"{facts_path} not found.\n\n"
+            "Facts files carry contract terms and are deliberately gitignored, so a clean clone "
+            "does not have them and `fpm contract` is a maintainer-only command. Everything the "
+            "pipeline measures lives in registry/ and needs no facts file.\n\n"
+            f"To render this appendix you need contracts/{team}.facts.yaml; "
+            "contracts/example.facts.yaml documents the shape.",
+            file=sys.stderr,
+        )
+        return 2
     facts = yaml.safe_load(Path(facts_path).read_text())
     functions = load_team_functions(team, registry)
     kernel = load_kernel(Path(registry) / "_kernel.yaml")

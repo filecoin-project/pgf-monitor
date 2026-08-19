@@ -1,6 +1,9 @@
-# IPNI (github.com/ipni), stewarded by the Open Impact Foundation, is the content-routing index
-# cid.contact serves. This manifest tracks that the indexer stays live and ingesting: a broad
-# provider set, active ad-chain ingestion, and error-free provider reporting.
+# IPNI is the content-routing layer: it indexes provider advertisements so retrieval clients
+# can find which provider holds a CID. This manifest tracks provider breadth, ad-chain ingestion
+# liveness, the error-free ratio, and indexer readiness.
+#
+# Appendix reconciliation 2026-08-18: the error-free ratio matches its signed bar exactly; the
+# other three are measured and not scored. Detail in contracts/oif-ipni.facts.yaml.
 team: oif-ipni
 maintainers: ["@TODO-github-handle"]   # team fills in (Open Impact Foundation / github.com/ipni)
 functions:
@@ -17,11 +20,12 @@ functions:
     category: 'Storage Market Middleware'
     sub_category: 'Content routing'
     funded_project_oso_slug: ipni
+    grant_ref: APP-O66TN87V-3MDZFT
     sla:
-      statement: "IPNI keeps a broad provider set indexed: >= 100 providers listed on cid.contact, measured daily"
+      statement: "Breadth of the IPNI provider set: providers listed on cid.contact, measured daily"
       metric: ipni_provider_count
-      threshold: { op: ">=", value: 100 }
       cadence: daily
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json
@@ -45,11 +49,12 @@ functions:
     category: 'Storage Market Middleware'
     sub_category: 'Content routing'
     funded_project_oso_slug: ipni
+    grant_ref: APP-O66TN87V-3MDZFT
     sla:
-      statement: "Ad-chain ingestion is live: >= 15 providers show a LastAdvertisementTime within the past 24h, measured daily"
+      statement: "Ad-chain ingestion liveness: providers showing a LastAdvertisementTime within the past 24h, measured daily"
       metric: ipni_providers_advertised_24h
-      threshold: { op: ">=", value: 15 }
       cadence: daily
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json
@@ -68,6 +73,7 @@ functions:
     category: 'Storage Market Middleware'
     sub_category: 'Content routing'
     funded_project_oso_slug: ipni
+    grant_ref: APP-O66TN87V-3MDZFT
     sla:
       statement: "IPNI providers error-free: >= 90% of providers report no LastError, measured daily"
       metric: ipni_error_free_ratio
@@ -82,3 +88,35 @@ functions:
       endpoint: "https://cid.contact/providers"
       query: "/providers"
       extract: { column: last_error, reduce: null_ratio, derive: value, unit: ratio }
+
+  # Adopted 2026-08-18 from the requested-additions block of IPNI's signed s3. That block records
+  # the reason it could not be measured as "cid.contact/health returns a plain string, not valid
+  # JSON" -- which is NO LONGER TRUE.
+  # PROBED 2026-08-18: GET https://cid.contact/health -> HTTP 200, content-type application/json,
+  #   body {"status":"ready"}. A single flat object, so data_selector "$" lands one row with a
+  #   `status` column.
+  # `status` is a STRING, and the pipeline needs a number, so this uses a transform rather than
+  #   extract: CASE yields 1 for ready and 0 for anything else. Single SELECT, single scalar, one
+  #   bound `raw` table -- inside the structural exfiltration guard.
+  - function_id: content-routing-ipni-readiness
+    kernel_id: content-routing-ads
+    origin: karma
+    tier: essential
+    category: 'Storage Market Middleware'
+    sub_category: 'Content routing'
+    funded_project_oso_slug: ipni
+    grant_ref: APP-O66TN87V-3MDZFT
+    sla:
+      statement: "The IPNI indexer reports itself ready on its own health endpoint (1 when status is 'ready', else 0), measured daily — the readiness signal the committee asked for and cid.contact now serves as JSON"
+      metric: ipni_indexer_ready
+      cadence: daily
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://cid.contact"
+      endpoint: "https://cid.contact/health"
+      query: "/health"
+      data_selector: "$"
+    transform:
+      sql: "SELECT CASE WHEN MAX(status) = 'ready' THEN 1 ELSE 0 END FROM raw"

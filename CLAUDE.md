@@ -46,6 +46,11 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 - Thresholds are human commitments: the report drafter deliberately omits them; drafts
   mark ours `PLACEHOLDER`. Don't invent tight thresholds without probe evidence.
 - Secrets never enter the repo; live smokes read `OSO_API_KEY` from the environment.
+- **The registry is PUBLIC.** Do not put quoted agreement text, money figures, DocuSign or other
+  contract identifiers, or characterisations of a recipient's paperwork into `registry/`. Where a
+  bar is absent, say why with `sla.unscored_reason` (an enum) and keep the reasoning in
+  `contracts/<team>.facts.yaml`, which is gitignored. `contracts/` being absent is the normal state
+  for a collaborator, so nothing in tests or CI may require it.
 - `data/observations.csv` (values) and `data/thresholds.csv` (the bar as it stood that day) are
   the system of record for the time series — OSO's `filpgf_sla_observations` and
   `filpgf_sla_thresholds` are full-table republishes of them. Never hand-edit either, and never

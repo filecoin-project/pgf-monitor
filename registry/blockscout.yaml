@@ -1,16 +1,9 @@
-# Funded scope is hosting + indexing + NV maintenance of Blockscout's OWN two Filecoin
-# instances: Mainnet (chain id 314, filecoin.blockscout.com) and Calibration testnet
-# (314159, filecoin-testnet.blockscout.com). This manifest probes BLOCKSCOUT's own
-# instances directly so explorer redundancy and the FEVM-developer surface (contract
-# read/write, verified sources) are evidenced independently of other explorers.
+# Blockscout operates the Filecoin mainnet and Calibration-testnet block explorers. This
+# manifest measures explorer indexing lag on both, plus one third-party cross-check.
 #
-# APPENDIX STATUS (checked 2026-08-15, agreement doc 1dotjw_i…, mod 2026-08-10): the signed
-# §3 lists these two health endpoints as SOURCES but carries NO metric names, thresholds or
-# cadences — the team replaced §3 with bare URLs. The <= 3600s bars below are OURS, not
-# theirs, and were never agreed. Treat as PLACEHOLDER pending confirmation at check-in.
-# `mainnet-block-explorer` additionally reads filfox.info, a third party Blockscout does not
-# operate and cannot keep public under §2 (though the Funded list does name that metric for
-# them). See docs/reconciliation-2026-08-15.md.
+# Appendix reconciliation 2026-08-18: the team replaced s3 with two health endpoints and no bars,
+# so both explorer metrics are measured and not scored. The grant term also begins 2026-12-01,
+# after these readings start. Detail in contracts/blockscout.facts.yaml (maintainer-local).
 team: blockscout
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -41,11 +34,12 @@ functions:
     category: 'UX/DX'
     sub_category: 'Explorers and Tooling'
     funded_project_oso_slug: blockscout
+    grant_ref: APP-J8CF3XJY-CG03HL
     sla:
-      statement: "Blockscout Filecoin mainnet explorer indexes at chain head: newest indexed block <= 3600s old, measured daily — a stale explorer is not an observability surface"
+      statement: "Blockscout Filecoin mainnet explorer indexing lag: age of the newest indexed block, measured daily — a stale explorer is not an observability surface"
       metric: blockscout_mainnet_head_age_seconds
-      threshold: { op: "<=", value: 3600 }
       cadence: daily
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json
@@ -72,11 +66,12 @@ functions:
     category: 'Coordination & Hardening'
     sub_category: 'Testnets - explorer'
     funded_project_oso_slug: blockscout
+    grant_ref: APP-J8CF3XJY-CG03HL
     sla:
-      statement: "Blockscout Calibration testnet explorer indexes at chain head: newest indexed block <= 3600s old, measured daily — upgrade rehearsal needs a working explorer to analyse"
+      statement: "Blockscout Calibration testnet explorer indexing lag: age of the newest indexed block, measured daily — upgrade rehearsal needs a working explorer to analyse"
       metric: blockscout_calibnet_head_age_seconds
-      threshold: { op: "<=", value: 3600 }
       cadence: daily
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json
@@ -103,10 +98,10 @@ functions:
     sub_category: 'Explorers and Tooling'
     funded_project_oso_slug: unfunded   # filfox is a third-party source, not a grantee: both the FilOz and Plumbline Appendix 1 s4 tables record it as 'Filfox (third party), ProPGF funded? N'
     sla:
-      statement: "Explorer keeps pace with the chain: the largest gap between consecutive indexed tipsets stays <= 90s (3 epochs), measured daily"
+      statement: "Explorer pace against the chain: the largest gap between consecutive indexed tipsets, measured daily"
       metric: explorer_max_tipset_gap_seconds
-      threshold: { op: "<=", value: 90 }
       cadence: daily
+      unscored_reason: not-in-appendix
     source:
       adapter: oso
       kind: http-json

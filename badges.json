@@ -1,9 +1,9 @@
 {
-  "kernel_functions": 29,
-  "monitored_metrics": 32,
+  "kernel_functions": 31,
+  "monitored_metrics": 38,
   "teams": 13,
-  "coverage": "16/29",
-  "coverage_adopted": "16/29",
-  "coverage_with_drafts": "27/29",
-  "coverage_live": "16/29"
+  "coverage": "17/31",
+  "coverage_adopted": "17/31",
+  "coverage_with_drafts": "28/31",
+  "coverage_live": "17/31"
 }

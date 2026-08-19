@@ -1,6 +1,8 @@
-# FIL-Builders maintains filecoin-project/filecoin-docs, the source repo for docs.filecoin.io,
-# the canonical Filecoin network documentation. This manifest tracks that the docs repo keeps
-# receiving commits.
+# FIL-B maintains Filecoin's network-wide documentation. This manifest tracks commit recency
+# on the docs repo and its open-issue backlog.
+#
+# Appendix reconciliation 2026-08-18: the signed s3 marks its one threshold "(to confirm)", so
+# both metrics are measured and not scored. Detail in contracts/fil-b.facts.yaml.
 team: fil-b
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -15,13 +17,14 @@ functions:
     category: 'UX/DX'
     sub_category: 'Explorers and Tooling'
     funded_project_oso_slug: fil-builders
+    grant_ref: APP-OFZ5ILTO-QC1XCM
     repos:
       - filecoin-project/filecoin-docs
     sla:
-      statement: "Docs repo not abandoned: most recent commit on filecoin-project/filecoin-docs <= 60 days old, measured weekly"
+      statement: "Docs repo activity: age of the most recent commit on filecoin-project/filecoin-docs, measured weekly"
       metric: docs_last_commit_age_days
-      threshold: { op: "<=", value: 60 }
       cadence: weekly
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json
@@ -32,3 +35,35 @@ functions:
     transform:
       # age in days of the newest commit; dlt flattens commit.committer.date -> commit__committer__date
       sql: "SELECT CAST(date_diff('day', MAX(commit__committer__date), :now_tz) AS DOUBLE) FROM raw"
+
+  # Adopted 2026-08-18 from the requested-additions block of FIL-B's signed s3, which recorded it
+  # as "buildable now from the GitHub issues API ... flagged by the committee as a quick win".
+  # PROBED 2026-08-18: total_count = 42 open issues. Search returns a single top-level object
+  #   {total_count, incomplete_results, items:[...]}; data_selector "$" lands it as one row so
+  #   extract reads total_count off the parent, and the nested `items` array stays in an
+  #   unreachable child table we do not need.
+  # No threshold: an issue count has no obvious right level, and a bar here could just as easily
+  #   punish triage as reward it. Measured for trend first.
+  - function_id: docs-open-issues
+    kernel_id: network-documentation
+    origin: karma
+    tier: essential
+    category: 'UX/DX'
+    sub_category: 'Explorers and Tooling'
+    funded_project_oso_slug: fil-builders
+    grant_ref: APP-OFZ5ILTO-QC1XCM
+    repos:
+      - filecoin-project/filecoin-docs
+    sla:
+      statement: "Open issue count on filecoin-project/filecoin-docs, measured weekly — the backlog the funded documentation work is drawing down"
+      metric: docs_open_issues
+      cadence: weekly
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.github.com"
+      endpoint: "https://api.github.com/search/issues?q=repo:filecoin-project/filecoin-docs+is:issue+is:open&per_page=1"
+      query: "/search/issues?q=repo:filecoin-project/filecoin-docs+is:issue+is:open&per_page=1"
+      data_selector: "$"
+      extract: { column: total_count, cast: float, reduce: single, derive: value, unit: issues }
