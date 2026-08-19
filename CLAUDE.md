@@ -36,7 +36,12 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   gate rejects a shared slot without it and lists the choices); it's optional when the slot is unique.
 - Exactly one of `source.extract` / `transform` per http-json function. Transform SQL:
   single SELECT, single scalar, only the `raw` table (structural exfiltration guard).
-- New source hosts require a `registry/_allowlist.txt` addition in the same PR.
+- New source hosts require a `registry/_allowlist.txt` addition, and it must land in an EARLIER PR
+  than the manifest that uses it -- not the same one. `validate.yml` and `dry-run.yml` both read the
+  allowlist from the BASE branch, never the PR head, so a host added in the same PR is not yet
+  trusted when its metric is checked: the live dry-run reports `egress not allowed (host ... is not
+  on the provisioning allowlist)` and the host cannot be proven at all. Land the host first, then
+  the metric.
 - Any field added to `Manifest`/`FunctionSpec` MUST be classified in
   `src/fpm/governance/fields.py::FIELD_BUCKETS` — `tests/test_governance_fields.py` fails
   otherwise. That one map is what the goalpost diff compares AND what selects functions for the
