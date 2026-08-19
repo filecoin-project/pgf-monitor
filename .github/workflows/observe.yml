@@ -86,3 +86,25 @@ jobs:
           # A concurrent merge to main between checkout and push is normal, not an error.
           git pull --rebase --autostash origin "${{ github.ref_name }}"
           git push origin "HEAD:${{ github.ref_name }}"
+
+      # Committing the CSV is only half the record. OSO's filpgf_sla_observations and
+      # filpgf_sla_thresholds are full-table republishes of these two files, and nothing else
+      # refreshes them -- so before this step the warehouse (and the dashboard reading it) drifted
+      # behind the repo silently: on 2026-08-19 the CSVs held readings through the 19th while both
+      # published tables still ended on the 17th, because the last republish was whenever someone
+      # last ran scripts/run_full_review.sh by hand.
+      #
+      # Order is load-bearing (docs/guide-reviewers.md s4): thresholds FIRST, observations LAST.
+      # Republishing observations narrows that table to the columns the dashboard's committed query
+      # expects, so inverting the order leaves a window where the dashboard's obs_data cell takes
+      # its bare-except fallback and every chart silently empties.
+      #
+      # A full-table republish of unchanged CSVs is a no-op, so this is safe on a quiet night.
+      - name: Republish the series to OSO
+        if: ${{ !inputs.dry_run }}
+        env:
+          OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
+        run: |
+          set -euo pipefail
+          uv run python scripts/observations.py upload-thresholds --oso-org "${{ vars.OSO_ORG_ID }}"
+          uv run python scripts/observations.py upload --oso-org "${{ vars.OSO_ORG_ID }}"
