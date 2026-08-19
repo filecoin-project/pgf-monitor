@@ -26,10 +26,24 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          git fetch origin "$HEAD_SHA" --depth=1
+          # NOT --depth=1. A shallow head has no common ancestor with the base, so the three-dot
+          # diff below fails with "no merge base" -- and because that failure used to be swallowed
+          # by `|| true`, the manifest list came out EMPTY, the measurement loop never ran, and the
+          # gate reported SUCCESS having measured nothing. A dry-run that proves nothing must never
+          # look like a dry-run that passed.
+          git fetch origin "$HEAD_SHA"
           mkdir -p /tmp/pr_head /tmp/pr_base
+          # No `|| true`: if the diff cannot be computed, fail loudly instead of measuring nothing.
           changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- 'registry/*.yaml' | grep -v '/_' || true)
           echo "$changed" > /tmp/changed_manifests.txt
+          if [ -z "$(tr -d '[:space:]' < /tmp/changed_manifests.txt)" ]; then
+            echo "::error::dry-run-ok was applied but no changed adopted manifest was found between" \
+                 "$BASE_SHA and $HEAD_SHA. Either the label was added to a PR that changes no" \
+                 "manifest, or the diff could not be computed. Refusing to report success without" \
+                 "measuring anything."
+            exit 1
+          fi
+          echo "will measure: $(tr '\n' ' ' < /tmp/changed_manifests.txt)"
           for f in $changed; do
             mkdir -p "/tmp/pr_head/$(dirname "$f")" "/tmp/pr_base/$(dirname "$f")"
             # A PR that DELETES a manifest has no head blob. There is nothing to measure, and
