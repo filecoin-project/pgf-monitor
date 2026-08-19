@@ -17,6 +17,17 @@ _SCHEMA_PATH = Path(__file__).resolve().parents[2] / "registry" / "_schema.json"
 SourceKind = Literal["fixture", "http-json", "onchain-indexsupply"]
 ReduceOp = Literal["single", "latest", "avg", "min", "max", "null_ratio"]
 ThresholdSource = Literal["signed-appendix", "to-confirm", "provisional"]
+# Why a function carries no threshold. Absent bars used to be explained in long YAML comments,
+# which put quoted contract terms into a public repo and made the manifests unreadable. The
+# reason is data: one of these values, with the narrative kept in the maintainer-local facts file.
+#   no-agreement     no signed agreement has been located for this grant at all
+#   no-signed-bar    the appendix names the metric but agrees no number (often "(to confirm)")
+#   not-in-appendix  an agreement exists, but this metric does not appear in its s3
+#   doc-conflict     the appendix states a bar that contradicts itself
+#   out-of-scope     the agreement explicitly places the measured thing outside the grant
+UnscoredReason = Literal[
+    "no-agreement", "no-signed-bar", "not-in-appendix", "doc-conflict", "out-of-scope"
+]
 
 
 DeriveOp = Literal["value", "diff", "age_seconds", "age_days"]
@@ -53,6 +64,8 @@ class SlaSpec(_Model):
     # Where the number came from. A team passing a bar we invented must not render like a team
     # passing one they signed.
     threshold_source: ThresholdSource = "provisional"
+    # Set only when threshold_value is None; the pair is asserted by tests/test_manifest.py.
+    unscored_reason: UnscoredReason | None = None
     cadence: Cadence
 
 
@@ -88,6 +101,12 @@ class FunctionSpec(_Model):
     # OSO project slug of the party RECEIVING PAYMENT for this work. Not the code's project and
     # not the team's org: those are different things, and one field used to carry all three.
     funded_project_oso_slug: str = ""
+    # `application_ref_id` of the grant in registry/_grants.yaml that PAYS for this metric.
+    # funded_project_oso_slug names the payee, which is not enough when one payee holds two
+    # grants: both zondax.yaml entries read slug `zondax` yet only one of Core Infra and Beryx
+    # funds each. Empty is legal for an entry no grant pays for (the filfox cross-check, whose
+    # slug is `unfunded`) and for drafts staged before an award.
+    grant_ref: str = ""
     # GitHub repositories the funded work covers, as lowercase owner/name -- OSO's GITHUB_REPO
     # artifact identity, so the list joins straight to artifacts_by_project. Empty is honest for
     # work measured through an RPC endpoint, an explorer or a status page.
@@ -137,6 +156,7 @@ def manifest_from_raw(raw: object) -> Manifest:
             category=f.get("category", ""),
             sub_category=f.get("sub_category", ""),
             funded_project_oso_slug=f.get("funded_project_oso_slug", ""),
+            grant_ref=f.get("grant_ref", ""),
             repos=list(f.get("repos") or []),
             sla=SlaSpec(
                 statement=f["sla"]["statement"],
@@ -144,6 +164,7 @@ def manifest_from_raw(raw: object) -> Manifest:
                 threshold_op=(f["sla"].get("threshold") or {}).get("op"),
                 threshold_value=(f["sla"].get("threshold") or {}).get("value"),
                 threshold_source=(f["sla"].get("threshold") or {}).get("source", "provisional"),
+                unscored_reason=f["sla"].get("unscored_reason"),
                 cadence=f["sla"]["cadence"],
             ),
             source=SourceSpec(

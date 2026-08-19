@@ -43,6 +43,9 @@ FIELD_BUCKETS: dict[str, Bucket] = {
     "sub_category": "material",
     # who is paid, and what code the work covers: two facts, two fields, both material
     "funded_project_oso_slug": "material",
+    # WHICH GRANT pays for this metric. Re-pointing it moves the money a reading is attributed
+    # to, which is the definition of changing who is accountable.
+    "grant_ref": "material",
     "repos": "material",
     # --- the commitment
     # Prose restating the SLA. Does not change the number or the bar; a wording fix should not
@@ -52,6 +55,8 @@ FIELD_BUCKETS: dict[str, Bucket] = {
     "sla.threshold_op": "material",
     "sla.threshold_value": "material",
     "sla.threshold_source": "material",  # signed-appendix vs provisional is a real distinction
+    # Why no bar is set. Changing it changes the stated basis for not holding a team to anything.
+    "sla.unscored_reason": "material",
     "sla.cadence": "material",
     # --- where the number comes from
     "source.adapter": "material",

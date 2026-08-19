@@ -21,6 +21,7 @@
           "category": {"enum": ["Blockchain Core & Physical Storage", "Coordination & Hardening", "Coordination & Incentives", "UX/DX", "Storage Market Middleware"]},
           "sub_category": {"type": "string", "minLength": 1},
           "funded_project_oso_slug": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "minLength": 2},
+          "grant_ref": {"type": "string", "pattern": "^APP-[A-Z0-9]+-[A-Z0-9]+$"},
           "repos": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$"}},
           "sla": {
             "type": "object",
@@ -45,7 +46,8 @@
                   }
                 }
               },
-              "cadence": {"enum": ["daily", "weekly", "monthly"]}
+              "cadence": {"enum": ["daily", "weekly", "monthly"]},
+              "unscored_reason": {"enum": ["no-agreement", "no-signed-bar", "not-in-appendix", "doc-conflict", "out-of-scope"]}
             }
           },
           "source": {
