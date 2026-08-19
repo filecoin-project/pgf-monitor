@@ -55,9 +55,20 @@ jobs:
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
           OSO_ORG_ID: ${{ vars.OSO_ORG_ID }}
+          GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
           RUN_TAG: pr${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
+          # This gate provisions a THROWAWAY dataset per metric, so unlike observe.yml it needs the
+          # source credential every time -- OSO only keeps one for a dataset that already exists.
+          # Without it, every authenticated GitHub source reports "cannot be proven here", which is
+          # honest but means the gate silently covers less than a reader assumes. Say so up front.
+          if [ -z "${GH_API_TOKEN:-}" ]; then
+            echo "::warning::GH_API_TOKEN is not set, so any metric declaring auth.secret_ref" \
+                 "cannot be provisioned and will report 'cannot be proven here'. Six GitHub-sourced" \
+                 "metrics are in that state. Set the repository secret to give this gate full" \
+                 "coverage."
+          fi
           rc=0
           while IFS= read -r f; do
             [ -z "$f" ] && continue
