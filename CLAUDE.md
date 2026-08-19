@@ -58,11 +58,16 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   bar is absent, say why with `sla.unscored_reason` (an enum) and keep the reasoning in
   `contracts/<team>.facts.yaml`, which is gitignored. `contracts/` being absent is the normal state
   for a collaborator, so nothing in tests or CI may require it.
-- **The public warehouse surface is FOUR tables, and `docs/public-datasets.md` is what an outside
-  consumer reads.** Beside the two series below, `filpgf_kernel_functions` (the kernel inventory,
-  including functions nothing measures) and `filpgf_kernel_metrics` (one row per SLA entry with its
-  join keys: `kernel_id`, `grant_ref`, `oso_project_slug`, `team`, `state`) are what let anyone slice
-  the readings by team, project, grant or kernel function. Both are DERIVED from `registry/` by
+- **An outside consumer reads `filecoin.filpgf_public.*`, NOT this repo's static models, and
+  `docs/public-datasets.md` is that contract.** The mart (`kernel_functions`, `kernel_metrics`,
+  `timeseries_kernel_sla`, all public-read) is built by UDMs in
+  `insights-private/projects/filecoin/models/` and deployed with that repo's
+  `scripts/deploy_models.py`; every model runs `@daily`, so a registry change reaches the mart
+  within a day. This repo owns only the LANDING tables it feeds:
+  `filpgf_kernel_functions` (the kernel inventory, including functions nothing measures) and
+  `filpgf_kernel_metrics` (one row per SLA entry with its join keys: `kernel_id`, `grant_ref`,
+  `oso_project_slug`, `team`, `state`), beside the two series below. Both are DERIVED from
+  `registry/` by
   `fpm.exports` — regenerate with `scripts/exports.py write`, never hand-edit
   `data/kernel_functions.csv` or `data/kernel_metrics.csv`; `tests/test_exports.py` fails when the
   committed copies disagree with the registry. Keep money, agreement terms and contract identifiers
