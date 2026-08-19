@@ -29,7 +29,10 @@ functions:
   # future real source (e.g. an uptime checker on a known param CID URL) can drop in
   # without renaming the metric.
   - function_id: trusted-setup-param-hosting
-    kernel_function: "Serving Groth16 trusted-setup parameters to every node and SP (go-paramfetch)"
+    kernel_id: groth16-params
+    # No grant pays for the param gateway today, and this entry is a fixture placeholder anyway.
+    # `unfunded` is the honest value: explicit and greppable, not a blank to be filled by guess.
+    funded_project_oso_slug: unfunded
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
@@ -51,11 +54,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): == 1 means "committee attests stewardship
   # was performed this period"; there is nothing to probe.
   - function_id: shared-infra-stewardship
+    kernel_id: infra-stewardship
     origin: oso
     tier: essential
     category: 'Coordination & Hardening'
     sub_category: 'Shared infra stewardship'
-    oso_project_slug: sead-ai
+    funded_project_oso_slug: sead-ai
     sla:
       statement: "Committee attests vendor/access governance, runbooks and workspace stewardship were performed, measured monthly (UNMEASURABLE BY MACHINE; fixture placeholder)"
       metric: stewardship_attestation
@@ -76,11 +80,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): automated checks update this frequently;
   # <= 45 days catches an abandoned page while tolerating a long incident-free stretch.
   - function_id: network-monitoring-status-page
+    kernel_id: network-monitoring-ir
     origin: oso
     tier: essential
     category: 'Coordination & Hardening'
     sub_category: 'Network data & monitoring'
-    oso_project_slug: starboard-ventures   # TODO: confirm operator — funding model lists Starboard as monitoring steward; page itself is Statuspage-hosted
+    funded_project_oso_slug: starboard-ventures   # TODO: confirm operator — funding model lists Starboard as monitoring steward; page itself is Statuspage-hosted
     sla:
       statement: "The public Filecoin status page was updated <= 45 days ago, measured weekly — a live status/monitoring surface is the public face of incident response"
       metric: status_page_updated_age_days

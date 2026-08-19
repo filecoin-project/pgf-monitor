@@ -41,12 +41,12 @@ functions:
   #   address before this threshold is meaningful. reserve_in_usd is the pool's total
   #   value locked in USD.
   - function_id: usdfc-axlusdc-pool-tvl
-    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    kernel_id: open-network-datasets
     origin: karma
     tier: essential
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
-    oso_project_slug: secured-finance
+    funded_project_oso_slug: secured-finance
     sla:
       statement: "The USDFC–axlUSDC liquidity pool holds meaningful depth: GeckoTerminal reserve_in_usd >= 170,000 USD (Phase 1 target; Phase 2 300,000), measured weekly — thin pool liquidity means USDFC cannot be traded at scale"
       metric: usdfc_pool_tvl_usd
@@ -68,12 +68,12 @@ functions:
   #   placeholder is-it-trading floor. volume_usd.h24 is the rolling 24-hour trade volume
   #   in USD, which dlt flattens to attributes__volume_usd__h24.
   - function_id: usdfc-axlusdc-pool-volume
-    kernel_function: "Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards"
+    kernel_id: open-network-datasets
     origin: karma
     tier: essential
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
-    oso_project_slug: secured-finance
+    funded_project_oso_slug: secured-finance
     sla:
       statement: "The USDFC–axlUSDC pool sees real trading flow: GeckoTerminal 24h volume_usd >= 1,000 USD, measured daily — a pool with liquidity but no volume is not serving swaps"
       metric: usdfc_pool_volume_usd

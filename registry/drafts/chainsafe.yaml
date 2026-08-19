@@ -54,12 +54,12 @@ functions:
   # THRESHOLD: PLACEHOLDER — 172800s (48h) = roughly two missed daily cycles given the
   #   observed ~24-28h cadence. Confirm with team.
   - function_id: mainnet-diff-snapshot-freshness
-    kernel_function: "Validated snapshot generation & hosting (~2h cadence)"
+    kernel_id: validated-snapshots
     origin: karma
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Mainnet Infrastructure'
-    oso_project_slug: forest
+    funded_project_oso_slug: forest-chainsafe
     sla:
       statement: "Fresh mainnet DIFF snapshots keep publishing: newest diff snapshot in the archive listing is <= 172800s (48h) old, measured daily"
       metric: diff_snapshot_age_seconds
@@ -82,12 +82,12 @@ functions:
   # THRESHOLD: PLACEHOLDER — 2592000s (30 days) ~= 2-3 missed cycles at the observed
   #   ~11-12 day cadence. Lite is a convenience lane, so wide headroom is intentional. Confirm with team.
   - function_id: mainnet-lite-snapshot-freshness
-    kernel_function: "Validated snapshot generation & hosting (~2h cadence)"
+    kernel_id: validated-snapshots
     origin: karma
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Mainnet Infrastructure'
-    oso_project_slug: forest
+    funded_project_oso_slug: forest-chainsafe
     sla:
       statement: "Fresh mainnet LITE snapshots keep publishing: newest lite snapshot in the archive listing is <= 2592000s (30 days) old, measured daily"
       metric: lite_snapshot_age_seconds
@@ -115,11 +115,12 @@ functions:
   # THRESHOLD: PLACEHOLDER — <= 7 days since the wallet last transacted. An actively-serving
   #   faucet transacts many times per day, so 7 days is a generous "clearly stalled" floor. Confirm with team.
   - function_id: calibnet-faucet-wallet-activity
+    kernel_id: calibnet-miners
     origin: karma
     tier: essential
     category: 'Coordination & Hardening'
     sub_category: 'Testnets - miners'
-    oso_project_slug: forest
+    funded_project_oso_slug: forest-chainsafe
     sla:
       statement: "ChainSafe's calibnet faucet wallet t1lo4ajjyeygqn3lkrw6izwz6aft5chshngs6gjxa keeps dispensing: days since its last on-chain message <= 7, measured daily"
       metric: faucet_days_since_last_message

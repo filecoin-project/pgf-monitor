@@ -5,7 +5,7 @@ Every catalogued kernel function (registry/_kernel.yaml) and the metrics that
 monitor it, from adopted manifests (registry/) plus any pending drafts
 (registry/drafts/). `fixture` sources are placeholders awaiting a real feed.
 
-**16/29 functions are adopted** — a metric in `registry/`, so a team is held to it today, and 16 of those read from a live, non-fixture source. **27/29 are modelled** — adopted or drafted. A metric is credited to the ONE kernel function it names (`kernel_function`, or the sole function in its slot), never to every function sharing a slot.
+**16/29 functions are adopted** — a metric in `registry/`, so a team is held to it today, and 16 of those read from a live, non-fixture source. **27/29 are modelled** — adopted or drafted. A metric is credited to the ONE kernel function its `kernel_id` names, never to every function sharing a slot.
 
 🟢 adopted, live source · 🟡 drafted, or fixture-only · 🔴 nothing yet.
 
@@ -13,11 +13,15 @@ monitor it, from adopted manifests (registry/) plus any pending drafts
 
 ### 🔴 FVM execution engine (deterministic WASM actor execution)
 
+`fvm-execution-engine`
+
 > Shared execution engine that produces gas spent; a divergence here forks execution across all clients. Co-maintained by Lotus and Forest.
 
 _No monitoring entry yet._
 
 ### 🟡 Storage market / miner / power / system / reward / datacap actors
+
+`builtin-actor-suite`
 
 > Storage market, miner, power and reward logic at protocol level. FIPs may propose modifications. Co-maintained by Lotus and Forest.
 
@@ -26,6 +30,8 @@ _No monitoring entry yet._
 | filoz | `release_age_days` (builtin-actors) | api.github.com | draft |
 
 ### 🟡 Proving subsystem - PoRep (StackedDRG sealing), WinningPoSt/WindowPoSt, crypto primitives (BLST, bellperson, neptune)
+
+`proving-subsystem`
 
 > Storage proofs make physical storage trustless and gate block production and sector onboarding; a regression halts proving network-wide.
 
@@ -36,6 +42,8 @@ _No monitoring entry yet._
 
 ### 🟡 GossipSub propagation, Kademlia DHT peer/content discovery, transports (TCP/QUIC) + NAT traversal
 
+`p2p-networking-stack`
+
 > Blocks must propagate within ~30s; precondition for propagation, discovery and every connection - failure threatens consensus.
 
 | team | metric | source | state |
@@ -44,6 +52,8 @@ _No monitoring entry yet._
 | libp2p-networking | `mainnet_avg_seconds_per_epoch` (mainnet-block-propagation-cadence) | filfox.info | draft |
 
 ### 🟢 Distributed randomness beacon (threshold-BLS, League of Entropy)
+
+`distributed-randomness-beacon`
 
 > If the beacon stops, the chain halts instantly and (without months of R&D) irrecoverably. Governance and on-call support required.
 
@@ -55,6 +65,8 @@ _No monitoring entry yet._
 
 ### 🟡 Consensus/validation client: fork-choice, state validation, message pool
 
+`consensus-validation-client`
+
 > Most widely-deployed full node with broadest feature coverage; the client most of the network currently runs.
 
 | team | metric | source | state |
@@ -62,6 +74,8 @@ _No monitoring entry yet._
 | filoz | `avg_days_between_stable_releases` (lotus-consensus-client-release-cadence) | api.github.com | draft |
 
 ### 🟢 Chain sync & state management (snapshot bootstrap, heaviest-chain, RPC)
+
+`chain-sync-state`
 
 > A correct, fast sync path keeps nodes in consensus rather than forking. Read/write surface used by miners, wallets, explorers, RPC providers and FEVM dApps.
 
@@ -77,6 +91,8 @@ _No monitoring entry yet._
 
 ### 🟢 Independent Rust full node (sync, validation, RPC, snapshot export)
 
+`forest-full-node`
+
 > Second production client bounds the blast radius of a Lotus bug - client diversity is a security property; ~30% lighter footprint, efficient snapshots, more performant Eth RPC.
 
 | team | metric | source | state |
@@ -85,6 +101,8 @@ _No monitoring entry yet._
 
 ### 🟡 Block production - WinningPoSt leader election & block assembly
 
+`block-production`
+
 > Without miners running WinningPoSt there is no block production; the chain stops advancing. Majority of block producers run this (70%+).
 
 | team | metric | source | state |
@@ -92,6 +110,8 @@ _No monitoring entry yet._
 | filoz | `mainnet_avg_tipset_interval_seconds` (lotus-miner-winningpost-block-production) | filfox.info | draft |
 
 ### 🟢 Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)
+
+`sealing-pipeline`
 
 > How SPs onboard committed capacity and data onto the network.
 
@@ -102,6 +122,8 @@ _No monitoring entry yet._
 
 ### 🟢 Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility
 
+`proving-scheduler`
+
 > Recurring liveness proofs and block production; missed windows mean fault penalties and power loss.
 
 | team | metric | source | state |
@@ -109,6 +131,8 @@ _No monitoring entry yet._
 | filoz | `avg_blocks_per_tipset` (curio-windowpost-winningpost-scheduler) | filfox.info | adopted |
 
 ### 🟡 Pooled block production (sophon-miner) + distributed sealing cluster (Damocles)
+
+`venus-pooled-mining`
 
 > Independent block-winning and sealing path for Venus SPs - SP-side client diversity. Dominant stack for China-based SPs (~15% of miners).
 
@@ -119,6 +143,8 @@ _No monitoring entry yet._
 
 ### 🟡 EVM + EAM actor
 
+`evm-eam-actors`
+
 > Enables smart contract programmability. Requires keeping shared VM/actors/finality libraries consistent across clients through upgrades. Co-maintained by Lotus, Forest and Fil-B.
 
 | team | metric | source | state |
@@ -126,6 +152,8 @@ _No monitoring entry yet._
 | filoz | `avg_days_between_releases` (evm-eam-actor-maintenance) | api.github.com | draft |
 
 ### 🟢 High-SLA HTTP + gossipsub relays & quarterly resharing
+
+`randomness-relays`
 
 > Keeps randomness reachable and the threshold group healthy as members rotate. Infrastructure and on-call support required.
 
@@ -138,6 +166,8 @@ _No monitoring entry yet._
 
 ### 🟢 Validated snapshot generation & hosting (~2h cadence)
 
+`validated-snapshots`
+
 > New/recovering nodes cannot sync from genesis in reasonable time; fresh snapshots keep operators off bad forks. Forest produces them; Lotus can, with more resources.
 
 | team | metric | source | state |
@@ -148,6 +178,8 @@ _No monitoring entry yet._
 
 ### 🟢 Operation of seed nodes a new peer contacts on startup
 
+`bootstrap-seed-nodes`
+
 > Without reachable bootstrap nodes a fresh node 'starts and just sits there'.
 
 | team | metric | source | state |
@@ -155,6 +187,8 @@ _No monitoring entry yet._
 | chainsafe | `bootstrap_dns_status` (bootstrap-dns-mainnet) | dns.google | adopted |
 
 ### 🟡 Serving Groth16 trusted-setup parameters to every node and SP (go-paramfetch)
+
+`groth16-params`
 
 > The network cannot generate/verify proofs without these present and unaltered; impacts all nodes (verifiers) and miners (sealers and provers).
 
@@ -164,6 +198,8 @@ _No monitoring entry yet._
 
 ### 🟢 Mainnet-realistic testnet for rehearsing every network-version upgrade
 
+`calibnet-upgrade-rehearsal`
+
 > Required rehearsal path that catches consensus-breaking issues before mainnet.
 
 | team | metric | source | state |
@@ -172,6 +208,8 @@ _No monitoring entry yet._
 
 ### 🟡 Vendor/access governance, runbooks, Slack/Workspace/GitHub stewardship
 
+`infra-stewardship`
+
 > Connective infra the ecosystem relies on; reduces systemic and key-person risk.
 
 | team | metric | source | state |
@@ -179,6 +217,8 @@ _No monitoring entry yet._
 | filecoin-infra-misc | `stewardship_attestation` (shared-infra-stewardship) | fixture | draft |
 
 ### 🟢 Calibnet miners (Lotus-Miner / Curio / Venus) for upgrade rehearsal
+
+`calibnet-miners`
 
 > Makes Calibnet a faithful rehearsal; degraded coverage if missing.
 
@@ -190,6 +230,8 @@ _No monitoring entry yet._
 
 ### 🟢 Explorer for Calibration testnet
 
+`calibnet-explorer`
+
 > Supports rehearsal and analysis (need at least one).
 
 | team | metric | source | state |
@@ -198,6 +240,8 @@ _No monitoring entry yet._
 
 ### 🟡 Monitoring, archival access and incident response (Grafana, OpsGenie, IR coordination)
 
+`network-monitoring-ir`
+
 > Observability and rapid response/recovery through upgrades and outages. Critical for network security; any provider can populate it.
 
 | team | metric | source | state |
@@ -205,6 +249,8 @@ _No monitoring entry yet._
 | filecoin-infra-misc | `status_page_updated_age_days` (network-monitoring-status-page) | status.filecoin.io | draft |
 
 ### 🟢 Aggregates Filecoin on/off-chain data into open, queryable datasets and dashboards
+
+`open-network-datasets`
 
 > Prepares and presents network KPI metrics; free, vendor-neutral network data anyone can reuse - no rebuilding their own pipeline.
 
@@ -218,6 +264,8 @@ _No monitoring entry yet._
 
 ### 🟡 Chain ETL, indexing, normalization & parameter matching (BigQuery, Spacescope API)
 
+`chain-etl-spacescope`
+
 > Free, vendor-neutral chain data anyone can reuse - no rebuilding their own pipeline.
 
 | team | metric | source | state |
@@ -226,9 +274,13 @@ _No monitoring entry yet._
 
 ### 🔴 Chain ETL and indexing
 
+`chain-etl-indexing`
+
 _No monitoring entry yet._
 
 ### 🟢 Mainnet block explorer (Lotus archive, indexing, NV maintenance)
+
+`mainnet-explorer`
 
 > Primary accessibility/observability surface for users and SPs.
 
@@ -239,6 +291,8 @@ _No monitoring entry yet._
 
 ### 🟢 Network-wide documentation along with source code availability and source control
 
+`network-documentation`
+
 > Onboarding to the ecosystem.
 
 | team | metric | source | state |
@@ -246,6 +300,8 @@ _No monitoring entry yet._
 | fil-b | `docs_last_commit_age_days` (network-documentation-commit-recency) | api.github.com | adopted |
 
 ### 🟢 System to advertise CID content records
+
+`content-routing-ads`
 
 > An adopted solution for content routing is essential. The network doesn't halt, but it stops being a useful storage network.
 
@@ -256,6 +312,8 @@ _No monitoring entry yet._
 | oif-ipni | `ipni_error_free_ratio` (content-routing-ipni) | cid.contact | adopted |
 
 ### 🟢 Deal-making + PDP + HTTP retrieval
+
+`dealmaking-pdp-retrieval`
 
 > Composable deal interface and hot-storage proving - the demand-side onramp for SPs.
 

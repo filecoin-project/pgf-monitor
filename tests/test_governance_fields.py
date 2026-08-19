@@ -68,9 +68,17 @@ def test_data_selector_is_diffed_and_material():
     )
 
 
-def test_kernel_function_is_diffed():
-    m, m2 = _with_function(kernel_function="Chain ETL and indexing")
-    assert any(c.field_path == "kernel_function" for c in manifest_diff(m, m2))
+def test_kernel_id_is_diffed():
+    m, m2 = _with_function(kernel_id="chain-etl-indexing")
+    assert any(c.field_path == "kernel_id" for c in manifest_diff(m, m2))
+
+
+def test_funded_project_and_repos_are_diffed():
+    """Who is paid and what code is covered are both commitments, so both are goalpost fields."""
+    m, m2 = _with_function(funded_project_oso_slug="someone-else")
+    assert any(c.field_path == "funded_project_oso_slug" for c in manifest_diff(m, m2))
+    m, m3 = _with_function(repos=["filecoin-project/lotus"])
+    assert any(c.field_path == "repos" for c in manifest_diff(m, m3))
 
 
 def test_team_is_diffed():

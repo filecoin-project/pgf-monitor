@@ -29,11 +29,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): observed ~21-day average; <= 60 days flags
   # a stalled release train while tolerating a quiet quarter.
   - function_id: libp2p-release-cadence
+    kernel_id: p2p-networking-stack
     origin: oso
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Networking'
-    oso_project_slug: libp2p
+    funded_project_oso_slug: ipshipyard   # steward of record (requirement_stewards: 'libp2p (IP Shipyard)'); NOT funded in ProPGF 3
+    repos:
+      - libp2p/go-libp2p
     sla:
       statement: "go-libp2p ships a release every 60 days on average (active-maintenance signal), measured monthly — the transport/GossipSub/DHT stack must track upstream fixes"
       metric: libp2p_avg_days_between_releases
@@ -58,11 +61,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): nominal epoch is 30s; <= 45s tolerates
   # normal jitter while still catching a stalled chain.
   - function_id: mainnet-block-propagation-cadence
+    kernel_id: p2p-networking-stack
     origin: oso
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Networking'
-    oso_project_slug: libp2p
+    funded_project_oso_slug: ipshipyard   # steward of record (requirement_stewards: 'libp2p (IP Shipyard)'); NOT funded in ProPGF 3
     sla:
       statement: "Mainnet advances on the ~30s epoch cadence: avg seconds per epoch <= 45, measured daily — blocks only arrive on cadence if GossipSub propagation and peer discovery work"
       metric: mainnet_avg_seconds_per_epoch

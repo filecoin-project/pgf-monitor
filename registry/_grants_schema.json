@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grants"
+  ],
+  "properties": {
+    "grants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "app_ref",
+          "label",
+          "status"
+        ],
+        "properties": {
+          "app_ref": {
+            "type": "string",
+            "pattern": "^APP-[A-Z0-9]+-[A-Z0-9]+$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "funded_project_oso_slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "minLength": 2
+          },
+          "status": {
+            "enum": [
+              "funded",
+              "on-slate-unresolved",
+              "not-funded"
+            ]
+          },
+          "manifest": {
+            "type": "string",
+            "pattern": "^registry/(drafts/)?[a-z0-9-]+\\.yaml$"
+          },
+          "facts": {
+            "type": "string",
+            "pattern": "^contracts/[a-z0-9-]+\\.facts\\.yaml$"
+          },
+          "agreement_doc_id": {
+            "type": "string",
+            "minLength": 10
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -18,6 +18,11 @@
 # network — a proving regression would halt liveness proofs and block production
 # network-wide, so the chain advancing on its ~30s cadence already evidences the proving
 # subsystem indirectly.
+# NO FUNDED MAINTAINER. The committee's own record is explicit: requirement_stewards for
+# proving-subsystem reads "rust-fil-proofs (core; needs a funded maintainer)" with no resolved
+# project, there is no ProPGF 3 application against it and no Batch 2 commitment. So both entries
+# say `unfunded` rather than naming the code's OSO project, which would imply a payee that does
+# not exist. This manifest stays a DRAFT until someone is funded to maintain the subsystem.
 team: proving
 maintainers: ["@TODO-github-handle"]   # team fills in
 x_draft:
@@ -31,11 +36,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): repo is in slow maintenance mode, so
   # <= 120 days flags a genuinely unstaffed quarter without flapping on normal quiet periods.
   - function_id: rust-fil-proofs-maintenance
+    kernel_id: proving-subsystem
     origin: oso
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Proving'
-    oso_project_slug: rust-fil-proofs   # TODO: confirm OSO/oss-directory slug
+    funded_project_oso_slug: unfunded   # TODO: confirm OSO/oss-directory slug
+    repos:
+      - filecoin-project/rust-fil-proofs
     sla:
       statement: "rust-fil-proofs has a commit <= 120 days old, measured monthly — the proving library must stay staffed; a regression here halts proving network-wide"
       metric: proofs_days_since_last_commit
@@ -54,11 +62,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): crypto primitives change rarely, so
   # <= 180 days is a stall detector, not an activity target.
   - function_id: proving-crypto-primitives-maintenance
+    kernel_id: proving-subsystem
     origin: oso
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Proving'
-    oso_project_slug: rust-fil-proofs   # TODO: confirm OSO/oss-directory slug
+    funded_project_oso_slug: unfunded   # TODO: confirm OSO/oss-directory slug
+    repos:
+      - filecoin-project/bellperson
     sla:
       statement: "bellperson (Groth16 prover) has a commit <= 180 days old, measured monthly — the crypto primitives under PoRep/PoSt must remain maintained"
       metric: bellperson_days_since_last_commit

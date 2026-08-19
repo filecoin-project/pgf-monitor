@@ -1,12 +1,12 @@
 """Generate docs/kernel-coverage.md: every catalogued kernel function x who monitors it.
 
 Joins registry/_kernel.yaml against adopted manifests (registry/*.yaml) and drafts
-(registry/drafts/*.yaml) on the EXACT kernel function, resolved the same way
-`fpm.kernel.conformance_error` resolves it: `kernel_function` when set, otherwise the sole
-function in the entry's (tier, category, sub_category) slot. Keying on the triple alone — which
-this script used to do — credits every metric in a shared slot to every function in it: 6 of the
-17 slots are shared, which is how a published 29/29 came out of a registry that exactly covers
-27. An entry that cannot be resolved is reported, never silently spread.
+(registry/drafts/*.yaml) on the kernel function's slug: each SLA names exactly one via `kernel_id`,
+the same rule `fpm.kernel.conformance_error` enforces at the gate. Keying on the
+(tier, category, sub_category) triple, which this script used to do, credits every metric in a
+shared slot to every function in it: 6 of the 17 slots are shared, which is how a published 29/29
+came out of a registry that exactly covers 27. An entry whose id resolves to nothing is reported,
+never silently spread.
 
 Two coverage numbers, because both are real and they are not the same claim:
   * ADOPTED    — the function has a metric in registry/, so some team is held to it today.
@@ -28,37 +28,26 @@ from pathlib import Path
 
 from fpm.drafts import split_draft
 from fpm.governance.allowlist import host_of
-from fpm.kernel import load_kernel
+from fpm.kernel import NON_KERNEL_ID, load_kernel
 from fpm.manifest import load_manifest
 
 OUT = Path("docs/kernel-coverage.md")
 
 
-def kernel_slots(kernel) -> dict[tuple[str, str, str], list[str]]:
-    """(tier, category, sub_category) -> the kernel functions catalogued in that slot."""
-    slots: dict[tuple[str, str, str], list[str]] = defaultdict(list)
-    for e in kernel.entries:
-        slots[(e.tier, e.category, e.sub_category)].append(e.function)
-    return slots
-
-
-def resolve_kernel_function(fn, slots) -> tuple[str | None, str | None]:
-    """The exact kernel function an entry evidences, or (None, why not).
+def resolve_kernel_id(fn, ids: set[str]) -> tuple[str | None, str | None]:
+    """The kernel function an entry evidences, by slug, or (None, why not).
 
     Deliberately the same rule as `fpm.kernel.conformance_error`, which the PR gate already
-    enforces: if the gate can name the one function an entry is about, so can this.
+    enforces. `NON_KERNEL_ID` resolves to nothing on purpose: the metric is real, it is simply not
+    evidence for any catalogued kernel function, so it must inflate no coverage number.
     """
-    slot = (fn.tier, fn.category, fn.sub_category)
-    names = slots.get(slot)
-    if not names:
-        return None, f"{slot} is not a catalogued kernel slot"
-    if fn.kernel_function:
-        if fn.kernel_function in names:
-            return fn.kernel_function, None
-        return None, f"kernel_function {fn.kernel_function!r} is not in slot {slot}"
-    if len(names) == 1:
-        return names[0], None
-    return None, f"slot {slot} maps to {len(names)} kernel functions and kernel_function is unset"
+    if not fn.kernel_id:
+        return None, "kernel_id is unset"
+    if fn.kernel_id == NON_KERNEL_ID:
+        return None, None
+    if fn.kernel_id in ids:
+        return fn.kernel_id, None
+    return None, f"kernel_id {fn.kernel_id!r} is not in the kernel inventory"
 
 
 def collect(registry_dir: Path = Path("registry"), drafts_dir: Path | None = None):
@@ -77,18 +66,19 @@ def collect(registry_dir: Path = Path("registry"), drafts_dir: Path | None = Non
     """
     drafts_dir = registry_dir / "drafts" if drafts_dir is None else drafts_dir
     kernel = load_kernel()
-    slots = kernel_slots(kernel)
-    entries = defaultdict(list)  # kernel function -> [entry]
+    ids = {e.id for e in kernel.entries}
+    entries = defaultdict(list)  # kernel id -> [entry]
     # (team, function_id, metric) -> {kernel function -> entry}. The kernel function is part of
     # the identity, not a property of the record: a draft may move a metric between functions.
     index: dict[tuple[str, str, str], dict[str, dict]] = defaultdict(dict)
     unresolved = []  # (team, function_id, reason)
 
     def add(team: str, fn, state: str) -> None:
-        name, why = resolve_kernel_function(fn, slots)
+        name, why = resolve_kernel_id(fn, ids)
         if name is None:
-            unresolved.append((team, fn.function_id, why))
-            return
+            if why is not None:
+                unresolved.append((team, fn.function_id, why))
+            return  # non-kernel: real metric, no kernel function to credit
         host = host_of(fn.source.base_url) if fn.source.kind == "http-json" else "fixture"
         by_function = index[(team, fn.function_id, fn.sla.metric)]
         seen = by_function.get(name)
@@ -110,6 +100,10 @@ def collect(registry_dir: Path = Path("registry"), drafts_dir: Path | None = Non
             "metric": fn.sla.metric,
             "host": host or "?",
             "state": state,
+            # who is paid, and what code the work covers: the two facts `oso_project_slug` used
+            # to conflate. Both ride the payload so the warehouse mapping can be built from it.
+            "funded_project": fn.funded_project_oso_slug,
+            "repos": sorted(fn.repos),
         }
         by_function[name] = entry
         entries[name].append(entry)
@@ -132,7 +126,7 @@ def collect(registry_dir: Path = Path("registry"), drafts_dir: Path | None = Non
 
 def counts(entries, kernel) -> dict:
     """The coverage numbers, each named for exactly what it counts."""
-    names = [e.function for e in kernel.entries]
+    names = [e.id for e in kernel.entries]
     adopted = sum(1 for n in names if any(x["state"] == "adopted" for x in entries.get(n, [])))
     with_drafts = sum(1 for n in names if entries.get(n))
     live = sum(
@@ -159,8 +153,7 @@ def render() -> str:
         f"**{c['adopted']}/{n} functions are adopted** — a metric in `registry/`, so a team is "
         f"held to it today, and {c['live']} of those read from a live, non-fixture source. "
         f"**{c['with_drafts']}/{n} are modelled** — adopted or drafted. A metric is credited to "
-        "the ONE kernel function it names (`kernel_function`, or the sole function in its slot), "
-        "never to every function sharing a slot.",
+        "the ONE kernel function its `kernel_id` names, never to every function sharing a slot.",
         "",
         "🟢 adopted, live source · 🟡 drafted, or fixture-only · 🔴 nothing yet.",
         "",
@@ -170,10 +163,10 @@ def render() -> str:
         if e.tier != cur_tier:
             cur_tier = e.tier
             lines += [f"## {e.tier.upper()}", ""]
-        matches = entries.get(e.function, [])
+        matches = entries.get(e.id, [])
         adopted_live = [m for m in matches if m["state"] == "adopted" and m["host"] != "fixture"]
         mark = "🟢" if adopted_live else ("🟡" if matches else "🔴")
-        lines += [f"### {mark} {e.function}", ""]
+        lines += [f"### {mark} {e.function}", "", f"`{e.id}`", ""]
         if e.value:
             lines += [f"> {e.value}", ""]
         if matches:
@@ -188,10 +181,10 @@ def render() -> str:
             lines += ["_No monitoring entry yet._", ""]
     if unresolved:
         lines += [
-            "## Entries that name no single kernel function",
+            "## Entries whose kernel_id resolves to nothing",
             "",
-            "These are counted toward NOTHING — the generator will not spread a metric across a",
-            "shared slot. Set `kernel_function` to the exact inventory name to place them.",
+            "These are counted toward NOTHING. Set `kernel_id` to an id in registry/_kernel.yaml,",
+            "or to `non-kernel` if the inventory genuinely does not name what the metric measures.",
             "",
             "| team | function_id | why |",
             "|---|---|---|",
@@ -237,20 +230,24 @@ def coverage_json() -> dict:
     functions = []
     for e in kernel.entries:
         payload_entries = []
-        for x in entries.get(e.function, []):
+        for x in entries.get(e.id, []):
             item = {
                 "team": x["team"],
                 "function_id": x["function_id"],
                 "metric": x["metric"],
                 "host": x["host"],
                 "state": x["state"],
+                "funded_project": x["funded_project"],
                 "origin": origins.get((x["team"], x["function_id"]), "oso"),
             }
+            if x["repos"]:
+                item["repos"] = x["repos"]
             if x.get("pending_draft"):
                 item["pending_draft"] = True
             payload_entries.append(item)
         functions.append(
             {
+                "id": e.id,
                 "tier": e.tier,
                 "category": e.category,
                 "sub_category": e.sub_category,

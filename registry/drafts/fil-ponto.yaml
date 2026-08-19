@@ -64,12 +64,12 @@ functions:
   #   whether that is the intended shape, or whether it should only be evaluated from the M1
   #   due date (2026-12-31) onward.
   - function_id: cuzk-upstream-prs
-    kernel_function: "Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)"
+    kernel_id: sealing-pipeline
     origin: karma
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    oso_project_slug: filponto
+    funded_project_oso_slug: filponto
     sla:
       statement: "Cuzk SP improvements ported into Lotus Miner: count of cuzk PRs merged into filecoin-project/lotus during the grant term (2026-10-01 to 2027-03-31) >= 1, measured monthly"
       metric: cuzk_upstream_prs

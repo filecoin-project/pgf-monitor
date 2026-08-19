@@ -7,9 +7,10 @@ from fpm.manifest import manifest_from_raw
 from fpm.report.contract import build_contract
 
 
-def _fn(fid, tier, sub, metric, *, kernel_function=""):
+def _fn(fid, tier, sub, metric, *, kernel_id="chain-sync-state"):
     fn = {
         "function_id": fid,
+        "funded_project_oso_slug": "drand",
         "tier": tier,
         "category": "Blockchain Core & Physical Storage",
         "sub_category": sub,
@@ -28,8 +29,8 @@ def _fn(fid, tier, sub, metric, *, kernel_function=""):
             "extract": {"column": "c"},
         },
     }
-    if kernel_function:
-        fn["kernel_function"] = kernel_function
+    if kernel_id:
+        fn["kernel_id"] = kernel_id
     return fn
 
 

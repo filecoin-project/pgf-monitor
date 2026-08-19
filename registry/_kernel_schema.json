@@ -10,8 +10,9 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["tier", "category", "sub_category", "function"],
+        "required": ["id", "tier", "category", "sub_category", "function"],
         "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "minLength": 2, "maxLength": 64},
           "tier": {"enum": ["irreplaceable", "essential", "important", "nice-to-have"]},
           "category": {"enum": ["Blockchain Core & Physical Storage", "Coordination & Hardening", "Coordination & Incentives", "UX/DX", "Storage Market Middleware"]},
           "sub_category": {"type": "string", "minLength": 1},

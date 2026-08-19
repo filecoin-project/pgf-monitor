@@ -17,4 +17,4 @@ def test_uncatalogued_triple_fails_gate():
     head.functions[0].sub_category = "made-up-subcat"
     ok, md = validate_manifest(None, head, {"api.llama.fi"}, AS_OF)
     assert ok is False
-    assert "not a catalogued kernel slot" in md
+    assert "sits in slot" in md

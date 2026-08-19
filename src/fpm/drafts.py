@@ -30,7 +30,7 @@ def promotion_problems(manifest: Manifest, kernel: Kernel, allowlist: set[str]) 
     """Everything the PR gate would reject, in one list. Empty = promotable as-is."""
     problems: list[str] = []
     for fn in manifest.functions:
-        err = conformance_error(fn.tier, fn.category, fn.sub_category, kernel, fn.kernel_function)
+        err = conformance_error(fn.tier, fn.category, fn.sub_category, kernel, fn.kernel_id)
         if err is not None:
             problems.append(f"{fn.function_id}: {err}")
         if fn.transform is not None:

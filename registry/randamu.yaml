@@ -10,11 +10,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): <= 2 rounds allows one round of propagation slack
   # on a mirror (60s at the 30s beacon period), vs <= 1 on the primary relay.
   - function_id: drand-relay-mirror-liveness
+    kernel_id: randomness-relays
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
-    oso_project_slug: drand
+    funded_project_oso_slug: drand
     sla:
       statement: "An independent drand HTTP relay (Cloudflare) stays in sync: expected - current <= 2 rounds, measured daily — randomness must be reachable even if the primary relay fails"
       metric: relay_mirror_round_lag
@@ -35,11 +36,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): <= 20 rounds (60s on the 3s chain) tolerates
   # fetch-vs-transform timing noise while still failing any relay more than a minute stale.
   - function_id: drand-relay-quicknet-freshness
+    kernel_id: randomness-relays
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
-    oso_project_slug: drand
+    funded_project_oso_slug: drand
     sla:
       statement: "Randamu relay mirror serves fresh quicknet rounds: wall-clock expected round minus served round <= 20 rounds (60s), measured daily"
       metric: relay_quicknet_round_lag
@@ -59,11 +61,12 @@ functions:
   # The randomness beacon itself: lag on the primary drand relay's beacon (the irreplaceable
   # randomness function that Filecoin leader election and block validation depend on).
   - function_id: randomness-beacon
+    kernel_id: distributed-randomness-beacon
     origin: oso
     tier: irreplaceable
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
-    oso_project_slug: drand
+    funded_project_oso_slug: drand
     sla:
       statement: "drand beacon relay not lagging: expected - current <= 1 round, measured daily"
       metric: beacon_round_lag
@@ -82,11 +85,12 @@ functions:
   # data_selector pins the root status object so the fetch doesn't descend into the nested arrays.
   # THRESHOLD (placeholder, confirm with team): indicator maps none -> 0, minor/major/critical -> 1.
   - function_id: drand-relay-statuspage
+    kernel_id: randomness-relays
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
-    oso_project_slug: drand
+    funded_project_oso_slug: drand
     sla:
       statement: "drand's own status page reports no active relay incident (status indicator 'none'), measured daily — the operator-reported health of the HTTP relay network Filecoin SPs consume randomness from"
       metric: statuspage_impact_level
@@ -108,11 +112,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): <= 45 days average between releases as a starting
   # point, pending the team's committed cadence.
   - function_id: drand-release-cadence
+    kernel_id: randomness-relays
     origin: karma
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Randomness'
-    oso_project_slug: drand
+    funded_project_oso_slug: drand
+    repos:
+      - drand/drand
     sla:
       statement: "drand ships a software-stack release at least every 45 days on average (active-maintenance signal), measured monthly"
       metric: avg_days_between_releases

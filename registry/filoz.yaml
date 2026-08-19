@@ -18,12 +18,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): ~25d observed avg release cadence; 45 leaves
   # ~2x headroom.
   - function_id: curio-sealing-release-cadence
-    kernel_function: "Sealing pipeline (PC1/PC2/Commit, SupraSeal, Snap)"
+    kernel_id: sealing-pipeline
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    oso_project_slug: curio-filecoin-project
+    funded_project_oso_slug: filozone
+    repos:
+      - filecoin-project/curio
     sla:
       statement: "Curio ships a release at least every 45 days on average (sealing-pipeline maintenance signal), measured monthly"
       metric: avg_days_between_releases
@@ -48,12 +50,12 @@ functions:
   # elected winners are failing to submit blocks (WinningPoSt/scheduler trouble across the SP
   # fleet).
   - function_id: curio-windowpost-winningpost-scheduler
-    kernel_function: "Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility"
+    kernel_id: proving-scheduler
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    oso_project_slug: curio-filecoin-project
+    funded_project_oso_slug: filozone
     sla:
       statement: "Win-count health: network average blocks per tipset >= 4.5 (of 5 expected), measured daily"
       metric: avg_blocks_per_tipset
@@ -76,12 +78,12 @@ functions:
   # THRESHOLD (placeholder, confirm with team): observed ~1032 active proof sets; >= 500
   # asserts PDP proving stays in production at roughly half current scale.
   - function_id: curio-pdp-active-proofsets
-    kernel_function: "Deal-making + PDP + HTTP retrieval"
+    kernel_id: dealmaking-pdp-retrieval
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Block Production (mining)'
-    oso_project_slug: curio-filecoin-project
+    funded_project_oso_slug: filozone
     sla:
       statement: "PDP live on mainnet: active proof sets >= 500, measured daily"
       metric: pdp_active_proof_sets

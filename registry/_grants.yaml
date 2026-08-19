@@ -1,0 +1,203 @@
+# The grant bridge: Karma application id <-> OSO project slug <-> the files that instrument it.
+#
+# One row per ProPGF grant on the committee slate, plus rows for applications we drafted against
+# that were never funded. Validated against _grants_schema.json; loaded by src/fpm/grants.py.
+#
+# WHY THIS FILE EXISTS. Three sources each held a fragment of this mapping and none was
+# authoritative:
+#   * the slate in the warehouse (funding_model_static.decisions, csnap-% events at the latest
+#     snapshot) has app_ref, amount, and an identity-resolved slug that is often a PERSON -- the
+#     Curio grant reads "Reiersen" there;
+#   * a _LABEL dict inside dashboards/propgf-kernel-health.py mapped app_ref to the
+#     committee-facing project name, and that correction lived nowhere else;
+#   * contracts/<team>.facts.yaml carries app_ref + contract terms, one file per team.
+# None of them could express a project holding two grants (zondax: Core Infra and Beryx;
+# reiers-filecoin: Curio and Plumbline), so "is this grant instrumented?" had no answer.
+#
+# MONEY IS NOT HERE, deliberately. The Curio grant reads $300,000 on the slate, $320,000 + 67,200
+# FIL in its signed Exhibit B, and 213,332 in its facts file (the through-December tranches). A
+# fourth copy would be a fourth number to disagree with. The facts file is where a reconciled
+# figure belongs.
+#
+# `funded_project_oso_slug` is the payee as named in the SIGNED AGREEMENT, not as resolved by the
+# slate's applicant_identity: for Curio the agreement is addressed "Dear Filoz Team" and signed
+# "Blueshift Foundation Filoz", so the slug is filozone even though the slate says reiers-filecoin.
+grants:
+  - app_ref: APP-P3NAPR7O-TSQ67Q
+    label: Curio (FilOz)
+    funded_project_oso_slug: filozone
+    status: funded
+    manifest: registry/filoz.yaml
+    facts: contracts/filoz.facts.yaml
+    agreement_doc_id: 1wdQmU721v0zcyj0fQ4JxLRl8xI7zftfs
+    note: >-
+      Slate applicant_identity resolves this to reiers-filecoin (a person); the signed agreement
+      is addressed to the FilOz Team. Its Appendix 1 s3 thresholds all read "(to confirm)".
+
+  - app_ref: APP-O66TN87V-3MDZFT
+    label: IPNI (OIF)
+    funded_project_oso_slug: ipni
+    status: funded
+    manifest: registry/oif-ipni.yaml
+    facts: contracts/oif-ipni.facts.yaml
+    agreement_doc_id: 1LSw0hk1i1z22wg03kSkGM3753IKYRCAK
+
+  - app_ref: APP-P0UD8I92-78VVRM
+    label: Forest (ChainSafe)
+    funded_project_oso_slug: forest-chainsafe
+    status: funded
+    manifest: registry/chainsafe.yaml
+    facts: contracts/chainsafe.facts.yaml
+    agreement_doc_id: 193C2hY7K8sN-WbgpSYfYino1YarMy3qS
+    note: >-
+      chainsafe.yaml instruments BOTH ChainSafe grants (see APP-VQC3PIBY-G2UDZJ), so its entries
+      need per-metric grant attribution. The team rewrote s3: 2 new metrics, 4 of ours absent.
+
+  - app_ref: APP-OFZ5ILTO-QC1XCM
+    label: Filecoin Docs (FIL-B)
+    funded_project_oso_slug: fil-builders
+    status: funded
+    manifest: registry/fil-b.yaml
+    facts: contracts/fil-b.facts.yaml
+    agreement_doc_id: 1tSOPovqsA0iZ1vBfc0Hk8_NunpbF8xi0
+
+  - app_ref: APP-WVTOW236-LUGH7Y
+    label: Zondax Core Infra
+    funded_project_oso_slug: zondax
+    status: funded
+    manifest: registry/zondax.yaml
+    facts: contracts/zondax.facts.yaml
+    note: no Batch 3 agreement found on the Drive. zondax.yaml also instruments Beryx.
+
+  - app_ref: APP-0QLIOMS2-JSK1EM
+    label: Filecoin Data Portal
+    funded_project_oso_slug: filecoin-data-portal-davidgasquez
+    status: funded
+    manifest: registry/filecoin-data-portal.yaml
+    note: >-
+      No facts file and no signed agreement on the Drive (only a June dossier), so `fpm contract`
+      cannot render an appendix for it yet.
+
+  - app_ref: APP-9PTCWEQL-HVKGV8
+    label: FIL Ponto
+    funded_project_oso_slug: filponto
+    status: funded
+    manifest: registry/drafts/fil-ponto.yaml
+    facts: contracts/fil-ponto.facts.yaml
+    agreement_doc_id: 1O5sf4rXPsgGUu_DY_UHzERPrq_7MTmT4
+    note: >-
+      Funded but DRAFT ONLY: no adopted metric, so nothing is scored. Its signed s3 is empty by
+      design (nothing measurable was agreed yet).
+
+  - app_ref: APP-Z1L7URG7-TJ3G5D
+    label: USDFC (Secured Finance)
+    funded_project_oso_slug: secured-finance
+    status: funded
+    manifest: registry/secured-finance.yaml
+    facts: contracts/secured-finance.facts.yaml
+    agreement_doc_id: 1YzUQqPK0yQeaYrbF5jvjD0va2PFpS6Ld
+    note: >-
+      The team replaced s3 wholesale in a later copy (1Dtm1dvEQH53EgpyQC2ZYJ5WqyUcgqKK5gHNoM4e37V4,
+      kenji@): neither of our 2 adopted metrics appears in it. Unreconciled.
+
+  - app_ref: APP-RRMZE7XC-XAVG4W
+    label: Goldsky
+    funded_project_oso_slug: goldsky
+    status: funded
+    manifest: registry/goldsky.yaml
+    facts: contracts/goldsky.facts.yaml
+    note: no Batch 3 agreement found on the Drive.
+
+  - app_ref: APP-KOZT1PS1-T25XTE
+    label: drand (Randamu)
+    funded_project_oso_slug: drand
+    status: funded
+    manifest: registry/randamu.yaml
+    facts: contracts/randamu.facts.yaml
+    agreement_doc_id: 1KAG8of4vY0KXDAqWvWtu6BVCuLMZDBCt
+    note: registry and doc s3 match exactly (5 metrics).
+
+  - app_ref: APP-ZGCSXHWL-8PJG01
+    label: Beryx (Zondax)
+    funded_project_oso_slug: zondax
+    status: funded
+    manifest: registry/zondax.yaml
+    facts: contracts/beryx.facts.yaml
+    note: >-
+      Second Zondax grant. Shares zondax.yaml with Core Infra, so neither grant's metrics can be
+      told apart today. No agreement on the Drive.
+
+  - app_ref: APP-U5CX297Z-XKDQDZ
+    label: Plumbline (calibnet)
+    funded_project_oso_slug: reiers-filecoin
+    status: funded
+    manifest: registry/plumbline.yaml
+    facts: contracts/plumbline.facts.yaml
+    agreement_doc_id: 1tiKERnsbxxerjmMac8AgZK968IsNtY2r
+    note: >-
+      Recipient is TSE Reiersen (Org. 929 074 912) per the signed agreement; registry and doc s3
+      match exactly (calibnet_miner_qap_share < 0.3334, weekly).
+
+  - app_ref: APP-ICVR43KL-H0P3K6
+    label: Ankr
+    funded_project_oso_slug: ankr-network
+    status: funded
+    manifest: registry/ankr.yaml
+    facts: contracts/ankr.facts.yaml
+    agreement_doc_id: 14ORv_PCkvT8N47mif1kwchEs6y2fZZmZ
+    note: >-
+      Newest agreement copy lives OUTSIDE the Batch 3 folder; the in-folder copy
+      (13KCGNKGmb06ZCosMA4HWDs67Prz_hbAD) is stale. The team expanded s3 from 2 to 5 metrics and
+      added a null-round exemption we do not implement. Unreconciled.
+
+  - app_ref: APP-P706QNLF-NLQPG5
+    label: Chain.Love
+    funded_project_oso_slug: chain-love
+    status: funded
+    manifest: registry/chain-love.yaml
+    facts: contracts/chain-love.facts.yaml
+    agreement_doc_id: 1u_7hLjXMXks5j6x8ISDOqp9e-l_hdnkz
+
+  - app_ref: APP-VQC3PIBY-G2UDZJ
+    label: Infra Services (ChainSafe)
+    funded_project_oso_slug: filecoin-community-services-chainsafe
+    status: funded
+    manifest: registry/chainsafe.yaml
+    note: >-
+      The second ChainSafe grant (snapshots, faucet, bootstrap nodes). No facts file and no
+      agreement on the Drive; its metrics currently sit in chainsafe.yaml under the Forest grant's
+      slug, so the two grants are indistinguishable.
+
+  - app_ref: APP-J8CF3XJY-CG03HL
+    label: Blockscout
+    funded_project_oso_slug: blockscout
+    status: funded
+    manifest: registry/blockscout.yaml
+    facts: contracts/blockscout.facts.yaml
+    agreement_doc_id: 1dotjw_iNbzqlSzWZ4cXWIfHMPzrX3C43
+    note: >-
+      The doc's s3 lists two endpoints and NO thresholds, so our 3 metrics are ProPGF-proposed
+      rather than agreed. One of them reads filfox, a third party.
+
+  - app_ref: APP-US5QDXQP-FOCBY4
+    label: Pyth Network
+    status: on-slate-unresolved
+    note: >-
+      On the slate with no committed amount, no resolved OSO project, and no manifest. The Pyth
+      FIL/USD feed is referenced only in registry comments.
+
+  # --- applications we drafted against that were never funded. Kept so the facts files on disk
+  # are all accounted for, and so a later round can pick them up.
+  - app_ref: APP-8SSKSC9X-NYY1GT
+    label: js-libp2p (volunteer maintainers)
+    funded_project_oso_slug: libp2p
+    status: not-funded
+    facts: contracts/js-libp2p.facts.yaml
+    agreement_doc_id: 1d0OZQQ-IY0xZ_SH-X8uqC1NAAtbpW4IS
+    note: an agreement doc exists on the Drive but the slate carries no commitment.
+
+  - app_ref: APP-UEB8YF3J-9QMLS2
+    label: SynapS3
+    status: not-funded
+    facts: contracts/synaps3.facts.yaml
+    note: no OSO project, no commitment on the slate.

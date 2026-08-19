@@ -30,12 +30,14 @@ functions:
   # THRESHOLD (placeholder, confirm with team): <= 90 days flags an abandoned indexer
   # (which breaks on the next network upgrade) while tolerating quiet inter-upgrade periods.
   - function_id: lily-etl-maintenance
-    kernel_function: "Chain ETL, indexing, normalization & parameter matching (BigQuery, Spacescope API)"
+    kernel_id: chain-etl-spacescope
     origin: oso
     tier: essential
     category: 'Coordination & Incentives'
     sub_category: 'Network data & monitoring'
-    oso_project_slug: starboard-ventures   # TODO: confirm — funding model lists Starboard as Lily steward
+    funded_project_oso_slug: starboard-ventures   # TODO: confirm — funding model lists Starboard as Lily steward
+    repos:
+      - filecoin-project/lily
     sla:
       statement: "Lily has a commit <= 90 days old, measured monthly — the chain ETL/indexer must track network upgrades or the open datasets it feeds go stale"
       metric: lily_days_since_last_commit
