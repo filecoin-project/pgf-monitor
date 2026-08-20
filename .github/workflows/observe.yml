@@ -71,17 +71,27 @@ jobs:
             ${{ inputs.dry_run && '--dry-run' || '' }} \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
+      # The two structural exports are DERIVED from registry/, so regenerate before committing
+      # rather than trusting whoever last touched a manifest to have run it. Cheap, and it means
+      # the published mapping cannot lag the registry by longer than a night.
+      - name: Regenerate the structural exports
+        if: ${{ !inputs.dry_run }}
+        run: uv run python -m scripts.exports write
+
       - name: Commit the day's readings
         if: ${{ !inputs.dry_run }}
         run: |
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- data/observations.csv data/thresholds.csv; then
-            echo "no change to data/observations.csv or data/thresholds.csv"
+          CSVS="data/observations.csv data/thresholds.csv data/kernel_functions.csv data/kernel_metrics.csv"
+          # shellcheck disable=SC2086  # deliberate word-splitting into a pathspec list
+          if git diff --quiet -- $CSVS; then
+            echo "no change to any published CSV"
             exit 0
           fi
-          git add data/observations.csv data/thresholds.csv
+          # shellcheck disable=SC2086
+          git add $CSVS
           git commit -m "chore(observations): readings and thresholds for $(date -u +%F)"
           # A concurrent merge to main between checkout and push is normal, not an error.
           git pull --rebase --autostash origin "${{ github.ref_name }}"
@@ -108,3 +118,14 @@ jobs:
           set -euo pipefail
           uv run python scripts/observations.py upload-thresholds --oso-org "${{ vars.OSO_ORG_ID }}"
           uv run python scripts/observations.py upload --oso-org "${{ vars.OSO_ORG_ID }}"
+
+      # The structural half of the same public surface: filpgf_kernel_functions (the inventory,
+      # including functions nothing measures yet) and filpgf_kernel_metrics (one row per SLA entry
+      # with its join keys). Karma and anyone else needs these to slice the readings by team,
+      # project, grant or kernel function -- before they existed the mapping was only reachable as
+      # a JSON literal embedded in our own notebook.
+      - name: Republish the structural exports to OSO
+        if: ${{ !inputs.dry_run }}
+        env:
+          OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
+        run: uv run python -m scripts.exports upload --oso-org "${{ vars.OSO_ORG_ID }}"

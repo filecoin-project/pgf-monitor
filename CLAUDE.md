@@ -18,6 +18,8 @@ uv run fpm observe [teams...] [--as-of DATE] [--dry-run] [--live-oso --oso-org U
 uv run fpm report <team> --link URL [--intent "..."] [--out FILE]   # draft an entry from a URL
 uv run fpm land --store DIR --oso-org UUID [--public-name N --private-name N]
 uv run fpm contract <team> [--facts FILE] [--out FILE]   # render a grant contract from manifest + contracts/<team>.facts.yaml
+uv run python -m scripts.exports write                  # regenerate data/kernel_{functions,metrics}.csv from registry/
+uv run python -m scripts.exports upload --oso-org UUID  # regenerate, then republish both public static models
 scripts/demo_project_flow.sh / scripts/demo_reviewer_flow.sh        # offline end-to-end demos
 ```
 
@@ -56,6 +58,20 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   bar is absent, say why with `sla.unscored_reason` (an enum) and keep the reasoning in
   `contracts/<team>.facts.yaml`, which is gitignored. `contracts/` being absent is the normal state
   for a collaborator, so nothing in tests or CI may require it.
+- **An outside consumer reads `filecoin.filpgf_public.*`, NOT this repo's static models, and
+  `docs/public-datasets.md` is that contract.** The mart (`kernel_functions`, `kernel_metrics`,
+  `timeseries_kernel_sla`, all public-read) is built by UDMs in
+  `insights-private/projects/filecoin/models/` and deployed with that repo's
+  `scripts/deploy_models.py`; every model runs `@daily`, so a registry change reaches the mart
+  within a day. This repo owns only the LANDING tables it feeds:
+  `filpgf_kernel_functions` (the kernel inventory, including functions nothing measures) and
+  `filpgf_kernel_metrics` (one row per SLA entry with its join keys: `kernel_id`, `grant_ref`,
+  `oso_project_slug`, `team`, `state`), beside the two series below. Both are DERIVED from
+  `registry/` by
+  `fpm.exports` — regenerate with `scripts/exports.py write`, never hand-edit
+  `data/kernel_functions.csv` or `data/kernel_metrics.csv`; `tests/test_exports.py` fails when the
+  committed copies disagree with the registry. Keep money, agreement terms and contract identifiers
+  out of them: `grant_ref` is safe (Karma issues it publicly), what a grant is worth is not.
 - `data/observations.csv` (values) and `data/thresholds.csv` (the bar as it stood that day) are
   the system of record for the time series — OSO's `filpgf_sla_observations` and
   `filpgf_sla_thresholds` are full-table republishes of them. Never hand-edit either, and never
@@ -118,4 +134,5 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 detectors, synthesize, pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
 `tests/` mirrors it · `registry/` the trust anchor · `fixtures/` offline responses ·
 `dashboards/propgf-kernel-health.py` (marimo, `uv sync --extra dashboards`) ·
-`docs/` guides (the grant-commitments appendix + per-plan design docs are gitignored, local only).
+`docs/` guides (`public-datasets.md` is the consumer-facing contract; the grant-commitments
+appendix + per-plan design docs are gitignored, local only).
