@@ -25,8 +25,19 @@ ThresholdSource = Literal["signed-appendix", "to-confirm", "provisional"]
 #   not-in-appendix  an agreement exists, but this metric does not appear in its s3
 #   doc-conflict     the appendix states a bar that contradicts itself
 #   out-of-scope     the agreement explicitly places the measured thing outside the grant
+#   contract-not-executed
+#                    the appendix DOES state a number, but the agreement carrying it is not
+#                    executed, so nobody has yet promised it. Distinct from no-signed-bar, which
+#                    means no number was ever agreed: this bar exists on paper and is not yet
+#                    binding, so the number stays recorded in the facts file and the metric
+#                    renders measured-but-unscored until the contract is countersigned.
 UnscoredReason = Literal[
-    "no-agreement", "no-signed-bar", "not-in-appendix", "doc-conflict", "out-of-scope"
+    "no-agreement",
+    "no-signed-bar",
+    "not-in-appendix",
+    "doc-conflict",
+    "out-of-scope",
+    "contract-not-executed",
 ]
 
 

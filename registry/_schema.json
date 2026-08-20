@@ -47,7 +47,7 @@
                 }
               },
               "cadence": {"enum": ["daily", "weekly", "monthly"]},
-              "unscored_reason": {"enum": ["no-agreement", "no-signed-bar", "not-in-appendix", "doc-conflict", "out-of-scope"]}
+              "unscored_reason": {"enum": ["no-agreement", "no-signed-bar", "not-in-appendix", "doc-conflict", "out-of-scope", "contract-not-executed"]}
             }
           },
           "source": {
