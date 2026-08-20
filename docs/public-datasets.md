@@ -9,7 +9,7 @@ through, granted public read and queryable through the OSO API with any API key.
 
 | table | one row per | rows |
 |---|---|---|
-| `filecoin.filpgf_public.kernel_timeseries_sla_by_project` | reading: day × team × function × metric | 673 |
+| `filecoin.filpgf_public.kernel_timeseries_metrics_by_project` | reading: day × team × function × metric | 673 |
 | `filecoin.filpgf_public.kernel_functions` | kernel function in the inventory | 31 |
 
 Every fact about a reading rides on the reading — what it is evidence for, who is paid for it, and
@@ -37,7 +37,7 @@ against the landing tables.
 ```sql
 SELECT grant_ref, team, project_display_name, kernel_function, tier,
        metric_name, sample_date, amount
-FROM filecoin.filpgf_public.kernel_timeseries_sla_by_project
+FROM filecoin.filpgf_public.kernel_timeseries_metrics_by_project
 WHERE grant_ref = 'APP-P706QNLF-NLQPG5'
 ORDER BY metric_name, sample_date
 ```
@@ -48,7 +48,7 @@ and `CAST(observed_at AS DATE)` if you need date arithmetic.
 
 ## What each column is for
 
-On every row of `kernel_timeseries_sla_by_project`:
+On every row of `kernel_timeseries_metrics_by_project`:
 
 - **`grant_ref`** — the Karma application id (`APP-…`) of the grant that PAYS for this metric. This
   is the key to use when rendering against a grant, and it is not the same thing as the team: one

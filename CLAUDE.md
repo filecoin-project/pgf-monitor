@@ -60,7 +60,7 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   for a collaborator, so nothing in tests or CI may require it.
 - **An outside consumer reads `filecoin.filpgf_public.*`, NOT this repo's static models, and
   `docs/public-datasets.md` is that contract.** The mart is TWO tables, kept deliberately minimal —
-  `kernel_timeseries_sla_by_project` (every fact about a reading, including the bar that day) and
+  `kernel_timeseries_metrics_by_project` (every fact about a reading, including the bar that day) and
   `kernel_functions` (the inventory, incl. the 14 functions nothing measures, so coverage has an
   honest denominator) — both public-read, and it is built by UDMs in
   `insights-private/projects/filecoin/models/` and deployed with that repo's
