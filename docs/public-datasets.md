@@ -9,12 +9,19 @@ through, granted public read and queryable through the OSO API with any API key.
 |---|---|---|
 | `filecoin.filpgf_public.kernel_functions` | kernel function in the inventory | 31 |
 | `filecoin.filpgf_public.kernel_metrics` | SLA entry (adopted or draft) | 57 |
-| `filecoin.filpgf_public.timeseries_kernel_sla` | (day, team, function, metric) reading | ~640 |
+| `filecoin.filpgf_public.kernel_timeseries_metrics_by_project` | (day, team, function, metric) reading | ~640 |
 | `filecoin.filpgf_sla_thresholds.filpgf_sla_thresholds` | (day, team, function, metric) commitment | ~1.4k |
 
-`timeseries_kernel_sla` arrives pre-joined: every reading already carries `grant_ref`, `team`,
-`oso_project_slug`, `project_display_name`, `kernel_id`, `kernel_function`, `tier` and `category`,
-so slicing by grant or by kernel function needs no join at all.
+`kernel_timeseries_metrics_by_project` arrives pre-joined: every reading already carries
+`grant_ref`, `team`, `oso_project_slug`, `project_display_name`, `kernel_id`, `kernel_function`,
+`tier` and `category`, so slicing by grant or by kernel function needs no join at all.
+
+It is named for the warehouse's `timeseries_metrics_by_project`, but **it is not keyed the same
+way** — the grain is `(team, function_id, metric_name, sample_date)`. A commitment is identified by
+`(team, function_id)`, and two teams publish the same `metric_name` for their own infrastructure
+(Ankr and Chain.Love both report `rpc_head_lag_epochs`), so `oso_project_slug` is a nullable
+attribute here rather than the key. Group by project and you merge distinct commitments; join on it
+and you lose the five funded projects that are absent from OSSD.
 
 The four landing tables this repo republishes nightly — `filpgf_kernel_functions`,
 `filpgf_kernel_metrics`, `filpgf_sla_observations` and `filpgf_sla_thresholds`, each
@@ -31,7 +38,7 @@ the join is already done; you need it only to attach the threshold series.
 ```sql
 SELECT grant_ref, team, project_display_name, kernel_function, tier,
        metric_name, sample_date, amount
-FROM filecoin.filpgf_public.timeseries_kernel_sla
+FROM filecoin.filpgf_public.kernel_timeseries_metrics_by_project
 WHERE grant_ref = 'APP-P706QNLF-NLQPG5'
 ORDER BY metric_name, sample_date
 ```
@@ -42,7 +49,7 @@ and `CAST(observed_at AS DATE)` if you need date arithmetic.
 
 ## What each column is for
 
-`kernel_metrics` (and the same columns on `timeseries_kernel_sla`):
+`kernel_metrics` (and the same columns on `kernel_timeseries_metrics_by_project`):
 
 - **`grant_ref`** — the Karma application id (`APP-…`) of the grant that PAYS for this metric. This
   is the key to use when rendering against a grant, and it is not the same thing as the team: one
