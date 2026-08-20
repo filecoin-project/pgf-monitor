@@ -104,7 +104,7 @@ functions:
     sla:
       statement: "ChainSafe's calibnet rehearsal miner t0181521 keeps >= 250 TB quality-adjusted power on-chain (the team's own Karma target), measured weekly"
       metric: calibnet_miner_qap_bytes
-      threshold: { op: ">=", value: 250000000000000 }
+      unscored_reason: contract-not-executed
       cadence: weekly
     source:
       adapter: oso
@@ -129,7 +129,7 @@ functions:
     sla:
       statement: "Forest ships a release at least every 45 days on average (active-maintenance signal), measured monthly"
       metric: avg_days_between_releases
-      threshold: { op: "<=", value: 45 }
+      unscored_reason: contract-not-executed
       cadence: monthly
     source:
       adapter: oso

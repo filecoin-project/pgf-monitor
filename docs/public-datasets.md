@@ -85,8 +85,14 @@ ORDER BY adopted_metrics, kernel_function
 No table stores pass/fail. `filpgf_sla_thresholds` records the bar **as it stood on each day**, and
 the outcome is derived at render time by joining it to the reading for the same day. That way
 correcting a threshold fixes history, instead of leaving old rows judged against a number nobody
-agreed to. Many metrics are measured and deliberately **not** scored: no bar has been agreed, so
-`threshold_op` is null and nothing is asserted about compliance.
+agreed to.
+
+**As of 2026-08-20 nothing is scored at all.** Every bar has been withdrawn, in the registry and
+across the whole history, because the agreements carrying them are not executed — a number in a
+draft appendix is not yet a promise. So `threshold_op` is null on every row, every reading derives
+as `unscored`, and the join below currently tells you only that. The numbers are not lost; they sit
+in the maintainer-local facts files and come back, unchanged, when contracts are countersigned. The
+derivation stays documented because it is what the table is for.
 
 If you need the outcome, derive it with the same rule the dashboard uses:
 

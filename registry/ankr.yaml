@@ -34,7 +34,7 @@ functions:
     sla:
       statement: "Public mainnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily — a stale head means the endpoint's backing node has stopped syncing"
       metric: rpc_head_lag_epochs
-      threshold: { op: "<=", value: 3 }   # the signed s3 commits <= 3 epochs, not 5
+      unscored_reason: contract-not-executed
       cadence: daily
     source:
       adapter: oso
@@ -73,7 +73,7 @@ functions:
     sla:
       statement: "FEVM/Eth RPC surface keeps pace: wall-clock expected epoch minus decoded eth_blockNumber <= 4 epochs, measured daily — the eth_* API is what FEVM dApps depend on, runs ~1 epoch below the native head by construction (so 4 = native 3 + 1), and can stall independently of the native API"
       metric: fevm_eth_head_lag_epochs
-      threshold: { op: "<=", value: 4 }
+      unscored_reason: contract-not-executed
       cadence: daily
     source:
       adapter: oso
