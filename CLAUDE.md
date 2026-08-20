@@ -59,8 +59,10 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   `contracts/<team>.facts.yaml`, which is gitignored. `contracts/` being absent is the normal state
   for a collaborator, so nothing in tests or CI may require it.
 - **An outside consumer reads `filecoin.filpgf_public.*`, NOT this repo's static models, and
-  `docs/public-datasets.md` is that contract.** The mart (`kernel_functions`, `kernel_metrics`,
-  `kernel_timeseries_metrics_by_project`, all public-read) is built by UDMs in
+  `docs/public-datasets.md` is that contract.** The mart is TWO tables, kept deliberately minimal —
+  `kernel_timeseries_sla_by_project` (every fact about a reading, including the bar that day) and
+  `kernel_functions` (the inventory, incl. the 14 functions nothing measures, so coverage has an
+  honest denominator) — both public-read, and it is built by UDMs in
   `insights-private/projects/filecoin/models/` and deployed with that repo's
   `scripts/deploy_models.py`; every model runs `@daily`, so a registry change reaches the mart
   within a day. This repo owns only the LANDING tables it feeds:

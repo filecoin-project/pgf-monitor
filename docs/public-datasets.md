@@ -5,40 +5,39 @@
 through, granted public read and queryable through the OSO API with any API key. Its SQL lives in
 `insights-private/projects/filecoin/models/`; this repo publishes the raw tables it is built from.
 
+**Two tables, on purpose.**
+
 | table | one row per | rows |
 |---|---|---|
+| `filecoin.filpgf_public.kernel_timeseries_sla_by_project` | reading: day × team × function × metric | 673 |
 | `filecoin.filpgf_public.kernel_functions` | kernel function in the inventory | 31 |
-| `filecoin.filpgf_public.kernel_metrics` | SLA entry (adopted or draft) | 57 |
-| `filecoin.filpgf_public.kernel_timeseries_metrics_by_project` | (day, team, function, metric) reading | ~640 |
-| `filecoin.filpgf_sla_thresholds.filpgf_sla_thresholds` | (day, team, function, metric) commitment | ~1.4k |
 
-`kernel_timeseries_metrics_by_project` arrives pre-joined: every reading already carries
-`grant_ref`, `team`, `oso_project_slug`, `project_display_name`, `kernel_id`, `kernel_function`,
-`tier` and `category`, so slicing by grant or by kernel function needs no join at all.
+Every fact about a reading rides on the reading — what it is evidence for, who is paid for it, and
+**the bar as it stood that day** — so thresholds and the metric registry need no tables of their
+own. `kernel_functions` stays because the 14 kernel functions nothing measures yet have no readings
+to ride on, and a coverage number computed without them always reads 100%.
 
-It is named for the warehouse's `timeseries_metrics_by_project`, but **it is not keyed the same
-way** — the grain is `(team, function_id, metric_name, sample_date)`. A commitment is identified by
-`(team, function_id)`, and two teams publish the same `metric_name` for their own infrastructure
-(Ankr and Chain.Love both report `rpc_head_lag_epochs`), so `oso_project_slug` is a nullable
-attribute here rather than the key. Group by project and you merge distinct commitments; join on it
-and you lose the five funded projects that are absent from OSSD.
+Neither a threshold nor a verdict can be *derived* from a reading: a bar is a promise and a verdict
+is a human judgment. The bar is joined in upstream, so it arrives on the row. Adjudicated verdicts
+are not in the mart at all — they live in `filecoin.filpgf_sla_verdicts.filpgf_sla_verdicts`.
 
-The four landing tables this repo republishes nightly — `filpgf_kernel_functions`,
+The landing tables this repo republishes nightly — `filpgf_kernel_functions`,
 `filpgf_kernel_metrics`, `filpgf_sla_observations` and `filpgf_sla_thresholds`, each
-`filecoin.<name>.<name>` — are public too, but they are the mart's inputs: untyped-ish, unjoined,
-and keyed only on `(team, function_id, metric)`. Query them only if you are rebuilding the mart.
+`filecoin.<name>.<name>` — are public too, but they are the mart's inputs: unjoined, and keyed only
+on `(team, function_id, metric)`. Query them only if you are rebuilding the mart.
 
 ## The join
 
 Everything hangs off `(team, function_id, metric)`. That triple is the identity of a monitored
 commitment, and it is stable — `team` is the registry filename stem, `function_id` is chosen by the
-team, and neither is renamed in place (renaming one orphans its history, so we don't). In the mart
-the join is already done; you need it only to attach the threshold series.
+team, and neither is renamed in place (renaming one orphans its history, so we don't). In the mart the join is
+already done, bar included — you need the triple only to attach verdicts, or to line rows up
+against the landing tables.
 
 ```sql
 SELECT grant_ref, team, project_display_name, kernel_function, tier,
        metric_name, sample_date, amount
-FROM filecoin.filpgf_public.kernel_timeseries_metrics_by_project
+FROM filecoin.filpgf_public.kernel_timeseries_sla_by_project
 WHERE grant_ref = 'APP-P706QNLF-NLQPG5'
 ORDER BY metric_name, sample_date
 ```
@@ -49,7 +48,7 @@ and `CAST(observed_at AS DATE)` if you need date arithmetic.
 
 ## What each column is for
 
-`kernel_metrics` (and the same columns on `kernel_timeseries_metrics_by_project`):
+On every row of `kernel_timeseries_sla_by_project`:
 
 - **`grant_ref`** — the Karma application id (`APP-…`) of the grant that PAYS for this metric. This
   is the key to use when rendering against a grant, and it is not the same thing as the team: one
@@ -89,15 +88,15 @@ ORDER BY adopted_metrics, kernel_function
 
 ## Compliance is not a column, on purpose
 
-No table stores pass/fail. `filpgf_sla_thresholds` records the bar **as it stood on each day**, and
-the outcome is derived at render time by joining it to the reading for the same day. That way
-correcting a threshold fixes history, instead of leaving old rows judged against a number nobody
-agreed to.
+No table stores pass/fail. The bar rides on each reading **as it stood on that day**, and the
+outcome is derived at render time from the two columns. That way correcting a threshold fixes
+history — the mart rebuilds nightly against the corrected series — instead of leaving old rows
+judged against a number nobody agreed to.
 
 **As of 2026-08-20 nothing is scored at all.** Every bar has been withdrawn, in the registry and
 across the whole history, because the agreements carrying them are not executed — a number in a
 draft appendix is not yet a promise. So `threshold_op` is null on every row, every reading derives
-as `unscored`, and the join below currently tells you only that. The numbers are not lost; they sit
+as `unscored`, and the derivation below currently tells you only that. The numbers are not lost; they sit
 in the maintainer-local facts files and come back, unchanged, when contracts are countersigned. The
 derivation stays documented because it is what the table is for.
 
@@ -105,21 +104,19 @@ If you need the outcome, derive it with the same rule the dashboard uses:
 
 ```sql
 CASE
-  WHEN o.observed_value IS NULL   THEN 'indeterminate'  -- no defensible number this day
-  WHEN t.threshold_op  IS NULL    THEN 'unscored'       -- measured, but no agreed bar
-  WHEN t.threshold_op = '>=' THEN IF(o.observed_value >= t.threshold_value, 'pass', 'fail')
-  WHEN t.threshold_op = '<=' THEN IF(o.observed_value <= t.threshold_value, 'pass', 'fail')
-  WHEN t.threshold_op = '>'  THEN IF(o.observed_value >  t.threshold_value, 'pass', 'fail')
-  WHEN t.threshold_op = '<'  THEN IF(o.observed_value <  t.threshold_value, 'pass', 'fail')
-  WHEN t.threshold_op = '==' THEN IF(o.observed_value =  t.threshold_value, 'pass', 'fail')
+  WHEN amount       IS NULL THEN 'indeterminate'  -- no defensible number that day
+  WHEN threshold_op IS NULL THEN 'unscored'       -- measured, but no agreed bar
+  WHEN threshold_op = '>=' THEN IF(amount >= threshold_value, 'pass', 'fail')
+  WHEN threshold_op = '<=' THEN IF(amount <= threshold_value, 'pass', 'fail')
+  WHEN threshold_op = '>'  THEN IF(amount >  threshold_value, 'pass', 'fail')
+  WHEN threshold_op = '<'  THEN IF(amount <  threshold_value, 'pass', 'fail')
+  WHEN threshold_op = '==' THEN IF(amount =  threshold_value, 'pass', 'fail')
   ELSE 'unscored'
 END AS sla_outcome
 ```
 
-Join the threshold series to the mart on
-`t.observed_at = CAST(s.sample_date AS VARCHAR) AND t.team = s.team AND t.function_id =
-s.function_id AND t.metric = s.metric_name`, with a **LEFT** JOIN — an inner join drops exactly the
-unscored metrics, which is most of them.
+No join needed: `threshold_op` and `threshold_value` are columns on the same row as `amount`, and
+`threshold_source` says whether the number came from a signed appendix or is provisional.
 
 `indeterminate` and `unscored` are different failures and must not be collapsed: the first is ours
 (we could not get a defensible number that day), the second is the absence of an agreed bar. Neither
@@ -138,8 +135,8 @@ uv run python -m scripts.exports upload --oso-org <uuid>     # regenerate, then 
 `tests/test_exports.py` fails when the committed copies disagree with `registry/`, so a manifest
 change that forgets to regenerate cannot merge.
 
-The mart on top is `insights-private/projects/filecoin/models/` — three `staging__filpgf__*`
-models, two `registry_kernel_*` entities, `metrics_filpgf_sla`, and the three `filpgf_public`
+The mart on top is `insights-private/projects/filecoin/models/` — four `staging__filpgf__*`
+models, two `registry_kernel_*` entities, `metrics_filpgf_sla`, and the two `filpgf_public`
 marts. Deploy with that repo's `scripts/deploy_models.py`, layer by layer in DAG order. Every
 model runs `@daily` on its own, so a registry change reaches the mart within a day of the nightly
 republish without anyone doing anything.
