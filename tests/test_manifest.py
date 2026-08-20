@@ -106,3 +106,16 @@ def test_a_threshold_and_an_unscored_reason_cannot_coexist():
     raw = _raw_function(unscored_reason="no-agreement")
     with pytest.raises(ManifestError):
         manifest_from_raw(raw)
+
+
+def test_contract_not_executed_is_an_accepted_unscored_reason():
+    """A bar stated in an appendix nobody has executed yet: measured, deliberately not scored.
+
+    Distinct from `no-signed-bar`, where no number was ever agreed. Both the schema and the model
+    must accept it, or a manifest withdrawing such a bar cannot describe why.
+    """
+    raw = _raw_function(unscored_reason="contract-not-executed")
+    del raw["functions"][0]["sla"]["threshold"]
+    sla = manifest_from_raw(raw).functions[0].sla
+    assert (sla.threshold_op, sla.threshold_value) == (None, None)
+    assert sla.unscored_reason == "contract-not-executed"
