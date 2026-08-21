@@ -6,7 +6,10 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def kernel_page(KERNEL_CSS, PAGE_HTML, mo):
-    mo.md(KERNEL_CSS + PAGE_HTML)
+    # mo.Html, NOT mo.md: mo.md strips only the COMMON leading whitespace, and the page HTML
+    # starts at column 0, so the stylesheet's indentation survives and markdown renders the whole
+    # <style> block as an indented code block. The mockup uses mo.Html for the same reason.
+    mo.Html(KERNEL_CSS + PAGE_HTML)
     return
 
 
@@ -899,7 +902,7 @@ def public_engine(datetime, math):
 
 
 @app.cell(hide_code=True)
-def live_registry(build_registry, mo, pyoso_db_conn):
+def live_registry(build_registry, mo, pyoso_db_conn, to_rows):
     # The mockup carries its registry as a gzipped base64 blob. This one reads the same shape out
     # of the two public tables, so the page cannot describe a world the warehouse does not.
     _series = mo.sql(
@@ -922,11 +925,30 @@ def live_registry(build_registry, mo, pyoso_db_conn):
         output=False,
         engine=pyoso_db_conn,
     )
-    REGISTRY = build_registry(
-        _series.to_dicts() if hasattr(_series, "to_dicts") else list(_series),
-        _functions.to_dicts() if hasattr(_functions, "to_dicts") else list(_functions),
-    )
+    REGISTRY = build_registry(to_rows(_series), to_rows(_functions))
     return (REGISTRY,)
+
+
+@app.cell(hide_code=True)
+def row_reader():
+    def to_rows(result):
+        """A query result as a list of row dicts, whichever frame mo.sql hands back.
+
+        `list(df)` on a pandas DataFrame yields its COLUMN NAMES, not its rows -- which is how the
+        first version of this cell fed build_registry a list of strings and died on
+        `string indices must be integers`. Polars is asked first because mo.sql returns it here;
+        pandas is the fallback, and anything else is an error rather than a guess.
+        """
+        if hasattr(result, "to_dicts"):          # polars
+            return result.to_dicts()
+        if hasattr(result, "to_dict"):           # pandas
+            return result.to_dict("records")
+        rows = list(result)
+        if rows and not isinstance(rows[0], dict):
+            raise TypeError(f"expected row dicts, got {type(rows[0]).__name__}")
+        return rows
+
+    return (to_rows,)
 
 
 @app.cell(hide_code=True)
