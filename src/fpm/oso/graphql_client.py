@@ -94,12 +94,30 @@ class GraphqlOsoClient:
         return None
 
     def trigger_run(self, dataset_id: str) -> str:
+        # OSO changed this mutation's payload on 2026-08-22: `createDataIngestionRunRequest` now
+        # returns CreateRunGroupPayload (a run GROUP wrapping one run per selected model) and no
+        # longer has a `run` field, so the old selection failed GraphQL validation with a bare
+        # 400 -- every metric raised, every reading landed indeterminate, and the workflow still
+        # reported success. The group carries its runs inline and already attached (QUEUED) in
+        # the mutation response, so one round trip still yields the run id.
+        # `createStaticModelRunRequest` was NOT changed and still returns `run{ id }`; see
+        # fpm/oso/static_model.py, which is why the CSV republish kept working throughout.
         d = self._gql(
             "mutation($i:CreateDataIngestionRunRequestInput!){ "
-            "createDataIngestionRunRequest(input:$i){ run{ id } } }",
+            "createDataIngestionRunRequest(input:$i){ success message "
+            "runGroup{ id runs{ edges{ node{ id } } } } } }",
             {"i": {"datasetId": dataset_id}},
         )
-        return d["createDataIngestionRunRequest"]["run"]["id"]
+        payload = d["createDataIngestionRunRequest"]
+        group = payload.get("runGroup") or {}
+        edges = ((group.get("runs") or {}).get("edges")) or []
+        if not edges:
+            raise RuntimeError(
+                f"createDataIngestionRunRequest returned no run for dataset {dataset_id} "
+                f"(runGroup={group.get('id')!r}, success={payload.get('success')!r}, "
+                f"message={payload.get('message')!r})"
+            )
+        return edges[0]["node"]["id"]
 
     def get_runs(self, dataset_id: str) -> list[RunInfo]:
         d = self._gql(

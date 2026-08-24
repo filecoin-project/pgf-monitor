@@ -66,3 +66,22 @@ def test_credentials_come_from_the_right_place():
     assert "secrets.OSO_API_KEY" in body
     assert "vars.OSO_ORG_ID" in body
     assert "secrets.OSO_ORG_ID" not in body
+
+
+def test_a_night_that_collected_nothing_fails_the_workflow():
+    """The gap this closes: `fpm observe` isolates per-function fetch failures, so a failure that
+    hits EVERY function exits 0. Between 2026-08-22 and 2026-08-24 the workflow reported success
+    three times while every reading landed value-less."""
+    body = WORKFLOW.read_text()
+    assert "scripts.check_collection" in body
+
+
+def test_the_blackout_check_runs_after_the_writes():
+    """Order is the whole design. A broken night is evidence and belongs in git and in the
+    warehouse, so the assertion must come after the commit and both republishes -- otherwise
+    `set -euo pipefail` aborts the job first and throws the evidence away."""
+    body = WORKFLOW.read_text()
+    guard = body.index("scripts.check_collection")
+    assert body.index("git commit") < guard
+    assert body.index("scripts/observations.py upload") < guard
+    assert body.index("scripts.exports upload") < guard

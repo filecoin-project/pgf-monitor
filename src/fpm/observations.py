@@ -100,6 +100,22 @@ def save_rows(rows: list[Row], path: Path = CSV_PATH) -> None:
         writer.writerows([{c: row.get(c, "") for c in COLUMNS} for row in rows])
 
 
+def collection_status(rows: list[Row], day: str) -> tuple[int, int]:
+    """(rows recorded, rows carrying a value) for one day.
+
+    A day where the pipeline recorded readings and NOT ONE of them carries a value is not a
+    quiet night; it is the instrument being broken. That state held from 2026-08-22 to
+    2026-08-24 -- OSO had changed the ingestion-trigger payload, every fetch raised, and the
+    nightly workflow reported success three times because a per-function fetch failure is
+    isolated by design. Nothing distinguished it from a night when every source was simply
+    healthy and quiet. This is what does.
+    """
+    d = normalize_date(day)
+    todays = [r for r in rows if normalize_date(r["observed_at"]) == d]
+    carried = sum(1 for r in todays if str(r.get("observed_value") or "").strip() != "")
+    return len(todays), carried
+
+
 def append_observations(observations: list[Observation], path: Path = CSV_PATH) -> list[Row]:
     """Merge observations into the CSV on disk and write it back. Returns the full table."""
     rows = merge(load_rows(path), [to_row(o) for o in observations])
