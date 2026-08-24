@@ -77,3 +77,87 @@ functions:
     transform:
       # 24h trading volume (USD) of the one USDFC/axlUSDC pool, isolated by address; single parent row
       sql: "SELECT MAX(CAST(attributes__volume_usd__h24 AS DOUBLE)) FROM raw WHERE attributes__address = '0x21ca72fe39095db9642ca9cc694fa056f906037f'"
+
+  # ---------------------------------------------------------------------------
+  # The three commitments of the agreed Appendix 1 s3 (2026-08-24 review). All three are
+  # measured and NOT scored today: every bar was withdrawn on 2026-08-20 pending executed
+  # agreements, and the peg band's shape is still open with the recipient -- see
+  # contracts/secured-finance.facts.yaml.
+  #
+  # Same host as the two pool entries above (api.geckoterminal.com, already allowlisted), so
+  # nothing here needs an allowlist PR.
+  # ---------------------------------------------------------------------------
+
+  # The peg. NOT a 24h TWAP, and the reason is structural rather than a preference: GeckoTerminal
+  # returns ohlcv_list as an ARRAY OF ARRAYS, so dlt pushes every value into an unreachable child
+  # table and leaves the parent holding only _dlt_load_id/_dlt_id. Proved live on 2026-08-24 --
+  # the parent came back with 24 rows and zero data columns, and the transform 400'd. A transform
+  # may bind only the one `raw` table (the structural exfiltration guard), so no SQL reaches the
+  # child. The daily OHLCV has the identical shape, which is why the 30-day mean is not here
+  # either; both belong in the recipient's monthly JSON, where s3 already has a promotion hook.
+  #
+  # So: spot at read time, off the pools endpoint the two entries above ALREADY poll -- object
+  # shaped, no arrays, and proven in this manifest.
+  #
+  # SIGNED deviation, not absolute: every one of the 30 days to 2026-08-24 closed ABOVE peg (min
+  # 1.0003, median 1.0111), and s3 says the ceiling is defended only by mint-and-sell at ~1.091.
+  # Keeping the sign is what lets a floor bar (>= -0.025) be stated as one threshold and score the
+  # side redemption actually enforces, instead of an absolute value that fires on the upside.
+  - function_id: usdfc-peg-deviation
+    kernel_id: stablecoin-settlement
+    origin: karma
+    tier: important
+    category: 'UX/DX'
+    sub_category: 'Stablecoin & yield'
+    funded_project_oso_slug: secured-finance
+    grant_ref: APP-Z1L7URG7-TJ3G5D
+    sla:
+      statement: "USDFC peg deviation: USDFC–axlUSDC pool price minus 1.00 USD, signed, read at measurement time and measured daily. Positive is a premium over peg, negative a discount"
+      metric: usdfc_peg_deviation
+      cadence: daily
+      unscored_reason: contract-not-executed
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.geckoterminal.com"
+      endpoint: "https://api.geckoterminal.com/api/v2/networks/filecoin/pools"
+      query: "/api/v2/networks/filecoin/pools"
+      data_selector: data
+    transform:
+      # signed deviation from 1.00 USD for the one USDFC/axlUSDC pool, isolated by address
+      sql: "SELECT MAX(CAST(attributes__base_token_price_usd AS DOUBLE)) - 1 FROM raw WHERE attributes__address = '0x21ca72fe39095db9642ca9cc694fa056f906037f'"
+
+  # The redemption fee is read straight off the TroveManager contract, so the fact is the
+  # recipient's own even though the transport is a third party's public RPC. s3 explicitly accepts
+  # this ("requires no endpoint from the Recipient ... on-chain reads via Filecoin public RPC").
+  # OPERATIONAL COUPLING, on purpose and worth knowing: an outage at filecoin.chain.love -- itself
+  # a funded kernel endpoint -- renders this metric indeterminate rather than failed, per s2.
+  #
+  # JSON shape mirrors chain-love's eth_blockNumber entry: a flat {id, jsonrpc, result} object,
+  # one row, `result` a top-level hex STRING. No data_selector, and the extract vocab cannot cast
+  # hex, so the transform decodes it. getRedemptionRate() returns a 1e18-scaled fraction; the
+  # metric is a percentage, hence /1e16. ltrim strips the 64-char zero padding an eth_call returns,
+  # which a bare from_base would choke on; the rate is floored at 0.5% so it is never all-zero.
+  - function_id: usdfc-redemption-fee
+    kernel_id: stablecoin-settlement
+    origin: karma
+    tier: important
+    category: 'UX/DX'
+    sub_category: 'Stablecoin & yield'
+    funded_project_oso_slug: secured-finance
+    grant_ref: APP-Z1L7URG7-TJ3G5D
+    sla:
+      statement: "USDFC redemption fee: TroveManager getRedemptionRate(), measured daily. Reported for context — a higher rate is normal protocol behaviour under redemption pressure, not a fault"
+      metric: usdfc_redemption_fee_pct
+      cadence: daily
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filecoin.chain.love"
+      endpoint: "https://filecoin.chain.love/rpc/v1"
+      query: "/rpc/v1"
+      method: POST
+      params: { jsonrpc: "2.0", method: "eth_call", params: [ { to: "0x5aB87c2398454125Dd424425e39c8909bBE16022", data: "0x2b11551a" }, "latest" ], id: 1 }
+    transform:
+      sql: "SELECT MAX(from_base(ltrim(substr(result, 3), '0'), 16)) / 1e16 FROM raw"
