@@ -129,3 +129,21 @@ jobs:
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
         run: uv run python -m scripts.exports upload --oso-org "${{ vars.OSO_ORG_ID }}"
+
+      # LAST, and after the commit and both republishes on purpose. `fpm observe` isolates a
+      # per-function fetch failure so one dead endpoint cannot abort the night (fpm.observe.
+      # measure) -- the price is that a failure hitting EVERY function exits 0 and looks exactly
+      # like a healthy quiet night. It did: on 2026-08-22 OSO changed the payload type of
+      # createDataIngestionRunRequest, every fetch raised a bare 400, and this workflow reported
+      # success for three nights while 38 value-less rows a night landed in the series. Three
+      # nights of point-in-time readings are gone permanently.
+      #
+      # This step turns that red. It runs after the writes because a broken night is itself
+      # evidence and belongs in git and in the warehouse; folding the check into `fpm observe`'s
+      # exit code would abort the job before the commit and throw the evidence away.
+      - name: Assert the night actually collected something
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          uv run python -m scripts.check_collection \
+            ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }}

@@ -23,10 +23,14 @@ _TERMINAL = {"SUCCESS", "FAILED", "CANCELED"}
 
 def main() -> None:
     org_id = sys.argv[1]
+    # The one live guard on the ingestion trigger/poll path -- keep it pointed at a function
+    # that EXISTS. It was still asking for `filecoin-tvl`, retired months ago, so the script
+    # raised StopIteration before it ever reached `trigger_run`; that is why nobody caught OSO
+    # changing the mutation payload on 2026-08-22 until three nights of readings were lost.
     fn = next(
         f
         for f in load_manifest("registry/chainsafe.yaml").functions
-        if f.function_id == "filecoin-tvl"
+        if f.function_id == "mainnet-snapshot-freshness"
     )
     window = window_for(fn.sla.cadence, datetime(2026, 7, 1, tzinfo=timezone.utc))
     client = GraphqlOsoClient(api_key=os.environ["OSO_API_KEY"], org_id=org_id)
