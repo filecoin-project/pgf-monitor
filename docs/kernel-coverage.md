@@ -337,6 +337,8 @@ _No monitoring entry yet._
 |---|---|---|---|
 | secured-finance | `usdfc_pool_tvl_usd` (usdfc-axlusdc-pool-tvl) | api.geckoterminal.com | adopted |
 | secured-finance | `usdfc_pool_volume_usd` (usdfc-axlusdc-pool-volume) | api.geckoterminal.com | adopted |
+| secured-finance | `usdfc_peg_deviation` (usdfc-peg-deviation) | api.geckoterminal.com | adopted |
+| secured-finance | `usdfc_redemption_fee_pct` (usdfc-redemption-fee) | filecoin.chain.love | adopted |
 
 ### 🔴 Technical program coordination, ecosystem technical support and discretionary grant administration across kernel teams
 

@@ -1,6 +1,6 @@
 {
   "kernel_functions": 31,
-  "monitored_metrics": 38,
+  "monitored_metrics": 40,
   "teams": 13,
   "coverage": "17/31",
   "coverage_adopted": "17/31",
