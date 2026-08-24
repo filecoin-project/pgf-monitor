@@ -237,6 +237,7 @@ def stylesheet():
         .kpage .pill.ok{color:var(--k-go);border-color:#A8D5BC}
         .kpage .pill.nm{color:var(--k-ink-3);border-color:var(--k-rule)}
         .kpage .pill.bad{color:var(--k-bad);border-color:#EFC4B8}
+        .kpage .pill.gap{color:var(--k-warn);border-color:#E7CE92}
         .kpage .car{color:var(--k-ink-3);transition:transform .18s;justify-self:end;display:flex;align-items:center}
         .kpage details.fn[open] .car{transform:rotate(180deg);color:var(--k-ink)}
         .kpage .flag{font-family:var(--k-mono);font-size:10.5px;letter-spacing:.02em}
@@ -304,6 +305,8 @@ def stylesheet():
         .kpage .strip i[data-o="p"]{background:var(--k-good)}
         .kpage .strip i[data-o="f"]{background:var(--k-bad)}
         .kpage .strip i[data-o="i"]{background:var(--k-warn)}
+        /* Public-page additions to the shared sheet: nothing here is scored, so a bar is either a reading that landed (blue) or a day the source gave no defensible number (amber). Grey stays "no reading expected yet". */
+        .kpage .strip i[data-o="u"]{background:var(--k-fil)}
         .kpage .axis{display:flex;justify-content:space-between;gap:12px;font-family:var(--k-mono);font-size:9.5px;letter-spacing:.06em;color:var(--k-ink-3);margin-top:7px}
 
         .kpage .metrics-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:26px 0 14px;padding-bottom:9px;border-bottom:1px solid var(--k-rule)}
@@ -378,13 +381,16 @@ def stylesheet():
 
 @app.cell(hide_code=True)
 def public_engine(datetime, math):
-    # The formatting, axis and line-chart helpers are lifted VERBATIM from
-    # dashboards/propgf-kernel-mockup_v2.py so the two pages cannot drift apart visually. What is
-    # authored here is the page composition, because the mockup's own builder renders program
-    # sections this page must not have: committed amounts per team, source endpoints, and an SLA
-    # verdict vocabulary (p/f/i) that has no member meaning "measured, but no bar was agreed" --
-    # which is the state of every metric on this page.
+    # The formatting, axis, strip and line-chart helpers are lifted VERBATIM from
+    # dashboards/propgf-kernel-mockup_v2.py so the two pages cannot drift apart
+    # visually. What changes is the ROLL-UP: the mockup rolls readings into a
+    # pass/fail SLA percentage, and no bar is in force here, so this page rolls
+    # them into reading coverage instead -- the share of the periods a metric's
+    # own cadence expects that actually carry a value. Same shape in the layout,
+    # a claim the public tables can actually support.
     WIN = 90
+
+    # ---------------------------------------------------------------- helpers
 
     def esc(s):
         if s is None:
@@ -432,9 +438,20 @@ def public_engine(datetime, math):
         return short(k)
 
 
+    # ------------------------------------------------ series + coverage roll-up
+
     GRAIN = {"daily": 1, "weekly": 7, "monthly": 30}
+    # A period is only as good as its worst reading: a day that produced no
+    # defensible number outranks one that did.
+    RANK = {"i": 2, "u": 1}
+
+
     def pts(e, today, win=WIN):
-        """Readings inside the window as [(iso, value, outcome)], oldest first."""
+        """Readings inside the window as [(iso, value, outcome)], oldest first.
+
+        outcome is 'u' (a value was read, and nothing scores it) or 'i' (the
+        source was asked and gave no defensible number).
+        """
         s = e.get("s")
         if not s:
             return []
@@ -467,21 +484,78 @@ def public_engine(datetime, math):
         return out
 
 
+    def roll(e, today, win=WIN):
+        """Coverage roll-up over the window, at the metric's own cadence grain.
+
+        The denominator starts at the metric's FIRST reading, not at the window
+        edge: a commitment first collected three weeks ago has not missed the
+        sixty-nine days before that, and charging it for them would read as a
+        failure to report rather than as an instrument that had not been built.
+        """
+        p = pts(e, today, win)
+        by, val = {}, {}
+        for iso, v, _o in p:
+            k = bucket_key(iso, e["cad"])
+            if v is not None:
+                by[k], val[k] = "u", v
+            elif k not in by:
+                by[k] = "i"
+        keys_all = periods(e["cad"], today, win)
+        first = bucket_key(p[0][0], e["cad"]) if p else None
+        keys = [k for k in keys_all if first is None or k >= first] or keys_all[-1:]
+        read = sum(1 for k in keys if by.get(k) == "u")
+
+        # A run of consecutive periods with no value. Ours to answer for, not
+        # the team's, so it is called a gap and never coloured as a breach.
+        runs, cur = [], None
+        for k in keys:
+            if by.get(k) == "u":
+                cur = None
+            elif cur:
+                cur["n"] += 1
+            else:
+                cur = {"d": k, "n": 1}
+                runs.append(cur)
+
+        vals = [(iso, v) for iso, v, _o in p if v is not None]
+        return {"by": by, "val": val, "keys": keys, "read": read,
+                "expected": len(keys), "miss": len(keys) - read,
+                "pct": (100.0 * read / len(keys)) if keys else None,
+                "runs": runs, "last": p[-1] if p else None,
+                "last_val": vals[-1] if vals else None,
+                "n_read": len(vals), "n_att": len(p),
+                "from": p[0][0] if p else None}
+
+
     def grain_word(cad):
         return {"daily": "day", "weekly": "week", "monthly": "month"}.get(cad, "period")
 
 
+    def agg(entries, today, win=WIN):
+        """Aggregate coverage over a list of entry dicts."""
+        if not entries:
+            return {"state": "none", "pct": None, "gaps": 0, "read": 0, "expected": 0}
+        read = exp = gaps = 0
+        for e in entries:
+            r = roll(e, today, win)
+            read += r["read"]
+            exp += r["expected"]
+            gaps += len(r["runs"])
+        return {"state": "none" if not exp else ("good" if read == exp else "warn"),
+                "pct": (100.0 * read / exp) if exp else None,
+                "gaps": gaps, "read": read, "expected": exp}
+
+
     def delta(e, today, win=WIN):
-        p = pts(e, today, win)
-        if len(p) < 2:
+        p = [(i, v) for i, v, _o in pts(e, today, win) if v is not None]
+        if len(p) < 2 or not p[0][1]:
             return {"cls": "flat", "txt": "—"}
-        f, l = p[0][1], p[-1][1]
-        if not f:
-            return {"cls": "flat", "txt": "—"}
-        pc = ((l - f) / abs(f)) * 100
+        pc = ((p[-1][1] - p[0][1]) / abs(p[0][1])) * 100
         return {"cls": "up" if pc > 1.5 else ("dn" if pc < -1.5 else "flat"),
                 "txt": ("+" if pc > 0 else "") + f"{pc:.1f}%"}
 
+
+    # -------------------------------------------------------------- chrome
 
     ICON = {
         "good": '<svg width="9" height="9" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.4 4.6 9 10 3.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -494,15 +568,72 @@ def public_engine(datetime, math):
             'style="vertical-align:baseline"><path d="M4 8 8.5 3.5M8.5 3.5H5.3M8.5 3.5v3.2" '
             'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" '
             'stroke-linejoin="round"/></svg>')
-    LABEL = {"good": "meeting", "bad": "interrupted",
-             "warn": "indeterminate", "none": "not measured"}
 
 
-    def chip(kind, txt=None):
-        return (f'<span class="chip c-{kind}">{ICON.get(kind, "")}'
-                f'{esc(txt or LABEL.get(kind, kind))}</span>')
+    def chip(kind, txt):
+        return f'<span class="chip c-{kind}">{ICON.get(kind, "")}{esc(txt)}</span>'
 
 
+    # ---------------------------------------------------------- uptime strip
+
+    def collapse_bars(keys, by, max_bars):
+        if not max_bars or len(keys) <= max_bars:
+            return [{"o": by.get(k) or "n", "lab": key_label(k), "span": 1} for k in keys]
+        size = -(-len(keys) // max_bars)
+        out = []
+        for i in range(0, len(keys), size):
+            grp = keys[i:i + size]
+            o = "n"
+            for k in grp:
+                v = by.get(k)
+                if v and (o == "n" or RANK[v] > RANK.get(o, 0)):
+                    o = v
+            lab = (key_label(grp[0]) + " – " + key_label(grp[-1])
+                   if len(grp) > 1 else key_label(grp[0]))
+            out.append({"o": o, "lab": lab, "span": len(grp)})
+        return out
+
+
+    STATE_TXT = {"u": "read", "i": "no defensible number"}
+    MIN_BARS = 8
+
+
+    def strip_bits(e, today, win=WIN):
+        """What the coverage strip should draw.
+
+        A monthly commitment fills only three cadence periods in a 90-day
+        window, which reads as a broken graphic rather than a record. When the
+        grain is that coarse the strip switches to one bar per reading -- and
+        says so -- while the coverage percentage above it stays on the metric's
+        own cadence either way.
+        """
+        r = roll(e, today, win)
+        # The strip draws the WHOLE window, not just the periods since collection began: every
+        # strip on the page then covers the same dates and can be read against its neighbours,
+        # and the grey run in front of a young commitment is itself the fact worth seeing.
+        keys_all = periods(e["cad"], today, win)
+        if len(keys_all) >= MIN_BARS:
+            return {"keys": keys_all, "by": r["by"],
+                    "g": grain_word(e["cad"]), "dense": False}
+        p = pts(e, today, win)
+        return {"keys": [iso for iso, _v, _o in p],
+                "by": {iso: ("u" if v is not None else "i") for iso, v, _o in p},
+                "g": "reading", "dense": True}
+
+
+    def strip_html(e, today, win=WIN, small=False, max_bars=None):
+        b_ = strip_bits(e, today, win)
+        g = b_["g"]
+        bars = []
+        for b in collapse_bars(b_["keys"], b_["by"], max_bars):
+            state = STATE_TXT.get(b["o"], "no reading")
+            many = f" (worst of {b['span']} {g}s)" if b["span"] > 1 else ""
+            bars.append(f'<i data-o="{b["o"]}" title="{esc(b["lab"])} · {state}{many}"></i>')
+        cls = "strip sm" if small else "strip"
+        return (f'<div class="{cls}" role="img" aria-label="whether each {g} carries a '
+                f'reading, last {win} days">{"".join(bars)}</div>')
+
+    # ------------------------------------------------------------ line chart
     def nice_step(span, divisions=4):
         """A 1/2/2.5/5/10 step that splits `span` into roughly `divisions`."""
         raw = span / divisions
@@ -619,42 +750,6 @@ def public_engine(datetime, math):
             '</svg></div>')
 
 
-    TIERS = [
-        {"id": "irreplaceable", "name": "Irreplaceable", "declared": 5, "v": "--k-t1",
-         "label": "Only provider. Network halts without it. No substitute exists.",
-         "def": "Ledger, resource, and programmability — what the blockchain and the physical-storage-backed ledger need in order to keep running at all.",
-         "example": "Distributed randomness beacon — without it, block production stops.",
-         "posture": "Must fund. Non-negotiable security requirements. Audits milestone-gated.",
-         "short": "Must fund — non-negotiable"},
-        {"id": "essential", "name": "Essential", "declared": 24, "v": "--k-t2",
-         "label": "Network-critical, but alternatives exist. We need at least one.",
-         "def": "Core offerings — disk space from miners, storage primitives in smart contracts — that let participants engage with the irreplaceable components.",
-         "example": "Testnets: the network continues without them, but at least one is needed to stage and rehearse upgrades.",
-         "posture": "Fund for diversity that ensures uptime — maintain two or more implementations. Budget negotiable.",
-         "short": "Fund for redundancy — 2+ implementations"},
-        {"id": "important", "name": "Important", "declared": None, "v": "--k-t3",
-         "label": "Load-bearing. Multiple dependents. Silent failure cascades.",
-         "def": "Supports and improves access to the critical components, and speeds up development of revenue-generating work.",
-         "example": "A testnet faucet: it makes test FIL easy to get, but the network runs without it.",
-         "posture": "Fund maintenance, not features. Flag any repo with zero active developers.",
-         "short": "Fund maintenance, not features"},
-        {"id": "nice", "name": "Nice to have", "declared": None, "v": "--k-t4",
-         "label": "Enriches the ecosystem. Network survives without it.",
-         "def": "Initiatives that encourage additional growth, where having even one instance may matter for basic ecosystem support.",
-         "example": "F3: the network exists without it, but it improves UX considerably and encourages growth.",
-         "posture": "Discretionary. Fund only where aligned with the sustainability strategy.",
-         "short": "Discretionary"},
-    ]
-
-    def tier_by_id(tid):
-        return next(t for t in TIERS if t["id"] == tid)
-
-
-    def pct_label(v):
-        return "—" if v is None else f"{v:.1f}%"
-
-
-
     # --------------------------------------------------------------- cards
 
     def dense(e):
@@ -662,120 +757,358 @@ def public_engine(datetime, math):
 
         `line_svg` is verbatim from the mockup and assumes every point is numeric, because the
         mockup's data has no gaps. Rather than edit the chart code -- and risk the two pages
-        drifting apart -- the chart is handed a gap-free copy, and the card states the number of
-        unmeasurable days in words so the gap is never silently bridged.
+        drifting apart -- the chart is handed a gap-free copy, and the card states the missing
+        readings in words so the gap is never silently bridged.
         """
         s_ = e["s"]
         keep = [(o, v) for o, v in zip(s_["off"], s_["v"]) if v is not None]
         return {**e, "s": {"d0": s_["d0"], "off": [o for o, _ in keep],
                            "v": [v for _, v in keep], "o": ["u"] * len(keep)}}
 
-    def public_dtable(e, today, win=WIN):
-        """Date and value, newest first. Two columns, not three.
 
-        The mockup's dtable carries an SLA column; with no bar in force every cell in it would be
-        a dash, so the column is dropped rather than rendered empty.
+    def dtable(e, today, win=WIN):
+        """Date, value, and why a row is empty. Newest first.
+
+        The mockup's third column is the SLA outcome; with no bar in force every cell in it
+        would be a dash, so it carries the collection outcome instead -- which is the only
+        judgement this page is entitled to make.
         """
         rows = "".join(
-            f'<tr><td class="mono">{iso}</td><td class="n">{esc(fmt(v))}</td></tr>'
+            f'<tr><td class="mono">{iso}</td><td class="n">{esc(fmt(v))}</td>'
+            f'<td>{"read" if v is not None else "no defensible number"}</td></tr>'
             for iso, v, _o in reversed(pts(e, today, win)))
         return (f'<div class="dtable"><table><thead><tr><th>date</th>'
-                f'<th style="text-align:right">{esc(e["metric"])}</th></tr></thead>'
+                f'<th style="text-align:right">{esc(e["metric"])}</th>'
+                f'<th>collection</th></tr></thead>'
                 f'<tbody>{rows}</tbody></table></div>')
 
 
-    def public_card(e, today, win=WIN, show_team=True, qualify=False):
-        """One commitment: its latest reading, its movement, and its history.
+    def collection_row(e):
+        """Where the reading came from, in place of the mockup's source block.
 
-        Deliberately NOT the mockup's metric_card. That card leads with a rolling SLA percentage
-        and an interruption count, both of which require an agreed threshold; with none in force
-        they would render as a reassuring "No interruption in the window" on a metric nobody has
-        promised anything about. This shows the number and the trend, and says so.
+        The mockup names the endpoint and the SQL that reduces it to a scalar, because it reads
+        the registry. The public mart carries neither -- only HOW each reading was taken -- so
+        this row states that and the Method section says the endpoint is missing on purpose.
         """
-        # Both of these read values arithmetically, so they take the gap-free copy too; `p` keeps
-        # the nulls because the numbers table should still show an unmeasurable day as a row.
+        m = e["methods"]
+        n = sum(m.values())
+        live = m.get("nightly", 0)
+        review = m.get("live-review", 0)
+        hosts = sorted(h.split(":", 1)[1] for h in m if h.startswith("backfill:"))
+        bits = []
+        if live:
+            bits.append(f'{live} unattended nightly run{"s" if live != 1 else ""}')
+        if review:
+            bits.append(f'{review} taken during a review')
+        if hosts:
+            bits.append("history backfilled from <b>" + "</b>, <b>".join(esc(h) for h in hosts)
+                        + "</b>")
+        return (f'<div class="srcrow"><span class="srclab">collection</span>'
+                f'<span class="mchip">{esc(e["cad"])}</span>'
+                f'<span class="srcurl">{" · ".join(bits) or "no reading yet"}'
+                f'<span style="color:var(--k-ink-3)"> · {n} row'
+                f'{"s" if n != 1 else ""} in the public table</span></span></div>')
+
+
+    def metric_card(e, today, win=WIN, show_team=True, qualify=False):
+        """One commitment: coverage, the record, the readings, the numbers.
+
+        The mockup's card in every respect except the roll-up: where it leads with a rolling SLA
+        percentage and an interruption count -- both of which need an agreed threshold -- this
+        leads with reading coverage and the gaps in collection, which is what the public tables
+        can actually answer.
+        """
+        r = roll(e, today, win)
         d = dense(e)
-        p = pts(e, today, win)
-        real = pts(d, today, win)
-        last = real[-1][1] if real else None
-        dl = delta(d, today, win)
         head = f'{e["team"]} · {e["fid"]}' if qualify else e["fid"]
         meta = " · ".join(x for x in [
-            e["team"] if show_team else None, e["metric"], e["cad"], e["shape"],
+            e["team"] if show_team else None, e["metric"], e["cad"],
+            f'grant {e["grant"]}' if e["grant"] else "no grant pays for this",
         ] if x)
         prov = (f'<span class="prov obs" title="{e["n_real"]} readings fetched from the '
                 f'source">observed · {e["n_real"]} pts</span>')
-        _gaps = sum(1 for v in e["s"]["v"] if v is None)
-        gap_note = (f'<div class="lab" style="color:var(--k-warn)">{_gaps} day'
-                    f'{"s" if _gaps > 1 else ""} unmeasurable</div>') if _gaps else ""
+        state = chip("acc", "read · unscored") if r["last_val"] else chip("warn", "no reading")
+
+        g = grain_word(e["cad"])
+        if r["runs"]:
+            detail = " · ".join(
+                key_label(x["d"]) + (f' ({x["n"]} {g}s)' if x["n"] > 1 else "")
+                for x in r["runs"])
+            inc = (f'<div class="inc"><b>{len(r["runs"])} gap'
+                   f'{"s" if len(r["runs"]) > 1 else ""} in collection</b> · {esc(detail)}'
+                   f' — days the source gave no defensible number, not days the commitment '
+                   f'was missed</div>')
+        else:
+            inc = (f'<div class="inc">Every {g} since {esc(short(r["from"]))} carries a '
+                   f'reading.</div>')
+
+        latest = "—"
+        if r["last_val"]:
+            latest = (f'{esc(fmt(r["last_val"][1]))} <span style="color:var(--k-muted);'
+                      f'font-weight:400">on {esc(short(r["last_val"][0]))}</span>')
+        sb = strip_bits(e, today, win)
+        bar_caption = "one bar = one " + sb["g"]
+        if sb["dense"]:
+            bar_caption += " · coverage judged " + e["cad"]
+        if not sb["keys"]:
+            return (f'<article class="card" id="m-{e["id"]}">'
+                    f'<div class="chead"><span class="m">{esc(head)}</span>'
+                    f'<div class="r">{state}</div></div>'
+                    f'<div class="cmeta">{esc(meta)}</div>'
+                    f'<p class="cstmt">{esc(e["stmt"])}</p>'
+                    f'<div class="empty">No reading has been collected for this commitment '
+                    f'yet.</div></article>')
         return (
             f'<article class="card" id="m-{e["id"]}">'
             f'<div class="chead"><span class="m">{esc(head)}</span>'
-            f'<div class="r">{chip("warn", "no agreed bar")}{prov}</div></div>'
+            f'<div class="r">{state}{prov}</div></div>'
             f'<div class="cmeta">{esc(meta)}</div>'
             f'<p class="cstmt">{esc(e["stmt"])}</p>'
+            f'{collection_row(e)}'
             f'<div class="readout">'
-            f'<div><div class="lab">latest</div><div class="big">{esc(fmt(last))}</div></div>'
-            f'<div><div class="lab">change over {win}d</div>'
-            f'<div class="d {dl["cls"]}">{esc(dl["txt"])}</div></div>'
+            f'<div><div class="lab">coverage · {win}d</div>'
+            f'<div class="big num">{pct_label(r["pct"])}</div></div>'
             f'<div><div class="lab">readings</div>'
-            f'<div class="d flat num">{e["n_real"]}</div>{gap_note}</div></div>'
+            f'<div class="d flat num">{r["read"]} of {r["expected"]} {g}s</div></div>'
+            f'<div><div class="lab">latest</div><div class="d flat num">{latest}</div></div>'
+            f'<div><div class="lab">change over {win}d</div>'
+            f'<div class="d {delta(d, today, win)["cls"]}">'
+            f'{esc(delta(d, today, win)["txt"])}</div></div></div>'
+            f'{strip_html(e, today, win)}'
+            f'<div class="axis"><span>{esc(key_label(sb["keys"][0]))}</span>'
+            f'<span>{esc(bar_caption)}</span>'
+            f'<span>{esc(key_label(sb["keys"][-1]))}</span></div>'
+            f'{inc}'
             f'{line_svg(d, today, win, show_thr=False)}'
             f'<details class="dtoggle"><summary>show the numbers</summary>'
-            f'{public_dtable(e, today, win)}</details></article>')
+            f'{dtable(e, today, win)}</details></article>')
 
-    # ---------------------------------------------------------------- page
+
+    # ====================================================================
+    # PAGE ASSEMBLY
+    # ====================================================================
+    # --------------------------------------------------------------- copy deck
+    # Tier framework, program copy and the FY cycle are carried from
+    # dashboards/propgf-kernel-mockup_v2.py unchanged, except where a sentence
+    # claimed something only the private registry can support.
+    TIERS = [
+        {"id": "irreplaceable", "name": "Irreplaceable", "v": "--k-t1",
+         "label": "Only provider. Network halts without it. No substitute exists.",
+         "def": "Ledger, resource, and programmability — what the blockchain and the physical-storage-backed ledger need in order to keep running at all.",
+         "example": "Distributed randomness beacon — without it, block production stops.",
+         "posture": "Must fund. Non-negotiable security requirements. Audits milestone-gated.",
+         "short": "Must fund — non-negotiable"},
+        {"id": "essential", "name": "Essential", "v": "--k-t2",
+         "label": "Network-critical, but alternatives exist. We need at least one.",
+         "def": "Core offerings — disk space from miners, storage primitives in smart contracts — that let participants engage with the irreplaceable components.",
+         "example": "Testnets: the network continues without them, but at least one is needed to stage and rehearse upgrades.",
+         "posture": "Fund for diversity that ensures uptime — maintain two or more implementations. Budget negotiable.",
+         "short": "Fund for redundancy — 2+ implementations"},
+        {"id": "important", "name": "Important", "v": "--k-t3",
+         "label": "Load-bearing. Multiple dependents. Silent failure cascades.",
+         "def": "Supports and improves access to the critical components, and speeds up development of revenue-generating work.",
+         "example": "A testnet faucet: it makes test FIL easy to get, but the network runs without it.",
+         "posture": "Fund maintenance, not features. Flag any repo with zero active developers.",
+         "short": "Fund maintenance, not features"},
+        {"id": "nice", "name": "Nice to have", "v": "--k-t4",
+         "label": "Enriches the ecosystem. Network survives without it.",
+         "def": "Initiatives that encourage additional growth, where having even one instance may matter for basic ecosystem support.",
+         "example": "F3: the network exists without it, but it improves UX considerably and encourages growth.",
+         "posture": "Discretionary. Fund only where aligned with the sustainability strategy.",
+         "short": "Discretionary"},
+    ]
+
+    TIMELINE = [
+        {"date": "Jan 2026", "title": "FY26 term begins", "state": "done"},
+        {"date": "Apr 2026", "title": "Mid-term audit", "state": "done"},
+        {"date": "Aug 2026", "title": "Health reporting live", "state": "now"},
+        {"date": "Oct 2026", "title": "Close-out audit", "state": ""},
+        {"date": "Nov 2026", "title": "Applications close", "state": ""},
+        {"date": "Dec 2026", "title": "Awards published", "state": ""},
+        {"date": "Jan 2027", "title": "FY27 term begins", "state": ""},
+    ]
+
+    METHOD = [
+        ("Two tables, both public",
+         "<span class='mono'>filecoin.filpgf_public.kernel_timeseries_metrics_by_project</span> "
+         "holds one row per team, function, metric and day. "
+         "<span class='mono'>filecoin.filpgf_public.kernel_functions</span> holds the catalogue, "
+         "including the functions nothing measures. Both refresh daily, and any OSO API key "
+         "reproduces every number on this page."),
+        ("Why nothing is scored",
+         "Every threshold was withdrawn on <b>2026-08-20</b>. The numbers are stated in signed "
+         "appendices, but the agreements carrying them are not executed, and a number nobody has "
+         "countersigned is not a commitment. When contracts are signed the bars return unchanged "
+         "and history re-judges itself, because the bar is recorded per day."),
+        ("Coverage is about us, not them",
+         "The percentage on every row is <b>reading coverage</b>: the share of the periods a "
+         "metric's own cadence expects, counted from its first reading, that carry a value. A gap "
+         "means the source produced no defensible number that day — an endpoint down, a schema "
+         "moved. That is our failure to measure, not the team's failure to deliver, so it is drawn "
+         "as a break in the line rather than a drop to zero, and it never colours a row red."),
+        ("What is missing here",
+         "Adjudicated committee verdicts, draft metrics not yet adopted, the endpoint behind each "
+         "reading and the SQL that reduces it to one number, and anything about what a grant is "
+         "worth. The first three are in the internal dashboard; the last belongs on no public "
+         "page."),
+    ]
+
+    GLOSSARY = [
+        ("Kernel", "The funding program covering work the network cannot operate without. Funded as a <b>near-fixed cost</b> on an annual term with audits, not against milestones."),
+        ("Function", "A capability the network needs, named by <b>what it does</b> rather than by which repo provides it. Functions outlive implementations — the function survives when the code that serves it is replaced."),
+        ("Commitment", "One (team, function, metric) triple: a measurable indicator with an agreed cadence and a public source, fetched by a pipeline the team does not control. It is the unit every card on this page draws."),
+        ("Coverage · 90d", "The share of the reading periods the window expects that actually carry a value, counted at each metric's own cadence so a weekly metric is not penalised for being coarse. Low coverage means the commitment exists but is not being collected."),
+        ("Unscored", "Measured, but not judged. A reading is unscored when no threshold is in force — which today is every reading, because every bar was withdrawn pending executed agreements."),
+        ("Gap", "A period the source was asked and gave no defensible number. Not a zero, not a breach, and not the team's failure — it is a hole in the instrument."),
+        ("Tier", "How replaceable a function is, from <b>Irreplaceable</b> to <b>Nice to have</b>. Tier sets the funding posture and whether redundancy is required."),
+        ("Single maintainer", "A function measured through exactly one team. Tolerable at lower tiers, a named risk at the top two, where the posture calls for two or more independent implementations."),
+    ]
+
+    YES = ('<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">'
+           '<path d="M2 6.4 4.6 9 10 3.2" fill="none" stroke="currentColor" stroke-width="2" '
+           'stroke-linecap="round" stroke-linejoin="round"/></svg>')
+    NO = ('<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">'
+          '<path d="M3 3l6 6M9 3l-6 6" fill="none" stroke="currentColor" stroke-width="2" '
+          'stroke-linecap="round"/></svg>')
+    ARROW = ('<svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true" '
+             'style="vertical-align:-1px"><path d="M2 6h8M6.8 2.8 10 6l-3.2 3.2" fill="none" '
+             'stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+             'stroke-linejoin="round"/></svg>')
+    CARET = ('<svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">'
+             '<path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" '
+             'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+
+
+    def tier_by_id(tid):
+        return next((t for t in TIERS if t["id"] == tid), None)
+
+
+    def pct_label(v):
+        return "—" if v is None else f"{v:.1f}%"
+
+
+    def cov_pill(ag):
+        if ag["pct"] is None:
+            return '<span class="pill nm">not measured</span>'
+        if ag["state"] == "good":
+            return f'<span class="pill ok">{ICON["good"]} collecting</span>'
+        return f'<span class="pill gap">{ICON["warn"]} gaps in collection</span>'
+
+
+    def row_strip(ents, today):
+        """The row's own strip: the commitment collected least completely.
+
+        A row is only as well measured as its worst commitment, so that is the one drawn --
+        the same rule the mockup uses for its worst-SLA metric.
+        """
+        if not ents:
+            return '<div class="strip sm"></div>'
+        worst = min(ents, key=lambda e: (roll(e, today)["pct"]
+                                         if roll(e, today)["pct"] is not None else 101))
+        row_bars = 46
+        sbw = strip_bits(worst, today)
+        if not sbw["keys"]:
+            return '<div class="strip sm"></div>'
+        span = 1 if len(sbw["keys"]) <= row_bars else -(-len(sbw["keys"]) // row_bars)
+        cad = f'{span} {sbw["g"]}s' if span > 1 else f'1 {sbw["g"]}'
+        return (strip_html(worst, today, small=True, max_bars=row_bars)
+                + f'<div class="rowcad">1 bar = {cad}'
+                + (f' · worst of {len(ents)}' if len(ents) > 1 else '') + '</div>')
+
 
     def build_public_page(reg):
-        """reg = {'kfs':[...], 'entries':[...], 'today':'YYYY-MM-DD'} -- no projects, no money."""
-        E, KF, today = reg["entries"], reg["kfs"], reg["today"]
+        """reg = {'kfs':[...], 'entries':[...], 'projects':[...], 'today':'YYYY-MM-DD'}.
+
+        The mockup's page, section for section, minus what the public tables cannot support:
+        no committed amounts anywhere, no endpoint block on a card, and coverage wherever the
+        mockup shows an SLA percentage.
+        """
+        E, KF, PR, today = reg["entries"], reg["kfs"], reg["projects"], reg["today"]
         ents = lambda f: [E[i] for i in f["e"]]
+        teams_of = lambda f: list(dict.fromkeys(e["team"] for e in ents(f)))
         watched = [f for f in KF if f["e"]]
-        # Two different counts, and the page must not conflate them: every daily row in the table,
-        # and the subset that carries a value. 6 rows are days a source gave no defensible number.
         n_rows = sum(len(e["s"]["v"]) for e in E)
         n_read = sum(e["n_real"] for e in E)
         teams = sorted({e["team"] for e in E})
-        grants = sorted({e["grant"] for e in E if e.get("grant")})
+        grants = sorted({e["grant"] for e in E if e["grant"]})
+
+        # Collection status, derived rather than asserted. `run` is the trailing run of days on
+        # which the unattended pipeline produced rows at all -- it is what makes a 23% coverage
+        # figure legible, because most of the window predates the loop. `dry` is the trailing run
+        # of days on which it produced rows and not one of them carried a value, which is the one
+        # thing a reader must not mistake for every team failing at once.
+        day = {}
+        for e in E:
+            _b = as_date(e["s"]["d0"])
+            for _off, _v in zip(e["s"]["off"], e["s"]["v"]):
+                _d = (_b + datetime.timedelta(days=_off)).isoformat()
+                _r, _k = day.get(_d, (0, 0))
+                day[_d] = (_r + 1, _k + (0 if _v is None else 1))
+        run, cur = None, as_date(today)
+        while cur.isoformat() in day:
+            run = cur.isoformat()
+            cur -= datetime.timedelta(days=1)
+        dry, cur = 0, as_date(today)
+        while cur.isoformat() in day and day[cur.isoformat()][1] == 0:
+            dry += 1
+            cur -= datetime.timedelta(days=1)
+        status = ""
+        if run:
+            status = (f' The unattended pipeline has produced a reading every day since '
+                      f'<b>{esc(short(run))}</b>; anything earlier was collected by hand during a '
+                      f'review, which is why coverage over a {WIN}-day window reads low.')
+        if dry:
+            status += (f' Nothing has carried a value for <b>{dry} day'
+                       f'{"s" if dry > 1 else ""}</b> — that is one gap in the instrument, not '
+                       f'{len(E)} commitments failing at once.')
 
         out = []
         a = out.append
 
+        # -------------------------------------------------------------- nav
         a('<nav class="nav"><div class="wrap nav-in">'
-          '<a class="crumb" href="#p-top">fil<span class="fil">pgf</span>.io '
+          '<a class="crumb" href="#k-top">fil<span class="fil">pgf</span>.io '
           '<span style="opacity:.4">/</span> <b>Kernel</b> '
           '<span style="opacity:.4">/</span> Monitoring</a>'
           '<div class="nav-links">'
-          '<a href="#p-coverage">Coverage</a><a href="#p-metrics">Metrics</a>'
-          '<a href="#p-method">Method</a></div>'
-          '<a class="nav-cta" href="#p-method">Query it yourself</a>'
+          '<a href="#k-objective">Objective</a><a href="#k-timeline">Timeline</a>'
+          '<a href="#k-categories">Categories</a><a href="#k-functions">Inventory</a>'
+          '<a href="#k-metrics">Coverage</a><a href="#k-method">Method</a>'
+          '<a href="#k-terms">Terms</a></div>'
+          '<a class="nav-cta" href="#k-method">Query it yourself</a>'
           '</div></nav>')
 
         # ------------------------------------------------------------- hero
-        a('<header class="hero" id="p-top"><div class="wrap">'
+        a('<header class="hero" id="k-top"><div class="wrap">'
           '<p class="eyebrow">Kernel · Independent monitoring</p>'
           '<h1>What is being watched.</h1>'
-          '<p class="lede">Every night, each metric below is fetched from the team\'s own '
+          '<p class="lede">Every night, each commitment below is fetched from the team\'s own '
           'infrastructure by a pipeline they do not control, and the reading is appended to a '
           'public record. Nothing here is scored: the numbers exist, the bars do not, because no '
           'agreement carrying one has been executed yet.</p>'
           '<div class="ladder"><div class="ladder-h">'
           '<span></span><span>Tier</span><span>Functions</span>'
-          f'<span>Watched</span><span>What the tier means</span></div>')
+          f'<span>Coverage · {WIN}d</span><span>Funding posture</span></div>')
 
         for t in TIERS:
             fns = [f for f in KF if f["tier"] == t["id"]]
             seen = [f for f in fns if f["e"]]
-            tone = "good" if fns and len(seen) == len(fns) else ("warn" if seen else "none")
-            a(f'<div class="rung">'
+            ag = agg([e for f in fns for e in ents(f)], today)
+            if not fns:
+                count = ('<div class="rung-c" style="font-size:13px;color:var(--k-ink-3)">'
+                         'Pending</div><div class="rung-cl">not inventoried</div>')
+            else:
+                count = (f'<div class="rung-c">{len(fns)}</div>'
+                         f'<div class="rung-cl">in inventory</div>')
+            note = (f'{len(seen)} of {len(fns)} reporting' if fns else "nothing to report")
+            a(f'<a class="rung" href="#k-functions">'
               f'<span class="rung-bar" style="background:var({t["v"]})"></span>'
               f'<span><span class="rung-n">{esc(t["name"])}</span>'
               f'<span class="rung-s">{esc(t["label"])}</span></span>'
-              f'<span><span class="rung-c">{len(fns)}</span>'
-              f'<span class="rung-cl">in inventory</span></span>'
-              f'<span><span class="rung-c" style="color:var(--k-{tone})">{len(seen)}</span>'
-              f'<span class="rung-cl">reporting</span></span>'
-              f'<span class="rung-p">{esc(t["def"])}</span></div>')
+              f'<span>{count}</span>'
+              f'<span><span class="rung-c">{pct_label(ag["pct"])}</span>'
+              f'<span class="rung-cl">{esc(note)}</span></span>'
+              f'<span class="rung-p">{esc(t["short"])}</span></a>')
         a('</div></div></header>')
 
         # ------------------------------------------------------- provenance
@@ -783,120 +1116,392 @@ def public_engine(datetime, math):
           f'Every figure on this page is read from two public tables in the OSO warehouse as of '
           f'<span class="mono">{esc(today)}</span> — '
           f'<span class="mono">kernel_timeseries_metrics_by_project</span> and '
-          f'<span class="mono">kernel_functions</span>. No private source, no embedded snapshot: '
-          f'any OSO API key reproduces every one of the {n_rows} daily rows, '
-          f'{n_read} of which carry a value.'
+          f'<span class="mono">kernel_functions</span>. No private source, no embedded snapshot '
+          f'and no illustrative history: any OSO API key reproduces every one of the '
+          f'<b>{n_rows}</b> daily rows, <b>{n_read}</b> of which carry a value.'
+          f'{status}'
           '</div></div></div>')
 
-        # -------------------------------------------------------- headlines
-        a('<section class="sec" id="p-coverage"><div class="wrap">'
-          '<div class="sec-head"><p class="eyebrow">Coverage</p>'
-          '<h2>Half the inventory reports nothing</h2>'
-          '<p class="lede">A coverage figure computed over the functions we already measure would '
-          'always read 100%. This one is computed over the whole catalogue, so the gap is '
-          'visible.</p></div>'
-          '<div class="mets" style="margin-bottom:34px">'
+        # -------------------------------------------------------- objective
+        a('<section class="sec" id="k-objective"><div class="wrap">'
+          '<div class="sec-head"><p class="eyebrow">Objective</p>'
+          '<h2>Keep the floor from moving</h2></div>'
+          '<div class="split"><div>'
+          '<p>Most of what Filecoin runs on is maintained by small teams, and much of it has no '
+          'second implementation. When one of those goes unfunded, nothing breaks on the day it '
+          'happens — the repo just goes quiet, the maintainer moves on, and the network carries a '
+          'dependency nobody is watching. Kernel exists to make that failure mode visible and to '
+          'pay for it not to happen.</p>'
+          '<p>The program starts from a map, not a wishlist. Every capability the network needs is '
+          'written down as a <b>function</b>, independent of which repo currently provides it. Each '
+          'function is placed in a tier according to how replaceable it is, and each tier carries a '
+          'different funding posture — some are non-negotiable, some are funded for redundancy, some '
+          'are funded only for maintenance.</p>'
+          '<p>Funding follows an annual term with audits rather than milestones, because keeping '
+          'something working is a continuous obligation and not a deliverable. This page is the '
+          'audit trail: every commitment on it names a reading cadence and a public source anyone '
+          'can call. The thresholds those readings will be judged against are written down, and '
+          'withdrawn until the agreements carrying them are executed — so what you are looking at '
+          'is the instrument, working, before it is allowed to score anyone.</p>'
+          '<a class="btn" href="#k-functions">See the inventory</a></div>'
+          '<div class="panel"><div class="panel-t">Kernel funds</div><ul class="yn">'
+          f'<li class="y"><i>{YES}</i><span>Maintenance of functions the network cannot operate without</span></li>'
+          f'<li class="y"><i>{YES}</i><span>A second implementation where a single one is a systemic risk</span></li>'
+          f'<li class="y"><i>{YES}</i><span>Monitoring, testnets, and incident response that keep the network observable</span></li>'
+          f'<li class="y"><i>{YES}</i><span>Security and upgrade work required to stay production-safe</span></li>'
+          '</ul><div class="panel-t">Kernel does not fund</div><ul class="yn">'
+          f'<li class="n"><i>{NO}</i><span>New features or product expansion — that is Revenue Development</span></li>'
+          f'<li class="n"><i>{NO}</i><span>Exploratory or unproven work — that is R&amp;D</span></li>'
+          f'<li class="n"><i>{NO}</i><span>Functions with no maintainer willing to report health metrics</span></li>'
+          '</ul></div></div></div></section>')
+
+        # --------------------------------------------------------- timeline
+        a('<section class="sec sec-alt" id="k-timeline"><div class="wrap">'
+          '<div class="sec-head"><p class="eyebrow">Timeline</p><h2>One term, two audits</h2>'
+          '<p class="lede">Kernel grants run on an annual term. Audits fall mid-term and at close, '
+          'and each one checks the agreed resilience metrics rather than a feature list.</p></div>'
+          '<div class="round"><div><div class="round-k">Next round opening</div>'
+          '<div class="round-v">FY27 intake opens October 2026</div>'
+          '<p>Applications close in November, awards are published in December, and the new term '
+          'begins in January. Existing grantees re-apply on the same cycle.</p></div>'
+          f'<a href="https://app.filpgf.io/" target="_blank" rel="noopener noreferrer">'
+          f'Get notified {ARROW}</a></div><div class="tl">')
+        for t in TIMELINE:
+            a(f'<div class="tl-i {t["state"]}"><div class="tl-d">{esc(t["date"])}</div>'
+              f'<div class="tl-t">{esc(t["title"])}</div></div>')
+        a('</div></div></section>')
+
+        # ------------------------------------------------------- tier cards
+        a('<section class="sec" id="k-categories"><div class="wrap">'
+          '<div class="sec-head"><p class="eyebrow">Categories</p>'
+          '<h2>Four tiers, set by what happens without it</h2>'
+          '<p class="lede">A function\'s tier is decided by substitutability, not by how much anyone '
+          'likes it. That single judgement then drives how much scrutiny it gets, whether redundancy '
+          'is required, and how negotiable the budget is.</p></div><div class="tiers">')
+        for t in TIERS:
+            fns = [f for f in KF if f["tier"] == t["id"]]
+            band = f'{len(fns)} functions' if fns else "inventory pending"
+            a(f'<article class="tier">'
+              f'<div class="tier-band" style="background:var({t["v"]})">{esc(t["name"])}'
+              f'<em>{esc(band)}</em></div>'
+              f'<div class="tier-b"><div class="tier-lab">{esc(t["label"])}</div>'
+              f'<p>{esc(t["def"])}</p><div class="tier-rows">'
+              f'<div class="tier-row"><div class="tier-k">Example</div>'
+              f'<div class="tier-v">{esc(t["example"])}</div></div>'
+              f'<div class="tier-row"><div class="tier-k">Posture</div>'
+              f'<div class="tier-v">{esc(t["posture"])}</div></div>'
+              f'</div></div></article>')
+        a('</div></div></section>')
+
+        # -------------------------------------------------------- inventory
+        a('<section class="sec sec-alt" id="k-functions"><div class="wrap">'
+          '<div class="sec-head"><p class="eyebrow">Inventory</p><h2>The inventory</h2>'
+          '<p class="lede">The same commitments, read two ways. <b>By project</b> asks what each '
+          'reporting team is on the hook for; <b>by function</b> asks what the network needs and '
+          'whether anyone is watching it. The percentage is reading coverage — the share of the '
+          'periods a metric\'s own cadence expects, counted from its first reading, that carry a '
+          'value. Open any row for the commitments behind it in full: the collection record, every '
+          'gap, the readings themselves, and the table they came from.</p>'
+          '<div class="legend">'
+          '<span><i style="background:var(--k-fil)"></i>reading collected</span>'
+          '<span><i style="background:var(--k-warn)"></i>no defensible number</span>'
+          '<span><i style="background:var(--k-none)"></i>no reading taken</span></div>'
+          '</div></div>')
+
+        # Radio + :checked rather than a script: the page is exported statically, so a
+        # JS tab bar would come out dead. The panels must stay siblings of the inputs.
+        a('<div class="kviews">'
+          '<input type="radio" name="kview" id="kv-fn">'
+          '<input type="radio" name="kview" id="kv-pr" checked>'
+          '<div class="wrap"><div class="viewbar" role="tablist">'
+          f'<label for="kv-pr">By project <b>{len(PR)}</b></label>'
+          f'<label for="kv-fn">By function <b>{len(KF)}</b></label>'
+          '</div></div>'
+          '<div class="wrap vpanel v-fn">')
+
+        for t in TIERS:
+            fns = [f for f in KF if f["tier"] == t["id"]]
+            seen = [f for f in fns if f["e"]]
+            head = (f'{len(seen)} of {len(fns)} reporting' if fns else "inventory pending")
+            a(f'<div class="fgroup"><div class="fg-h">'
+              f'<span class="fg-n" style="color:var({t["v"]})">{esc(t["name"])}</span>'
+              f'<span class="fg-c">{esc(head)}</span></div>')
+            if not fns:
+                a(f'<div class="note">Functions in this tier have not been inventoried yet. '
+                  f'Posture is set — {esc(t["short"].lower())} — but nothing is being measured '
+                  f'against it.</div></div>')
+                continue
+            for dom in dict.fromkeys(f["sub"] for f in fns):
+                a(f'<div class="dom">{esc(dom)}</div>')
+                for f in sorted([x for x in fns if x["sub"] == dom],
+                                key=lambda x: (not x["e"], x["name"])):
+                    a(function_row(f, t, today, ents(f), teams_of(f)))
+            a('</div>')
+        a('</div>')
+
+        # ---------------------------------------------------- by project
+        a('<div class="wrap vpanel v-pr">')
+        covered = len({e["kernel_id"] for e in E if e["kernel_id"]})
+        overall = agg(E, today)
+        a('<div class="mets" style="margin-bottom:34px">'
           f'<div class="met"><div class="met-v">{len(E)}</div>'
           f'<div class="met-k">Commitments measured</div>'
           f'<div class="met-d">{len(teams)} teams · {len(grants)} grants</div></div>'
-          f'<div class="met"><div class="met-v">{len(watched)}<span style="color:var(--k-ink-3)">'
-          f'/{len(KF)}</span></div>'
+          f'<div class="met"><div class="met-v">{len(watched)}'
+          f'<span style="color:var(--k-ink-3)">/{len(KF)}</span></div>'
           f'<div class="met-k">Kernel functions with a reporter</div>'
           f'<div class="met-d bad">{len(KF) - len(watched)} report nothing at all</div></div>'
           f'<div class="met"><div class="met-v">0</div>'
           f'<div class="met-k">Readings judged</div>'
           f'<div class="met-d warn">No bar is in force until a contract is executed</div></div>'
           '</div>')
-
-        for t in TIERS:
-            fns = [f for f in KF if f["tier"] == t["id"]]
-            if not fns:
+        with_grant = [p for p in PR if p["grants"]]
+        without = [p for p in PR if not p["grants"]]
+        for label, group, note in (
+            ("Reporting under a grant", with_grant,
+             "Each row is one Karma application and the commitments it pays for."),
+            ("Reporting with no grant against it", without,
+             "Commitments nobody is paid for — cross-checks we run at our own expense."),
+        ):
+            if not group:
                 continue
-            seen = [f for f in fns if f["e"]]
             a(f'<div class="fgroup"><div class="fg-h">'
-              f'<span class="fg-n" style="color:var({t["v"]})">{esc(t["name"])}</span>'
-              f'<span class="fg-c">{len(seen)} of {len(fns)} reporting</span></div>')
-            for f in sorted(fns, key=lambda x: (not x["e"], x["name"])):
-                es = ents(f)
-                if es:
-                    who = ", ".join(sorted({e["team"] for e in es}))
-                    a(f'<div class="rung" style="grid-template-columns:8px minmax(0,2fr) 120px '
-                      f'minmax(0,1fr)">'
-                      f'<span class="rung-bar" style="background:var(--k-good)"></span>'
-                      f'<span><span class="rung-n" style="font-size:15px">{esc(f["name"])}</span>'
-                      f'<span class="rung-s">{esc(f["sub"])}</span></span>'
-                      f'<span><span class="rung-c">{len(es)}</span>'
-                      f'<span class="rung-cl">metrics</span></span>'
-                      f'<span class="rung-p">{esc(who)}</span></div>')
-                else:
-                    a(f'<div class="rung" style="grid-template-columns:8px minmax(0,2fr) 120px '
-                      f'minmax(0,1fr)">'
-                      f'<span class="rung-bar" style="background:var(--k-none)"></span>'
-                      f'<span><span class="rung-n" style="font-size:15px;color:var(--k-ink-3)">'
-                      f'{esc(f["name"])}</span>'
-                      f'<span class="rung-s">{esc(f["sub"])}</span></span>'
-                      f'<span><span class="rung-c" style="color:var(--k-ink-3)">—</span>'
-                      f'<span class="rung-cl">no metric</span></span>'
-                      f'<span class="rung-p" style="color:var(--k-ink-3)">Nobody reports on this '
-                      f'function, so nothing on this page can tell you whether it is healthy.'
-                      f'</span></div>')
+              f'<span class="fg-n">{esc(label)}</span>'
+              f'<span class="fg-c">{len(group)} row{"s" if len(group) != 1 else ""}</span></div>'
+              f'<div class="dom">{esc(note)}</div>')
+            for p in group:
+                a(project_row(p, today, E, KF))
             a('</div>')
-        a('</div></section>')
+        a('</div>')  # /v-pr
+        a('</div></section>')  # /kviews /section
 
-        # ----------------------------------------------------------- metrics
-        a('<section class="sec sec-alt" id="p-metrics"><div class="wrap">'
-          '<div class="sec-head"><p class="eyebrow">Metrics</p>'
-          '<h2>The readings themselves</h2>'
-          '<p class="lede">One card per commitment, newest reading first. The line is the metric '
-          'in its own units over the last 90 days; a gap is a day the source gave no defensible '
-          'number, which is not a zero and not a failure.</p></div>')
+        # --------------------------------------------------- program metrics
+        a('<section class="sec" id="k-metrics"><div class="wrap">'
+          '<div class="sec-head"><p class="eyebrow">Coverage</p>'
+          '<h2>How much of the Kernel is actually observed</h2>'
+          '<p class="lede">Aggregate health matters less than coverage, and with no bar in force '
+          'coverage is the only claim this page can make. A function with no reporter and no metric '
+          'is invisible here, which is exactly what makes it dangerous.</p></div>'
+          '<div class="mets">')
+        for c in program_metrics(KF, E, PR, today, teams_of, overall):
+            a(f'<div class="met"><div class="met-v">{esc(c["v"])}</div>'
+              f'<div class="met-k">{esc(c["k"])}</div>'
+              f'<div class="met-d {c["cls"]}">{esc(c["d"])}</div></div>')
+        a('</div><p class="note" style="margin-top:22px">Every reading on this page is derived from '
+          'the two public tables named below. Metrics for individual projects and repos live in the '
+          f'<a href="https://app.filpgf.io/projects" target="_blank" rel="noopener noreferrer" '
+          f'style="color:var(--k-fil-deep);white-space:nowrap">explorer {ARROW}</a>'
+          '</p></div></section>')
 
-        dup = {f for f in {e["fid"] for e in E}
-               if len({e["team"] for e in E if e["fid"] == f}) > 1}
-        for team in teams:
-            mine = [e for e in E if e["team"] == team]
-            a(f'<div class="fgroup"><div class="fg-h">'
-              f'<span class="fg-n">{esc(team)}</span>'
-              f'<span class="fg-c">{len(mine)} commitment'
-              f'{"s" if len(mine) > 1 else ""}</span></div>'
-              f'<div class="cards">')
-            for e in sorted(mine, key=lambda x: x["fid"]):
-                a(public_card(e, today, show_team=False, qualify=e["fid"] in dup))
-            a('</div></div>')
-        a('</div></section>')
-
-        # ------------------------------------------------------------ method
-        a('<section class="sec" id="p-method"><div class="wrap">'
+        # ----------------------------------------------------------- method
+        a('<section class="sec sec-alt" id="k-method"><div class="wrap">'
           '<div class="sec-head"><p class="eyebrow">Method</p>'
-          '<h2>What this page can and cannot tell you</h2></div>'
-          '<div class="terms">'
-          '<div class="term"><h3>Two tables, both public</h3>'
-          '<p><span class="mono">filecoin.filpgf_public.kernel_timeseries_metrics_by_project</span> '
-          'holds one row per team, function, metric and day. '
-          '<span class="mono">filecoin.filpgf_public.kernel_functions</span> holds the catalogue, '
-          'including the functions nothing measures. Both refresh daily.</p></div>'
-          '<div class="term"><h3>Why nothing is scored</h3>'
-          '<p>Every threshold was withdrawn on 2026-08-20. The numbers are stated in signed '
-          'appendices, but the agreements carrying them are not executed, and a number nobody has '
-          'countersigned is not a commitment. When contracts are signed the bars return unchanged '
-          'and history re-judges itself, because the bar is recorded per day.</p></div>'
-          '<div class="term"><h3>A gap is not a zero</h3>'
-          '<p>A missing reading means the source produced no defensible number that day — an '
-          'endpoint down, a schema moved. That is our failure to measure, not the team\'s failure '
-          'to deliver, and it is drawn as a break in the line rather than a drop to zero.</p></div>'
-          '<div class="term"><h3>What is missing here</h3>'
-          '<p>Adjudicated committee verdicts, draft metrics not yet adopted, the source endpoint '
-          'behind each reading, and anything about what a grant is worth. The first three are in '
-          'the internal dashboard; the last belongs on no public page.</p></div>'
-          '</div></div></section>')
+          '<h2>What this page can and cannot tell you</h2>'
+          '<p class="lede">The page is built only from tables anyone can query. That constraint is '
+          'the point, and it is also the limit.</p></div><dl class="terms">')
+        for dt, dd in METHOD:
+            a(f'<div class="term"><dt>{esc(dt)}</dt><dd>{dd}</dd></div>')
+        a('</dl></div></section>')
 
+        # --------------------------------------------------------- glossary
+        a('<section class="sec" id="k-terms"><div class="wrap">'
+          '<div class="sec-head"><p class="eyebrow">Terms</p>'
+          '<h2>What these words mean here</h2>'
+          '<p class="lede">Kernel uses a few words in a specific way. Getting them straight is most '
+          'of understanding the program.</p></div><dl class="terms">')
+        for dt, dd in GLOSSARY:
+            a(f'<div class="term"><dt>{esc(dt)}</dt><dd>{dd}</dd></div>')
+        a('</dl></div></section>')
+
+        # ----------------------------------------------------------- footer
         a('<footer class="foot"><div class="wrap foot-in">'
           f'<span>Filecoin Kernel · independent monitoring · {esc(today)}</span>'
           '<span class="foot-links">'
           '<a href="https://github.com/filecoin-project/pgf-monitor">pipeline &amp; registry</a>'
-          '</span></div></footer>')
+          '<a href="#k-method">Method</a><a href="#k-top">Top</a></span>'
+          '</div></footer>')
 
-        return f'<div class="kpage" id="k-top">{"".join(out)}</div>'
+        return f'<div class="kpage" id="k-page">{"".join(out)}</div>'
+
+
+    # ------------------------------------------------------------ components
+
+    def function_row(f, t, today, es, teams):
+        """One kernel function, with every commitment that evidences it.
+
+        The mockup splits health metrics from growth counters; the public mart carries no such
+        classification, so every commitment sits in one list and the row says nothing about
+        which of them could report an outage.
+        """
+        ag = agg(es, today)
+        seen = {}
+        for e in es:
+            seen[e["fid"]] = seen.get(e["fid"], 0) + 1
+        dup_fids = {k for k, v in seen.items() if v > 1}
+        n = len(teams)
+
+        flags = []
+        if n == 0:
+            flags.append('<span class="flag bad">no maintainer reporting</span>')
+        elif n == 1:
+            flags.append('<span class="flag solo">single maintainer</span>')
+        if es:
+            flags.append(f'{len(es)} commitment{"s" if len(es) > 1 else ""}')
+        else:
+            flags.append('<span class="none">nothing measured</span>')
+        if f["drafts"]:
+            flags.append(f'{f["drafts"]} proposed, not yet committed')
+        meta = f'<div class="fn-m">{" · ".join(flags)}</div>'
+
+        summary = (
+            f'<summary>'
+            f'<div><div class="fn-cat" style="color:var({t["v"]})">{esc(t["name"])} · '
+            f'{esc(f["cat"])}</div>'
+            f'<div class="fn-t">{esc(f["name"])}</div>{meta}</div>'
+            f'<div class="fn-rowstrip">{row_strip(es, today)}</div>'
+            f'<div class="fn-s"><div class="fn-p">{pct_label(ag["pct"])}</div>'
+            f'<div class="fn-l">{"COVERAGE · %dD" % WIN if ag["pct"] is not None else "NO DATA"}'
+            f'</div>{cov_pill(ag)}</div>'
+            f'<span class="car">{CARET}</span></summary>')
+
+        team_names = (", ".join(esc(x) for x in teams) if teams
+                      else '<span class="dim">no team reporting yet</span>')
+        grants = sorted({e["grant"] for e in es if e["grant"]})
+        cells = [
+            ("Teams reporting", team_names),
+            ("Domain", f'<span class="dim">{esc(f["sub"])}</span>'),
+            ("Commitments", f'<span class="num">{len(es)}</span>'),
+            ("Proposed, not adopted", f'<span class="num">{f["drafts"]}</span>'),
+            ("Grants", (" ".join(f'<span class="mono">{esc(g)}</span>' for g in grants)
+                        if grants else '<span class="dim">none</span>')),
+        ]
+        grid = "".join(f'<div><div class="fm-k">{esc(k)}</div><div class="fm-v">{v}</div></div>'
+                       for k, v in cells)
+
+        body = [f'<div class="fn-d"><p class="fn-purpose">{esc(f["why"])}</p>'
+                f'<div class="fn-grid">{grid}</div>']
+
+        if es:
+            body.append(f'<div class="metrics-head"><h4>Commitments</h4>'
+                        f'<span>{len(es)} metric{"s" if len(es) > 1 else ""} · measured nightly, '
+                        f'judged by nothing yet</span></div><div class="cards">'
+                        + "".join(metric_card(e, today, qualify=e["fid"] in dup_fids)
+                                  for e in es) + '</div>')
+        else:
+            extra = (f' {f["drafts"]} metric{"s" if f["drafts"] > 1 else ""} '
+                     f'{"have" if f["drafts"] > 1 else "has"} been proposed against it, and '
+                     f'{"are" if f["drafts"] > 1 else "is"} not yet adopted.'
+                     if f["drafts"] else "")
+            body.append('<div class="empty"><b>Nobody reports on this function.</b>'
+                        f'{extra} Nothing on this page can tell you whether it is healthy, so an '
+                        'interruption here would be invisible.</div>')
+        body.append('</div>')
+        return f'<details class="fn">{summary}{"".join(body)}</details>'
+
+
+    def project_row(p, today, E, KF):
+        """One grant, with every commitment it pays for.
+
+        The mirror image of `function_row`, and the mockup's project row with the money taken
+        out: no committed figure, and the bar that carried it now carries coverage instead.
+        """
+        es = [E[i] for i in p["e"]]
+        ag = agg(es, today)
+        kf_by_id = {f["kernel_id"]: f for f in KF}
+        fns = [kf_by_id[k] for k in dict.fromkeys(e["kernel_id"] for e in es) if k in kf_by_id]
+        tiers = [t for t in TIERS if any(f["tier"] == t["id"] for f in fns)]
+        top_tier = tiers[0] if tiers else None
+
+        # "1 Irreplaceable · 6 Essential" rather than a single tier name: a project that touches
+        # one irreplaceable function and six essential ones is not an irreplaceable project.
+        eyebrow = " · ".join(
+            f'{sum(1 for f in fns if f["tier"] == t["id"])} {t["name"]}'
+            for t in tiers) or "No kernel function mapped"
+        colour = top_tier["v"] if top_tier else "--k-ink-3"
+
+        bits = [f'{len(es)} commitment{"s" if len(es) != 1 else ""}',
+                f'{len(fns)} kernel function{"s" if len(fns) != 1 else ""}']
+        bits.append(f'<span class="mono">{esc(p["grants"][0])}</span>' if p["grants"]
+                    else '<span class="quiet">no grant against it</span>')
+        meta = f'<div class="fn-m">{" · ".join(bits)}</div>'
+
+        bar = ""
+        if ag["pct"] is not None:
+            bar = (f'<div class="ftrack"><span class="fbar" '
+                   f'style="width:{max(2, round(ag["pct"]))}%"></span></div>')
+
+        summary = (
+            f'<summary>'
+            f'<div><div class="fn-cat" style="color:var({colour})">{esc(eyebrow)}</div>'
+            f'<div class="fn-t">{esc(p["name"])}</div>{meta}{bar}</div>'
+            f'<div class="fn-rowstrip">{row_strip(es, today)}</div>'
+            f'<div class="fn-s"><div class="fn-p">{pct_label(ag["pct"])}</div>'
+            f'<div class="fn-l">{"COVERAGE · %dD" % WIN if ag["pct"] is not None else "NO DATA"}'
+            f'</div>{cov_pill(ag)}</div>'
+            f'<span class="car">{CARET}</span></summary>')
+
+        n_rows = sum(len(e["s"]["v"]) for e in es)
+        n_read = sum(e["n_real"] for e in es)
+        cells = [
+            ("Kernel functions", f'<span class="num">{len(fns)}</span>'),
+            ("Commitments", f'<span class="num">{len(es)}</span>'),
+            ("Readings collected", f'<span class="num">{n_read}</span> of {n_rows} rows'),
+            ("Grant", (" ".join(f'<span class="mono">{esc(g)}</span>' for g in p["grants"])
+                       if p["grants"] else '<span class="dim">no grant pays for this</span>')),
+            ("OSO project", (f'<span class="mono">{esc(p["slug"])}</span>' if p["slug"]
+                             else '<span class="dim">not mapped</span>')),
+        ]
+        body = ['<div class="fn-d">',
+                '<div class="fn-grid">' + "".join(
+                    f'<div><div class="fm-k">{esc(k)}</div><div class="fm-v">{v}</div></div>'
+                    for k, v in cells) + '</div>']
+
+        if fns:
+            chips = "".join(
+                f'<span><i style="color:var({tier_by_id(f["tier"])["v"]})">'
+                f'{esc(tier_by_id(f["tier"])["name"])}</i>{esc(f["name"])}</span>'
+                for f in fns if tier_by_id(f["tier"]))
+            body.append('<div class="pfns"><div class="dk">Kernel functions evidenced</div>'
+                        f'<div class="chips">{chips}</div></div>')
+
+        dup = {k for k, v in
+               {e["fid"]: sum(1 for x in es if x["fid"] == e["fid"]) for e in es}.items() if v > 1}
+        body.append(f'<div class="metrics-head"><h4>Commitments</h4>'
+                    f'<span>{len(es)} metric{"s" if len(es) != 1 else ""} · '
+                    f'{n_read} readings in the public table</span></div><div class="cards">'
+                    + "".join(metric_card(e, today, show_team=False, qualify=e["fid"] in dup)
+                              for e in sorted(es, key=lambda x: x["fid"])) + '</div>')
+        body.append('</div>')
+        return f'<details class="fn">{summary}{"".join(body)}</details>'
+
+
+    def program_metrics(KF, E, PR, today, teams_of, overall):
+        listed = len(KF)
+        watched = [f for f in KF if f["e"]]
+        unmeasured = listed - len(watched)
+        top_solo = sum(1 for f in KF
+                       if f["tier"] in ("irreplaceable", "essential") and len(teams_of(f)) == 1)
+        unowned = sum(1 for f in KF if not f["e"])
+        drafts = sum(f["drafts"] for f in KF)
+        teams = len({e["team"] for e in E})
+        cover = round(len(watched) / listed * 100) if listed else 0
+        return [
+            {"v": f"{cover}%", "k": "Measurement coverage",
+             "d": f"{unmeasured} of {listed} kernel functions report nothing",
+             "cls": "warn" if unmeasured else ""},
+            {"v": pct_label(overall["pct"]), "k": f"Reading coverage · rolling {WIN} days",
+             "d": f'{overall["read"]} of {overall["expected"]} expected reading periods carry a '
+                  f'value', "cls": "warn" if overall["state"] == "warn" else ""},
+            {"v": str(len(E)), "k": "Commitments measured",
+             "d": f"{teams} teams · {len(PR)} grant rows · {drafts} more proposed", "cls": ""},
+            {"v": "0", "k": "Readings judged",
+             "d": "Every threshold was withdrawn pending executed agreements", "cls": "warn"},
+            {"v": str(top_solo), "k": "Top-tier functions measured through one team only",
+             "d": "Posture calls for 2+ implementations", "cls": "bad" if top_solo else ""},
+            {"v": str(unowned), "k": "Functions with no team reporting",
+             "d": "Invisible to this page until one signs up",
+             "cls": "bad" if unowned else ""},
+        ]
 
     return (build_public_page,)
 
@@ -907,8 +1512,9 @@ def live_registry(build_registry, mo, pyoso_db_conn, to_rows):
     # of the two public tables, so the page cannot describe a world the warehouse does not.
     _series = mo.sql(
         """
-        SELECT sample_date, team, function_id, metric_name, grant_ref, kernel_id, kernel_function,
-               tier, category, sub_category, amount, threshold_op, threshold_value, cadence,
+        SELECT sample_date, team, project_display_name, oso_project_slug, function_id,
+               metric_name, grant_ref, kernel_id, kernel_function, tier, category, sub_category,
+               amount, threshold_op, threshold_value, threshold_source, method, cadence,
                sla_statement
         FROM filecoin.filpgf_public.kernel_timeseries_metrics_by_project
         ORDER BY team, function_id, metric_name, sample_date
@@ -916,9 +1522,12 @@ def live_registry(build_registry, mo, pyoso_db_conn, to_rows):
         output=False,
         engine=pyoso_db_conn,
     )
+    # `draft_metrics` is why the catalogue is read at all: a function nothing measures has no row
+    # in the series to ride on, and a coverage figure computed without it always reads 100%.
     _functions = mo.sql(
         """
-        SELECT kernel_id, tier, category, sub_category, kernel_function, kernel_value
+        SELECT kernel_id, tier, category, sub_category, kernel_function, kernel_value,
+               is_in_scope, adopted_metrics, draft_metrics, adopted_teams
         FROM filecoin.filpgf_public.kernel_functions
         ORDER BY tier, category, kernel_function
         """,
@@ -954,11 +1563,20 @@ def row_reader():
 @app.cell(hide_code=True)
 def registry_shape(datetime):
     def build_registry(rows, functions):
-        """Rows -> the {kfs, entries, today} shape the page renders.
+        """Rows -> the {kfs, entries, projects, today} shape the page renders.
 
         Readings are packed as day-offsets from the first one, exactly as the mockup packs them,
-        so the chart helpers can be reused unchanged.
+        so the chart and strip helpers can be reused unchanged.
         """
+        def _txt(v):
+            # polars hands back None, pandas hands back NaN for a missing varchar
+            if v is None or v != v:
+                return ""
+            return str(v)
+
+        def _iso(v):
+            return v if isinstance(v, str) else v.isoformat()
+
         by_key = {}
         for r in rows:
             key = (r["team"], r["function_id"], r["metric_name"])
@@ -966,49 +1584,51 @@ def registry_shape(datetime):
 
         entries = []
         for (team, fid, metric), rs in sorted(by_key.items()):
-            rs = sorted(rs, key=lambda x: x["sample_date"])
-            first = rs[0]["sample_date"]
-            d0 = first if isinstance(first, str) else first.isoformat()
+            rs = sorted(rs, key=lambda x: _iso(x["sample_date"]))
+            d0 = _iso(rs[0]["sample_date"])
             base = datetime.date.fromisoformat(d0)
-
-            def _iso(v):
-                return v if isinstance(v, str) else v.isoformat()
 
             # An unmeasurable day is carried as a null value rather than dropped, so the line
             # breaks where the source failed instead of interpolating over it.
             def _num(v):
                 # polars hands back None, pandas hands back NaN, and `NaN is None` is False --
-                # which silently turned 6 unmeasurable days into plottable garbage. v != v is the
+                # which silently turned unmeasurable days into plottable garbage. v != v is the
                 # NaN test that needs no numpy import.
                 if v is None or v != v:
                     return None
                 return float(v)
 
-            offs, vals, outs = [], [], []
+            offs, vals, outs, methods = [], [], [], {}
             for r in rs:
                 offs.append((datetime.date.fromisoformat(_iso(r["sample_date"])) - base).days)
                 _v = _num(r["amount"])
                 vals.append(_v)
                 outs.append("i" if _v is None else "u")
+                _m = _txt(r.get("method")) or "unknown"
+                methods[_m] = methods.get(_m, 0) + 1
             last = rs[-1]
+            display = next((_txt(r.get("project_display_name")) for r in reversed(rs)
+                            if _txt(r.get("project_display_name"))), "")
             entries.append({
                 "id": len(entries),
                 "team": team,
+                "project": display or team,
+                "slug": _txt(last.get("oso_project_slug")),
                 "fid": fid,
                 "metric": metric,
-                "grant": last.get("grant_ref") or "",
-                "kernel_id": last.get("kernel_id") or "",
-                "kf": last.get("kernel_function") or "",
-                "tier": last.get("tier") or "",
-                "cat": last.get("category") or "",
-                "sub": last.get("sub_category") or "",
-                "cad": last.get("cadence") or "daily",
-                "stmt": last.get("sla_statement") or "",
-                "shape": "reading",
+                "grant": _txt(last.get("grant_ref")),
+                "kernel_id": _txt(last.get("kernel_id")),
+                "kf": _txt(last.get("kernel_function")),
+                "tier": _txt(last.get("tier")),
+                "cat": _txt(last.get("category")),
+                "sub": _txt(last.get("sub_category")),
+                "cad": _txt(last.get("cadence")) or "daily",
+                "stmt": _txt(last.get("sla_statement")),
                 # No bar is in force, so the card draws no threshold line and claims no verdict.
                 "op": last.get("threshold_op"),
                 "thr": last.get("threshold_value"),
-                "src": "observed",
+                "thr_src": _txt(last.get("threshold_source")),
+                "methods": methods,
                 "n_real": sum(1 for v in vals if v is not None),
                 "s": {"d0": d0, "off": offs, "v": vals, "o": outs},
             })
@@ -1018,20 +1638,36 @@ def registry_shape(datetime):
             by_kernel.setdefault(e["kernel_id"], []).append(e["id"])
 
         kfs = [{
-            "name": f["kernel_function"],
-            "tier": f["tier"],
-            "cat": f["category"],
-            "sub": f["sub_category"],
-            "why": f.get("kernel_value") or "",
-            "e": by_kernel.get(f["kernel_id"], []),
+            "kernel_id": _txt(f["kernel_id"]),
+            "name": _txt(f["kernel_function"]),
+            "tier": _txt(f["tier"]),
+            "cat": _txt(f["category"]),
+            "sub": _txt(f["sub_category"]),
+            "why": _txt(f.get("kernel_value")),
+            "in_scope": bool(f.get("is_in_scope")),
+            "drafts": int(f.get("draft_metrics") or 0),
+            "e": by_kernel.get(_txt(f["kernel_id"]), []),
         } for f in functions]
 
-        today = max((e["s"]["d0"] for e in entries), default="")
+        # A row of the "by project" view is one GRANT, not one team: a recipient can hold two
+        # (ChainSafe holds Forest and Community Services), and `team` cannot tell them apart.
+        # The one commitment no grant pays for gets its own row rather than being hidden.
+        groups = {}
+        for e in entries:
+            key = e["grant"] or f'team:{e["team"]}'
+            g = groups.setdefault(key, {"name": e["project"], "team": e["team"],
+                                        "slug": e["slug"], "grants": [], "e": []})
+            g["e"].append(e["id"])
+            if e["grant"] and e["grant"] not in g["grants"]:
+                g["grants"].append(e["grant"])
+        projects = sorted(groups.values(), key=lambda p: (not p["grants"], p["name"].lower()))
+
+        today = ""
         for e in entries:
             base = datetime.date.fromisoformat(e["s"]["d0"])
             last = (base + datetime.timedelta(days=e["s"]["off"][-1])).isoformat()
             today = max(today, last)
-        return {"kfs": kfs, "entries": entries, "today": today}
+        return {"kfs": kfs, "entries": entries, "projects": projects, "today": today}
 
     return (build_registry,)
 
