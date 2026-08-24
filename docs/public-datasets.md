@@ -7,10 +7,10 @@ through, granted public read and queryable through the OSO API with any API key.
 
 **Two tables, on purpose.**
 
-| table | one row per | rows |
+| table | one row per | size |
 |---|---|---|
-| `filecoin.filpgf_public.kernel_timeseries_metrics_by_project` | reading: day × team × function × metric | 673 |
-| `filecoin.filpgf_public.kernel_functions` | kernel function in the inventory | 31 |
+| `filecoin.filpgf_public.kernel_timeseries_metrics_by_project` | reading: day × team × function × metric | 38 commitments, one row each per day collected — 825 on 2026-08-24, growing nightly |
+| `filecoin.filpgf_public.kernel_functions` | kernel function in the inventory | 31, of which 17 have a reporter |
 
 Every fact about a reading rides on the reading — what it is evidence for, who is paid for it, and
 **the bar as it stood that day** — so thresholds and the metric registry need no tables of their
@@ -61,19 +61,26 @@ On every row of `kernel_timeseries_metrics_by_project`:
 - **`kernel_id`** — the one kernel function this metric evidences. `non-kernel` means the metric is
   real but evidences nothing the inventory names; it is published as itself so it can't be mistaken
   for a missing value.
-- **`state`** — `adopted` (in `registry/`, so a team is held to it today) or `draft` (modelled, not
-  yet committed to). A metric can appear twice, once per state, which is how a team proposes its
-  next version. **Filter on `state = 'adopted'` unless you specifically want the pipeline.**
-- **`origin`** — who authored the entry: `oso`, `karma` (harvested from the team's application) or
-  `external-pr`.
-- **`source_host`** — the host the reading is fetched from, or `fixture` for a placeholder awaiting
-  a real feed; `is_fixture` says the same thing as a boolean. A `fixture` row is not yet a live
-  measurement.
-- **`kernel_id_resolves`** — false when `kernel_id` names nothing in the inventory. Distinguishes
-  "deliberately outside the taxonomy" (`non-kernel`) from "points at a function that no longer
-  exists", so a null `kernel_function` is never ambiguous.
-- **`repos`** — space-separated `owner/name`, lowercase, empty when the work is measured through an
-  endpoint rather than a repository.
+- **`project_display_name`** — the payee's display name where OSSD has one, null otherwise. Render
+  this rather than `team`; `team` is our filename stem, not what anyone calls themselves.
+- **`method`** — how that day's reading was taken: `nightly` (the unattended run), `live-review`
+  (taken during a review), or `backfill:<host>` where the source's own history was reconstructed
+  after the fact. A day can carry more than one row for one commitment when a backfill lands beside
+  a nightly reading; they are different observations of the same day, not duplicates.
+- **`threshold_source`** — `signed-appendix` when the bar was read out of a signed appendix,
+  `provisional` otherwise. Every row is `provisional` today, and every `threshold_op` is null.
+- **`time_interval`** — always `daily`, for shape-compatibility with the sibling
+  `timeseries_metrics_by_project`.
+
+**Adopted only, and six columns are NOT here.** The mart is built through
+`filecoin.metrics.metrics_filpgf_sla`, which joins `state = 'adopted'` — a draft is not a
+commitment, so drafts never reach these tables at all. Their existence is visible only as
+`kernel_functions.draft_metrics`. That also means **`state`, `origin`, `source_host`, `is_fixture`,
+`kernel_id_resolves` and `repos` are not columns of this table**: they belong to
+`filecoin.entities.registry_kernel_metrics`, one layer below, which is internal to the Filecoin org
+and not public-read. An earlier version of this page listed them here and told you to filter on
+`state`, which was doubly wrong — the column does not exist, and the filtering is already done. If
+you need any of them, ask; do not write a query against them.
 
 `kernel_functions` carries the inventory **including functions nothing measures yet**, with the
 counts already computed. That is the point: coverage against only the covered functions always
