@@ -85,3 +85,19 @@ def test_the_blackout_check_runs_after_the_writes():
     assert body.index("git commit") < guard
     assert body.index("scripts/observations.py upload") < guard
     assert body.index("scripts.exports upload") < guard
+
+
+def test_the_schedule_leaves_the_mart_time_to_rebuild():
+    """The cron must fire early enough that the republish beats the downstream UDM DAG.
+
+    `filpgf_public` rebuilds on a fixed daily chain starting with staging_external at 07:00 UTC.
+    A run whose republish lands after that shows the day's readings in the mart 24 hours late.
+    A 40-metric run measured 23 minutes on 2026-08-25 and GitHub fired the cron 9 minutes late,
+    so anything at or after 06:00 is cutting into the margin rather than leaving one.
+    """
+    cron = _workflow()[True]["schedule"][0]["cron"]
+    minute, hour = cron.split()[0], cron.split()[1]
+    assert hour.isdigit() and int(hour) < 6, (
+        f"observe is scheduled at {hour}:{minute} UTC; staging_external starts 07:00 and a "
+        f"40-metric run takes ~23m plus up to ~10m of scheduler lag"
+    )
