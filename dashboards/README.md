@@ -49,14 +49,34 @@ support the claim:
   bar now tracks reading coverage. What a grant is worth belongs on no public page.
 - **Coverage, not SLA.** Every threshold was withdrawn on 2026-08-20, so the slot the
   mockup fills with "SLA met - 90d" carries reading coverage instead: the share of the
-  periods a metric's own cadence expects, counted from its first reading, that carry a
-  value. Gaps are drawn amber and described as ours, never as a breach.
+  periods a metric's own cadence expects that carry a value. Gaps are drawn amber and
+  described as ours, never as a breach.
 - **No source block.** The mart carries how each reading was taken (`method`) but not the
   endpoint or the SQL that reduces it to a scalar, so the card names the collection route
   and the Method section says the endpoint is missing on purpose.
 
-The stylesheet is character-for-character the mockup's, plus two rules: a blue strip bar
-for "read, unscored" and an amber `.pill.gap`.
+### What the denominator is allowed to charge a team for
+
+Both rules live in the `collection_policy` cell, are stated on the page, and were added
+2026-08-26 after every Ankr commitment read 26% for reasons that were entirely ours:
+
+- **`COVERAGE_FROM = "2026-08-22"`** — coverage is judged from the day unattended nightly
+  collection became the record, never from a metric's first ad-hoc probe. 41 commitments
+  across 17 teams carry a single `live-review` reading on 2026-07-15; anchoring the
+  denominator on it charged each of them for the month before the instrument existed. It
+  is a floor, not an override: a metric first collected later still starts at its own
+  first reading.
+- **`PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23"}`** — the two nights OSO's run-group
+  change made `run { id }` a 400 and every fetch for all twelve teams returned nothing.
+  Those periods leave the denominator outright rather than counting as gaps. Dated by hand
+  because the public mart has no error column — only `method` — so there is nothing to
+  pattern-match on, and a list you must edit by hand cannot quietly swallow a source that
+  really did go dark. A weekly or monthly bucket only drops if the outage cost the *whole*
+  period.
+
+The stylesheet is character-for-character the mockup's, plus three rules: a blue strip bar
+for "read, unscored", a slate one for a period our own platform lost (`--k-skip`), and an
+amber `.pill.gap`.
 
 ## Run it
 
