@@ -135,6 +135,10 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 `src/fpm/` pipeline (manifest, provision, adapters, evaluate, observe, observations, thresholds,
 detectors, synthesize, pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
 `tests/` mirrors it · `registry/` the trust anchor · `fixtures/` offline responses ·
-`dashboards/propgf-kernel-health.py` (marimo, `uv sync --extra dashboards`) ·
+`dashboards/` (marimo, `uv sync --extra dashboards`): `propgf-kernel-public.py` is the PUBLIC
+surface — hosted as notebook `propgf-kernel-health-live`, built ONLY on the two
+`filecoin.filpgf_public.*` mart tables; `propgf-kernel-health.py` is the INTERNAL view (landing
+tables + `funding_model_static.*`, carries applicant identity); `propgf-kernel-mockup_v2.py` is a
+design reference, served to nobody · 
 `docs/` guides (`public-datasets.md` is the consumer-facing contract; the grant-commitments
 appendix + per-plan design docs are gitignored, local only).

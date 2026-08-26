@@ -1,7 +1,21 @@
 # Dashboards
 
-Marimo dashboards over the ProPGF monitoring system. Anyone can run them locally; a
-hosted copy is published on oso.xyz (filecoin org, notebook `propgf-kernel-health`).
+Marimo dashboards over the ProPGF monitoring system. Anyone can run them locally; each
+has a hosted copy on oso.xyz in the `filecoin` org. Two are load-bearing, and they are not
+interchangeable:
+
+| File | Hosted notebook | Reads | Audience |
+|---|---|---|---|
+| `propgf-kernel-public.py` | [`propgf-kernel-health-live`](https://www.oso.xyz/filecoin/propgf-kernel-health-live) | the two `filecoin.filpgf_public.*` mart tables, nothing else | **public** — the ProPGF committee and anyone outside |
+| `propgf-kernel-health.py` | `propgf-kernel-health` | landing tables + `funding_model_static.*` | **internal** — carries adjudication state and applicant identity |
+
+`propgf-kernel-public.py` is the one an outside consumer sees. It queries live and embeds
+no data, so any OSO API key reproduces every number on it. Do not point a public reader at
+`propgf-kernel-health`.
+
+`propgf-kernel-mockup_v2.py` is kept as the **design reference** the public page was built
+from — it is not served to anyone and its embedded payload is stale by design. Nothing
+should be reconciled against it.
 
 ## `propgf-kernel-health.py`
 

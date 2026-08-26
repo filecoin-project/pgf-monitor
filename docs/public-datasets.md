@@ -9,8 +9,20 @@ through, granted public read and queryable through the OSO API with any API key.
 
 | table | one row per | size |
 |---|---|---|
-| `filecoin.filpgf_public.kernel_timeseries_metrics_by_project` | reading: day × team × function × metric | 38 commitments, one row each per day collected — 825 on 2026-08-24, growing nightly |
+| `filecoin.filpgf_public.kernel_timeseries_metrics_by_project` | reading: day × team × function × metric | ~40 rows **per day**; 875 rows **cumulative** across all history as of 2026-08-25 |
 | `filecoin.filpgf_public.kernel_functions` | kernel function in the inventory | 31, of which 17 have a reporter |
+
+Those two numbers measure different things and must never be compared with each other. The
+per-day count is the health signal — if it stops matching the number of live commitments, something
+upstream has stalled. The cumulative total keeps rising even during a stall (early history is
+sparse: 875 rows spread over 378 distinct `sample_date`s), so it can never detect one.
+
+**Reference implementation.** [`propgf-kernel-health-live`](https://www.oso.xyz/filecoin/propgf-kernel-health-live)
+is a working consumer of exactly these two tables and nothing else — source in this repo at
+`dashboards/propgf-kernel-public.py`. It embeds no data and queries live, so any OSO API key
+reproduces every number on it. Read it as the worked example of this contract. Note that the
+similarly-named `propgf-kernel-health` is the *internal* committee view and reads private models;
+it is not a consumer of this contract.
 
 Every fact about a reading rides on the reading — what it is evidence for, who is paid for it, and
 **the bar as it stood that day** — so thresholds and the metric registry need no tables of their
