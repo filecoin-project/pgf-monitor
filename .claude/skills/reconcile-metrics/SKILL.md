@@ -186,11 +186,22 @@ change is not done until you have checked the copies:
 - **`badges.json`** — regenerate with `uv run python scripts/kernel_coverage.py --badges`. It was
   stale by one for three weeks after four registry changes.
 - **`docs/kernel-coverage.md`** — same script, no `--badges`.
-- **The dashboard payload** (`dashboards/propgf-kernel-mockup_v2.py`, gzip+base64 on one line) is
-  **hand-built with no generator**. It kept rendering the dropped `Reiers/*` drafts and two
-  Blockscout metrics that had been removed from the manifest. Decode it, diff `(team, fid)` against
-  the registry, and remember the project/kernel `e` arrays hold **positions into `entries`** — they
-  must be rebuilt whenever an entry is removed, or every row silently shows the wrong cards.
+- **The public dashboard** (`dashboards/propgf-kernel-public.py`, hosted as notebook
+  `propgf-kernel-health-live`) needs NO reconciliation. It queries
+  `filecoin.filpgf_public.kernel_functions` and `kernel_timeseries_metrics_by_project` live and
+  embeds no data, so a registry change reaches it within a day via the mart. Confirm it rather than
+  patch it: check that the mart's function count and the day's row count moved as the registry
+  change implies.
+- **Do NOT reconcile `dashboards/propgf-kernel-mockup_v2.py`.** It is a design reference, served to
+  nobody, and its gzip+base64 payload is stale on purpose. That payload used to be the public page
+  and was hand-built with no generator — it kept rendering dropped `Reiers/*` drafts and two removed
+  Blockscout metrics, which is exactly why the public page was rebuilt to query live. Editing it
+  now fixes nothing an outside reader can see.
+- **`dashboards/propgf-kernel-health.py`** (the INTERNAL view) still carries an embedded payload
+  alongside its live queries. If a registry change should show there, decode and diff `(team, fid)`
+  against the registry, and remember the project/kernel `e` arrays hold **positions into
+  `entries`** — they must be rebuilt whenever an entry is removed, or every row silently shows the
+  wrong cards.
 
 Counting rule, so the numbers can be defended: the badge counts adopted manifests in
 `registry/*.yaml`; the dashboard counts project rows, which also include draft-only teams and

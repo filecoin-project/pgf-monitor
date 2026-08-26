@@ -40,6 +40,7 @@ def stylesheet():
           --k-t4:#6A44CF; --k-t4-wash:#F1ECFC;
 
           --k-good:#1A7F4B; --k-bad:#D2593C; --k-warn:#C4890F; --k-none:#DDE3EC;
+          --k-skip:#C3CCDA;
           --k-go:#1A7F4B; --k-wait:#C98A00;
 
           --k-display:'Archivo',system-ui,sans-serif;
@@ -305,8 +306,9 @@ def stylesheet():
         .kpage .strip i[data-o="p"]{background:var(--k-good)}
         .kpage .strip i[data-o="f"]{background:var(--k-bad)}
         .kpage .strip i[data-o="i"]{background:var(--k-warn)}
-        /* Public-page additions to the shared sheet: nothing here is scored, so a bar is either a reading that landed (blue) or a day the source gave no defensible number (amber). Grey stays "no reading expected yet". */
+        /* Public-page additions to the shared sheet: nothing here is scored, so a bar is either a reading that landed (blue), a day the source gave no defensible number (amber), or a day OUR OWN platform was down (slate, and outside every denominator). Grey stays "no reading expected yet". */
         .kpage .strip i[data-o="u"]{background:var(--k-fil)}
+        .kpage .strip i[data-o="x"]{background:var(--k-skip)}
         .kpage .axis{display:flex;justify-content:space-between;gap:12px;font-family:var(--k-mono);font-size:9.5px;letter-spacing:.06em;color:var(--k-ink-3);margin-top:7px}
 
         .kpage .metrics-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:26px 0 14px;padding-bottom:9px;border-bottom:1px solid var(--k-rule)}
@@ -380,7 +382,32 @@ def stylesheet():
 
 
 @app.cell(hide_code=True)
-def public_engine(datetime, math):
+def collection_policy():
+    # Two decisions about what the coverage denominator is allowed to charge a team for. Both
+    # are OURS, both are stated on the page, and neither can hide a source that stopped
+    # answering.
+    #
+    # COVERAGE_FROM -- coverage is judged from the day unattended collection became the record,
+    # never from a metric's first ad-hoc probe. 41 commitments across 17 teams carry a single
+    # live-review reading on 2026-07-15; anchoring a denominator on it charged each of them for
+    # the month before the instrument existed, which reads as a team that stopped reporting
+    # rather than as a monitor that had not been built. A metric first collected AFTER this date
+    # still starts at its own first reading -- this is a floor, not an override.
+    COVERAGE_FROM = "2026-08-22"
+
+    # PLATFORM_OUTAGES -- days the OSO platform, not the source, failed. On 2026-08-22 OSO moved
+    # ingestion runs into run groups and `run { id }` began returning 400; every fetch for all 12
+    # teams returned nothing for two nights, and 2026-08-24 recovered on its own with no change
+    # at any source. Those days leave the denominator entirely rather than counting as gaps
+    # against a team. Dated explicitly because the public mart carries no error column -- only
+    # `method` -- so there is nothing in the data to pattern-match, and a list you have to edit
+    # by hand cannot quietly swallow a source that really did go dark.
+    PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23"}
+    return COVERAGE_FROM, PLATFORM_OUTAGES
+
+
+@app.cell(hide_code=True)
+def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
     # The formatting, axis, strip and line-chart helpers are lifted VERBATIM from
     # dashboards/propgf-kernel-mockup_v2.py so the two pages cannot drift apart
     # visually. What changes is the ROLL-UP: the mockup rolls readings into a
@@ -443,7 +470,7 @@ def public_engine(datetime, math):
     GRAIN = {"daily": 1, "weekly": 7, "monthly": 30}
     # A period is only as good as its worst reading: a day that produced no
     # defensible number outranks one that did.
-    RANK = {"i": 2, "u": 1}
+    RANK = {"i": 2, "u": 1, "x": 0}
 
 
     def pts(e, today, win=WIN):
@@ -491,18 +518,31 @@ def public_engine(datetime, math):
         edge: a commitment first collected three weeks ago has not missed the
         sixty-nine days before that, and charging it for them would read as a
         failure to report rather than as an instrument that had not been built.
+        COVERAGE_FROM floors that same argument at the programme level, and
+        periods lost to a PLATFORM_OUTAGES day leave the denominator outright --
+        both are our failures, not the team's, so neither is charged to it.
         """
         p = pts(e, today, win)
         by, val = {}, {}
-        for iso, v, _o in p:
+        for iso, v, o_ in p:
             k = bucket_key(iso, e["cad"])
+            # Inside one bucket a reading outranks an unmeasurable day, which outranks a
+            # day we were the ones who were down.
             if v is not None:
                 by[k], val[k] = "u", v
-            elif k not in by:
+            elif o_ == "x":
+                by.setdefault(k, "x")
+            elif by.get(k) in (None, "x"):
                 by[k] = "i"
         keys_all = periods(e["cad"], today, win)
         first = bucket_key(p[0][0], e["cad"]) if p else None
-        keys = [k for k in keys_all if first is None or k >= first] or keys_all[-1:]
+        floor = bucket_key(COVERAGE_FROM, e["cad"])
+        start = max(k for k in (first, floor) if k)
+        # A period drops out only when the outage cost us the WHOLE of it: a weekly or
+        # monthly bucket still holds days the outage never touched, and is judged on those.
+        keys = [k for k in keys_all
+                if k >= start and by.get(k) != "x"
+                and not (e["cad"] == "daily" and k in PLATFORM_OUTAGES)] or keys_all[-1:]
         read = sum(1 for k in keys if by.get(k) == "u")
 
         # A run of consecutive periods with no value. Ours to answer for, not
@@ -524,7 +564,9 @@ def public_engine(datetime, math):
                 "runs": runs, "last": p[-1] if p else None,
                 "last_val": vals[-1] if vals else None,
                 "n_read": len(vals), "n_att": len(p),
-                "from": p[0][0] if p else None}
+                # The date coverage is JUDGED from -- which is the floored, outage-trimmed
+                # start, not p[0][0]. The card states this date, so they must not disagree.
+                "from": keys[0] if keys else None}
 
 
     def grain_word(cad):
@@ -594,7 +636,8 @@ def public_engine(datetime, math):
         return out
 
 
-    STATE_TXT = {"u": "read", "i": "no defensible number"}
+    STATE_TXT = {"u": "read", "i": "no defensible number",
+                 "x": "OSO platform outage \u00b7 not counted"}
     MIN_BARS = 8
 
 
@@ -775,8 +818,8 @@ def public_engine(datetime, math):
         """
         rows = "".join(
             f'<tr><td class="mono">{iso}</td><td class="n">{esc(fmt(v))}</td>'
-            f'<td>{"read" if v is not None else "no defensible number"}</td></tr>'
-            for iso, v, _o in reversed(pts(e, today, win)))
+            f'<td>{esc(STATE_TXT.get(o_, "no reading"))}</td></tr>'
+            for iso, v, o_ in reversed(pts(e, today, win)))
         return (f'<div class="dtable"><table><thead><tr><th>date</th>'
                 f'<th style="text-align:right">{esc(e["metric"])}</th>'
                 f'<th>collection</th></tr></thead>'
@@ -837,9 +880,10 @@ def public_engine(datetime, math):
             inc = (f'<div class="inc"><b>{len(r["runs"])} gap'
                    f'{"s" if len(r["runs"]) > 1 else ""} in collection</b> · {esc(detail)}'
                    f' — days the source gave no defensible number, not days the commitment '
-                   f'was missed</div>')
+                   f'was missed. Days our own platform was down are not counted here at '
+                   f'all.</div>')
         else:
-            inc = (f'<div class="inc">Every {g} since {esc(short(r["from"]))} carries a '
+            inc = (f'<div class="inc">Every {g} since {esc(key_label(r["from"]))} carries a '
                    f'reading.</div>')
 
         latest = "—"
@@ -942,7 +986,12 @@ def public_engine(datetime, math):
          "and history re-judges itself, because the bar is recorded per day."),
         ("Coverage is about us, not them",
          "The percentage on every row is <b>reading coverage</b>: the share of the periods a "
-         "metric's own cadence expects, counted from its first reading, that carry a value. A gap "
+         "metric's own cadence expects that carry a value, counted from 2026-08-22 -- the day "
+         "unattended nightly collection became the record -- or from the metric's first reading "
+         "where that is later. Earlier one-off probes are shown but not scored against, because "
+         "charging a team for the month before the monitor existed measures us, not them. Two "
+         "days, 2026-08-22 and 2026-08-23, are excluded from every denominator on this page: our "
+         "own platform, not any source, returned nothing for all twelve teams those nights. A gap "
          "means the source produced no defensible number that day — an endpoint down, a schema "
          "moved. That is our failure to measure, not the team's failure to deliver, so it is drawn "
          "as a break in the line rather than a drop to zero, and it never colours a row red."),
@@ -1199,12 +1248,16 @@ def public_engine(datetime, math):
           '<p class="lede">The same commitments, read two ways. <b>By project</b> asks what each '
           'reporting team is on the hook for; <b>by function</b> asks what the network needs and '
           'whether anyone is watching it. The percentage is reading coverage — the share of the '
-          'periods a metric\'s own cadence expects, counted from its first reading, that carry a '
-          'value. Open any row for the commitments behind it in full: the collection record, every '
-          'gap, the readings themselves, and the table they came from.</p>'
+          'periods a metric\'s own cadence expects that carry a value, counted from '
+          + esc(COVERAGE_FROM) + ', when unattended collection became the record, or from the '
+          'metric\'s first reading where that is later. Days lost to an outage of our own '
+          'platform are excluded outright. Open any row for the commitments behind it in full: '
+          'the collection record, every gap, the readings themselves, and the table they came '
+          'from.</p>'
           '<div class="legend">'
           '<span><i style="background:var(--k-fil)"></i>reading collected</span>'
           '<span><i style="background:var(--k-warn)"></i>no defensible number</span>'
+          '<span><i style="background:var(--k-skip)"></i>our platform was down</span>'
           '<span><i style="background:var(--k-none)"></i>no reading taken</span></div>'
           '</div></div>')
 
@@ -1561,7 +1614,7 @@ def row_reader():
 
 
 @app.cell(hide_code=True)
-def registry_shape(datetime):
+def registry_shape(PLATFORM_OUTAGES, datetime):
     def build_registry(rows, functions):
         """Rows -> the {kfs, entries, projects, today} shape the page renders.
 
@@ -1603,7 +1656,9 @@ def registry_shape(datetime):
                 offs.append((datetime.date.fromisoformat(_iso(r["sample_date"])) - base).days)
                 _v = _num(r["amount"])
                 vals.append(_v)
-                outs.append("i" if _v is None else "u")
+                # "x" -- read as no-reading everywhere, but never counted as a gap.
+                outs.append("u" if _v is not None else
+                            ("x" if _iso(r["sample_date"]) in PLATFORM_OUTAGES else "i"))
                 _m = _txt(r.get("method")) or "unknown"
                 methods[_m] = methods.get(_m, 0) + 1
             last = rs[-1]
