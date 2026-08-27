@@ -71,7 +71,7 @@ def stylesheet():
         .kpage h1,.kpage h2,.kpage h3{font-family:var(--k-display);font-weight:700;letter-spacing:-.025em;line-height:1.05;margin:0;color:var(--k-ink)}
         .kpage h2{font-size:clamp(28px,3.3vw,40px)}
         .kpage h3{font-size:18px;letter-spacing:-.015em;line-height:1.25}
-        .kpage .lede{color:var(--k-ink-2);font-size:16.5px;max-width:64ch;margin:16px 0 0}
+        .kpage .lede{color:var(--k-ink-2);font-size:16.5px;max-width:86ch;margin:16px 0 0}
         .kpage p{margin:0}
 
         /* nav */
@@ -113,7 +113,7 @@ def stylesheet():
         /* sections */
         .kpage .sec{padding:76px 0;border-bottom:1px solid var(--k-rule)}
         .kpage .sec-alt{background:var(--k-paper-2)}
-        .kpage .sec-head{max-width:66ch;margin-bottom:42px}
+        .kpage .sec-head{max-width:88ch;margin-bottom:42px}
 
         /* provenance banner */
         .kpage .prov-bar{background:var(--k-paper-2);border-bottom:1px solid var(--k-rule)}
@@ -993,12 +993,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
          "and history re-judges itself, because the bar is recorded per day."),
         ("Coverage is about us, not them",
          "The percentage on every row is <b>reading coverage</b>: the share of the periods a "
-         "metric's own cadence expects that carry a value, counted from 2026-08-22 -- the day "
-         "unattended nightly collection became the record -- or from the metric's first reading "
-         "where that is later. Earlier one-off probes are shown but not scored against, because "
-         "charging a team for the month before the monitor existed measures us, not them. Two "
-         "days, 2026-08-22 and 2026-08-23, are excluded from every denominator on this page: our "
-         "own platform, not any source, returned nothing for all twelve teams those nights. A gap "
+         f"metric's own cadence expects that carry a value, counted from {COVERAGE_FROM} -- the "
+         "day unattended nightly collection became the record -- or from the metric's first "
+         "reading where that is later. Earlier one-off probes are shown but not scored against, "
+         "because charging a team for the month before the monitor existed measures us, not "
+         f"them. {' and '.join(sorted(PLATFORM_OUTAGES))} are excluded from every denominator on "
+         "this page: our own platform, not any source, returned nothing for all twelve teams "
+         "those nights. A gap "
          "means the source produced no defensible number that day — an endpoint down, a schema "
          "moved. That is our failure to measure, not the team's failure to deliver, so it is drawn "
          "as a break in the line rather than a drop to zero, and it never colours a row red."),
@@ -1267,14 +1268,9 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         a('<section class="sec sec-alt" id="k-functions"><div class="wrap">'
           '<div class="sec-head"><p class="eyebrow">Inventory</p><h2>The inventory</h2>'
           '<p class="lede">The same metrics, read two ways. <b>By project</b> asks what each '
-          'reporting team is on the hook for; <b>by function</b> asks what the network needs and '
-          'whether anyone is watching it. The percentage is reading coverage — the share of the '
-          'periods a metric\'s own cadence expects that carry a value, counted from '
-          + esc(COVERAGE_FROM) + ', when unattended collection became the record, or from the '
-          'metric\'s first reading where that is later. Days lost to an outage of our own '
-          'platform are excluded outright. Open any row for the metrics behind it in full: '
-          'the collection record, every gap, the readings themselves, and the table they came '
-          'from.</p>'
+          'reporting team is on the hook for; <b>by function</b> asks what the network needs '
+          'and whether anyone is watching it. Open any row for the metrics behind it — what '
+          'is collected, when, and every reading taken.</p>'
           '<div class="legend">'
           '<span><i style="background:var(--k-fil)"></i>reading collected</span>'
           '<span><i style="background:var(--k-warn)"></i>no defensible number</span>'
