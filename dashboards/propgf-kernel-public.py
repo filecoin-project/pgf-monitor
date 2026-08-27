@@ -264,6 +264,11 @@ def stylesheet():
         .kpage .note{font-family:var(--k-mono);font-size:11.5px;color:var(--k-ink-3);margin-top:16px;padding:12px 14px;background:var(--k-paper-3);border-radius:8px}
 
         /* metric cards */
+        .kpage .sla-notice{display:flex;gap:10px;align-items:flex-start;padding:13px 16px;margin-bottom:20px;
+          border:1px solid #E7CE92;background:var(--k-t2-wash);border-radius:8px;font-size:13.5px;color:var(--k-ink-2)}
+        .kpage .sla-notice b{color:var(--k-ink)}
+        .kpage .mets.two{grid-template-columns:repeat(2,1fr)}
+        @media(max-width:560px){.kpage .mets.two{grid-template-columns:1fr}}
         .kpage .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--k-paper);border:1px solid var(--k-rule);border-width:1px 0 0 1px}
         @media(max-width:860px){.kpage .mets{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:560px){.kpage .mets{grid-template-columns:1fr}}
@@ -818,11 +823,11 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         """
         rows = "".join(
             f'<tr><td class="mono">{iso}</td><td class="n">{esc(fmt(v))}</td>'
-            f'<td>{esc(STATE_TXT.get(o_, "no reading"))}</td></tr>'
+            f'<td>{esc("" if o_ == "u" else STATE_TXT.get(o_, "no reading"))}</td></tr>'
             for iso, v, o_ in reversed(pts(e, today, win)))
         return (f'<div class="dtable"><table><thead><tr><th>date</th>'
                 f'<th style="text-align:right">{esc(e["metric"])}</th>'
-                f'<th>collection</th></tr></thead>'
+                f'<th>comment</th></tr></thead>'
                 f'<tbody>{rows}</tbody></table></div>')
 
 
@@ -831,7 +836,10 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
 
         The mockup names the endpoint and the SQL that reduces it to a scalar, because it reads
         the registry. The public mart carries neither -- only HOW each reading was taken -- so
-        this row states that and the Method section says the endpoint is missing on purpose.
+        this row states that and links to the manifest, which is public and holds BOTH: the
+        endpoint, the query sent to it, and the SQL that reduces the response to one number.
+        Better than the bare host a mart column could carry, since most sources are JSON-RPC
+        POST endpoints a browser cannot usefully open.
         """
         m = e["methods"]
         n = sum(m.values())
@@ -846,11 +854,19 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         if hosts:
             bits.append("history backfilled from <b>" + "</b>, <b>".join(esc(h) for h in hosts)
                         + "</b>")
+        src = f'{REGISTRY_BASE}/{e["team"]}.yaml'
         return (f'<div class="srcrow"><span class="srclab">collection</span>'
                 f'<span class="mchip">{esc(e["cad"])}</span>'
                 f'<span class="srcurl">{" · ".join(bits) or "no reading yet"}'
                 f'<span style="color:var(--k-ink-3)"> · {n} row'
-                f'{"s" if n != 1 else ""} in the public table</span></span></div>')
+                f'{"s" if n != 1 else ""} in the public table</span></span></div>'
+                f'<div class="srcrow"><span class="srclab">source</span>'
+                f'<span class="srcurl"><a href="{esc(src)}" target="_blank" '
+                f'rel="noopener noreferrer" style="color:var(--k-fil-deep)">'
+                f'registry/{esc(e["team"])}.yaml {ARROW}</a>'
+                f'<span style="color:var(--k-ink-3)"> — the endpoint we poll, the query we '
+                f'send, and the SQL that turns the answer into this number</span>'
+                f'</span></div>')
 
 
     def metric_card(e, today, win=WIN, show_team=True, qualify=False):
@@ -868,9 +884,8 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             e["team"] if show_team else None, e["metric"], e["cad"],
             f'grant {e["grant"]}' if e["grant"] else "no grant pays for this",
         ] if x)
-        prov = (f'<span class="prov obs" title="{e["n_real"]} readings fetched from the '
-                f'source">observed · {e["n_real"]} pts</span>')
-        state = chip("acc", "read · unscored") if r["last_val"] else chip("warn", "no reading")
+        state = (chip("acc", f'Monitored · {esc(e["cad"])}') if r["last_val"]
+                 else chip("warn", "No reading yet"))
 
         g = grain_word(e["cad"])
         if r["runs"]:
@@ -879,17 +894,14 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
                 for x in r["runs"])
             inc = (f'<div class="inc"><b>{len(r["runs"])} gap'
                    f'{"s" if len(r["runs"]) > 1 else ""} in collection</b> · {esc(detail)}'
-                   f' — days the source gave no defensible number, not days the commitment '
+                   f' — days the source gave no defensible number, not days the metric '
                    f'was missed. Days our own platform was down are not counted here at '
                    f'all.</div>')
         else:
             inc = (f'<div class="inc">Every {g} since {esc(key_label(r["from"]))} carries a '
                    f'reading.</div>')
 
-        latest = "—"
-        if r["last_val"]:
-            latest = (f'{esc(fmt(r["last_val"][1]))} <span style="color:var(--k-muted);'
-                      f'font-weight:400">on {esc(short(r["last_val"][0]))}</span>')
+        latest = esc(fmt(r["last_val"][1])) if r["last_val"] else "—"
         sb = strip_bits(e, today, win)
         bar_caption = "one bar = one " + sb["g"]
         if sb["dense"]:
@@ -900,12 +912,12 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
                     f'<div class="r">{state}</div></div>'
                     f'<div class="cmeta">{esc(meta)}</div>'
                     f'<p class="cstmt">{esc(e["stmt"])}</p>'
-                    f'<div class="empty">No reading has been collected for this commitment '
+                    f'<div class="empty">No reading has been collected for this metric '
                     f'yet.</div></article>')
         return (
             f'<article class="card" id="m-{e["id"]}">'
             f'<div class="chead"><span class="m">{esc(head)}</span>'
-            f'<div class="r">{state}{prov}</div></div>'
+            f'<div class="r">{state}</div></div>'
             f'<div class="cmeta">{esc(meta)}</div>'
             f'<p class="cstmt">{esc(e["stmt"])}</p>'
             f'{collection_row(e)}'
@@ -914,7 +926,8 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             f'<div class="big num">{pct_label(r["pct"])}</div></div>'
             f'<div><div class="lab">readings</div>'
             f'<div class="d flat num">{r["read"]} of {r["expected"]} {g}s</div></div>'
-            f'<div><div class="lab">latest</div><div class="d flat num">{latest}</div></div>'
+            f'<div><div class="lab">latest value</div>'
+            f'<div class="d flat num">{latest}</div></div>'
             f'<div><div class="lab">change over {win}d</div>'
             f'<div class="d {delta(d, today, win)["cls"]}">'
             f'{esc(delta(d, today, win)["txt"])}</div></div></div>'
@@ -954,12 +967,6 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
          "example": "A testnet faucet: it makes test FIL easy to get, but the network runs without it.",
          "posture": "Fund maintenance, not features. Flag any repo with zero active developers.",
          "short": "Fund maintenance, not features"},
-        {"id": "nice", "name": "Nice to have", "v": "--k-t4",
-         "label": "Enriches the ecosystem. Network survives without it.",
-         "def": "Initiatives that encourage additional growth, where having even one instance may matter for basic ecosystem support.",
-         "example": "F3: the network exists without it, but it improves UX considerably and encourages growth.",
-         "posture": "Discretionary. Fund only where aligned with the sustainability strategy.",
-         "short": "Discretionary"},
     ]
 
     TIMELINE = [
@@ -1005,13 +1012,27 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
     GLOSSARY = [
         ("Kernel", "The funding program covering work the network cannot operate without. Funded as a <b>near-fixed cost</b> on an annual term with audits, not against milestones."),
         ("Function", "A capability the network needs, named by <b>what it does</b> rather than by which repo provides it. Functions outlive implementations — the function survives when the code that serves it is replaced."),
-        ("Commitment", "One (team, function, metric) triple: a measurable indicator with an agreed cadence and a public source, fetched by a pipeline the team does not control. It is the unit every card on this page draws."),
-        ("Coverage · 90d", "The share of the reading periods the window expects that actually carry a value, counted at each metric's own cadence so a weekly metric is not penalised for being coarse. Low coverage means the commitment exists but is not being collected."),
-        ("Unscored", "Measured, but not judged. A reading is unscored when no threshold is in force — which today is every reading, because every bar was withdrawn pending executed agreements."),
+        ("Metric", "One number a funded team is measured on: an indicator with an agreed cadence and a public source, fetched by a pipeline the team does not control. It is the unit every card on this page draws."),
+        ("Proposed", "A metric drafted against a function but not yet named in a signed agreement. Monitoring follows the agreements, so a proposed metric is not collected yet."),
+        ("Coverage · 90d", "The share of the reading periods the window expects that actually carry a value, counted at each metric's own cadence so a weekly metric is not penalised for being coarse. Low coverage means the metric exists but is not being collected."),
+        ("Unscored", "Measured, but not judged. A reading is unscored when no threshold is in force — which today is every reading, because SLA thresholds are still being negotiated."),
         ("Gap", "A period the source was asked and gave no defensible number. Not a zero, not a breach, and not the team's failure — it is a hole in the instrument."),
-        ("Tier", "How replaceable a function is, from <b>Irreplaceable</b> to <b>Nice to have</b>. Tier sets the funding posture and whether redundancy is required."),
+        ("Tier", "How replaceable a function is, from <b>Irreplaceable</b> to <b>Important</b>. Tier sets the funding posture and whether redundancy is required."),
         ("Single maintainer", "A function measured through exactly one team. Tolerable at lower tiers, a named risk at the top two, where the posture calls for two or more independent implementations."),
     ]
+
+    # Every threshold was withdrawn on 2026-08-20 pending executed agreements. Without this
+    # said plainly and above the fold, a viewer reads the coverage percentage as an SLA pass
+    # rate, which is the exact misreading the withdrawal was meant to prevent.
+    SLA_NOTICE = ('<div class="sla-notice"><span>&#9432;</span><span>'
+                  '<b>SLA thresholds are still being negotiated.</b> This page reports what is '
+                  'being measured, not whether a target was met. Monitoring follows the signed '
+                  'agreements: a function is measured once an agreement names a metric for it.'
+                  '</span></div>')
+
+    # The manifests are public, so the page can show anyone exactly what is being observed
+    # without the mart having to carry a source column.
+    REGISTRY_BASE = "https://github.com/filecoin-project/pgf-monitor/blob/main/registry"
 
     YES = ('<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">'
            '<path d="M2 6.4 4.6 9 10 3.2" fill="none" stroke="currentColor" stroke-width="2" '
@@ -1109,7 +1130,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         if dry:
             status += (f' Nothing has carried a value for <b>{dry} day'
                        f'{"s" if dry > 1 else ""}</b> — that is one gap in the instrument, not '
-                       f'{len(E)} commitments failing at once.')
+                       f'{len(E)} metrics failing at once.')
 
         out = []
         a = out.append
@@ -1131,7 +1152,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         a('<header class="hero" id="k-top"><div class="wrap">'
           '<p class="eyebrow">Kernel · Independent monitoring</p>'
           '<h1>What is being watched.</h1>'
-          '<p class="lede">Every night, each commitment below is fetched from the team\'s own '
+          '<p class="lede">Every night, each metric below is fetched from the team\'s own '
           'infrastructure by a pipeline they do not control, and the reading is appended to a '
           'public record. Nothing here is scored: the numbers exist, the bars do not, because no '
           'agreement carrying one has been executed yet.</p>'
@@ -1188,7 +1209,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           'are funded only for maintenance.</p>'
           '<p>Funding follows an annual term with audits rather than milestones, because keeping '
           'something working is a continuous obligation and not a deliverable. This page is the '
-          'audit trail: every commitment on it names a reading cadence and a public source anyone '
+          'audit trail: every metric on it names a reading cadence and a public source anyone '
           'can call. The thresholds those readings will be judged against are written down, and '
           'withdrawn until the agreements carrying them are executed — so what you are looking at '
           'is the instrument, working, before it is allowed to score anyone.</p>'
@@ -1245,13 +1266,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         # -------------------------------------------------------- inventory
         a('<section class="sec sec-alt" id="k-functions"><div class="wrap">'
           '<div class="sec-head"><p class="eyebrow">Inventory</p><h2>The inventory</h2>'
-          '<p class="lede">The same commitments, read two ways. <b>By project</b> asks what each '
+          '<p class="lede">The same metrics, read two ways. <b>By project</b> asks what each '
           'reporting team is on the hook for; <b>by function</b> asks what the network needs and '
           'whether anyone is watching it. The percentage is reading coverage — the share of the '
           'periods a metric\'s own cadence expects that carry a value, counted from '
           + esc(COVERAGE_FROM) + ', when unattended collection became the record, or from the '
           'metric\'s first reading where that is later. Days lost to an outage of our own '
-          'platform are excluded outright. Open any row for the commitments behind it in full: '
+          'platform are excluded outright. Open any row for the metrics behind it in full: '
           'the collection record, every gap, the readings themselves, and the table they came '
           'from.</p>'
           '<div class="legend">'
@@ -1263,7 +1284,8 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
 
         # Radio + :checked rather than a script: the page is exported statically, so a
         # JS tab bar would come out dead. The panels must stay siblings of the inputs.
-        a('<div class="kviews">'
+        a(f'<div class="wrap">{SLA_NOTICE}</div>'
+          '<div class="kviews">'
           '<input type="radio" name="kview" id="kv-fn">'
           '<input type="radio" name="kview" id="kv-pr" checked>'
           '<div class="wrap"><div class="viewbar" role="tablist">'
@@ -1275,7 +1297,10 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         for t in TIERS:
             fns = [f for f in KF if f["tier"] == t["id"]]
             seen = [f for f in fns if f["e"]]
-            head = (f'{len(seen)} of {len(fns)} reporting' if fns else "inventory pending")
+            prop = [f for f in fns if not f["e"] and f["drafts"]]
+            head = ((f'{len(seen)} of {len(fns)} monitored'
+                     + (f' · {len(prop)} proposed' if prop else ""))
+                    if fns else "inventory pending")
             a(f'<div class="fgroup"><div class="fg-h">'
               f'<span class="fg-n" style="color:var({t["v"]})">{esc(t["name"])}</span>'
               f'<span class="fg-c">{esc(head)}</span></div>')
@@ -1296,25 +1321,29 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         a('<div class="wrap vpanel v-pr">')
         covered = len({e["kernel_id"] for e in E if e["kernel_id"]})
         overall = agg(E, today)
-        a('<div class="mets" style="margin-bottom:34px">'
-          f'<div class="met"><div class="met-v">{len(E)}</div>'
-          f'<div class="met-k">Commitments measured</div>'
-          f'<div class="met-d">{len(teams)} teams · {len(grants)} grants</div></div>'
+        # Monitoring follows the signed agreements, so a function nobody has committed to is
+        # WAITING, not failing. The three-way split says which: proposed but unsigned, or not
+        # yet scoped at all. All 31 stay in the denominator -- coverage against only the covered
+        # functions always reads 100%.
+        drafted = [f for f in KF if not f["e"] and f["drafts"]]
+        unscoped = [f for f in KF if not f["e"] and not f["drafts"]]
+        a('<div class="mets two" style="margin-bottom:34px">'
           f'<div class="met"><div class="met-v">{len(watched)}'
           f'<span style="color:var(--k-ink-3)">/{len(KF)}</span></div>'
-          f'<div class="met-k">Kernel functions with a reporter</div>'
-          f'<div class="met-d bad">{len(KF) - len(watched)} report nothing at all</div></div>'
-          f'<div class="met"><div class="met-v">0</div>'
-          f'<div class="met-k">Readings judged</div>'
-          f'<div class="met-d warn">No bar is in force until a contract is executed</div></div>'
+          f'<div class="met-k">Kernel functions monitored</div>'
+          f'<div class="met-d">{len(drafted)} with metrics proposed, awaiting a signed '
+          f'appendix · {len(unscoped)} not yet scoped</div></div>'
+          f'<div class="met"><div class="met-v">{len(E)}</div>'
+          f'<div class="met-k">Metrics collected</div>'
+          f'<div class="met-d">{len(teams)} teams · {len(grants)} grants</div></div>'
           '</div>')
         with_grant = [p for p in PR if p["grants"]]
         without = [p for p in PR if not p["grants"]]
         for label, group, note in (
             ("Reporting under a grant", with_grant,
-             "Each row is one Karma application and the commitments it pays for."),
+             "Each row is one Karma application and the metrics it pays for."),
             ("Reporting with no grant against it", without,
-             "Commitments nobody is paid for — cross-checks we run at our own expense."),
+             "Metrics nobody is paid for — cross-checks we run at our own expense."),
         ):
             if not group:
                 continue
@@ -1399,7 +1428,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         elif n == 1:
             flags.append('<span class="flag solo">single maintainer</span>')
         if es:
-            flags.append(f'{len(es)} commitment{"s" if len(es) > 1 else ""}')
+            flags.append(f'{len(es)} metric{"s" if len(es) > 1 else ""}')
         else:
             flags.append('<span class="none">nothing measured</span>')
         if f["drafts"]:
@@ -1423,7 +1452,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         cells = [
             ("Teams reporting", team_names),
             ("Domain", f'<span class="dim">{esc(f["sub"])}</span>'),
-            ("Commitments", f'<span class="num">{len(es)}</span>'),
+            ("Metrics", f'<span class="num">{len(es)}</span>'),
             ("Proposed, not adopted", f'<span class="num">{f["drafts"]}</span>'),
             ("Grants", (" ".join(f'<span class="mono">{esc(g)}</span>' for g in grants)
                         if grants else '<span class="dim">none</span>')),
@@ -1435,7 +1464,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
                 f'<div class="fn-grid">{grid}</div>']
 
         if es:
-            body.append(f'<div class="metrics-head"><h4>Commitments</h4>'
+            body.append(f'<div class="metrics-head"><h4>Metrics</h4>'
                         f'<span>{len(es)} metric{"s" if len(es) > 1 else ""} · measured nightly, '
                         f'judged by nothing yet</span></div><div class="cards">'
                         + "".join(metric_card(e, today, qualify=e["fid"] in dup_fids)
@@ -1472,7 +1501,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             for t in tiers) or "No kernel function mapped"
         colour = top_tier["v"] if top_tier else "--k-ink-3"
 
-        bits = [f'{len(es)} commitment{"s" if len(es) != 1 else ""}',
+        bits = [f'{len(es)} metric{"s" if len(es) != 1 else ""}',
                 f'{len(fns)} kernel function{"s" if len(fns) != 1 else ""}']
         bits.append(f'<span class="mono">{esc(p["grants"][0])}</span>' if p["grants"]
                     else '<span class="quiet">no grant against it</span>')
@@ -1493,12 +1522,9 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             f'</div>{cov_pill(ag)}</div>'
             f'<span class="car">{CARET}</span></summary>')
 
-        n_rows = sum(len(e["s"]["v"]) for e in es)
-        n_read = sum(e["n_real"] for e in es)
         cells = [
             ("Kernel functions", f'<span class="num">{len(fns)}</span>'),
-            ("Commitments", f'<span class="num">{len(es)}</span>'),
-            ("Readings collected", f'<span class="num">{n_read}</span> of {n_rows} rows'),
+            ("Metrics", f'<span class="num">{len(es)}</span>'),
             ("Grant", (" ".join(f'<span class="mono">{esc(g)}</span>' for g in p["grants"])
                        if p["grants"] else '<span class="dim">no grant pays for this</span>')),
             ("OSO project", (f'<span class="mono">{esc(p["slug"])}</span>' if p["slug"]
@@ -1519,9 +1545,10 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
 
         dup = {k for k, v in
                {e["fid"]: sum(1 for x in es if x["fid"] == e["fid"]) for e in es}.items() if v > 1}
-        body.append(f'<div class="metrics-head"><h4>Commitments</h4>'
+        body.append(f'<div class="metrics-head"><h4>Metrics</h4>'
                     f'<span>{len(es)} metric{"s" if len(es) != 1 else ""} · '
-                    f'{n_read} readings in the public table</span></div><div class="cards">'
+                    f'{sum(x["n_real"] for x in es)} readings in the public table</span>'
+                    f'</div><div class="cards">'
                     + "".join(metric_card(e, today, show_team=False, qualify=e["fid"] in dup)
                               for e in sorted(es, key=lambda x: x["fid"])) + '</div>')
         body.append('</div>')
@@ -1531,29 +1558,28 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
     def program_metrics(KF, E, PR, today, teams_of, overall):
         listed = len(KF)
         watched = [f for f in KF if f["e"]]
-        unmeasured = listed - len(watched)
         top_solo = sum(1 for f in KF
                        if f["tier"] in ("irreplaceable", "essential") and len(teams_of(f)) == 1)
-        unowned = sum(1 for f in KF if not f["e"])
+        drafted = sum(1 for f in KF if not f["e"] and f["drafts"])
+        unscoped = sum(1 for f in KF if not f["e"] and not f["drafts"])
         drafts = sum(f["drafts"] for f in KF)
         teams = len({e["team"] for e in E})
         cover = round(len(watched) / listed * 100) if listed else 0
         return [
-            {"v": f"{cover}%", "k": "Measurement coverage",
-             "d": f"{unmeasured} of {listed} kernel functions report nothing",
-             "cls": "warn" if unmeasured else ""},
+            {"v": f"{cover}%", "k": "Kernel functions monitored",
+             "d": f"{len(watched)} of {listed}, each under a signed agreement",
+             "cls": ""},
             {"v": pct_label(overall["pct"]), "k": f"Reading coverage · rolling {WIN} days",
              "d": f'{overall["read"]} of {overall["expected"]} expected reading periods carry a '
                   f'value', "cls": "warn" if overall["state"] == "warn" else ""},
-            {"v": str(len(E)), "k": "Commitments measured",
-             "d": f"{teams} teams · {len(PR)} grant rows · {drafts} more proposed", "cls": ""},
-            {"v": "0", "k": "Readings judged",
-             "d": "Every threshold was withdrawn pending executed agreements", "cls": "warn"},
+            {"v": str(len(E)), "k": "Metrics collected",
+             "d": f"{teams} teams · {len(PR)} grant rows", "cls": ""},
+            {"v": str(drafted), "k": "Functions with metrics proposed",
+             "d": f"{drafts} metrics drafted, awaiting a signed appendix", "cls": ""},
+            {"v": str(unscoped), "k": "Functions not yet scoped",
+             "d": "No metric proposed against them yet", "cls": ""},
             {"v": str(top_solo), "k": "Top-tier functions measured through one team only",
              "d": "Posture calls for 2+ implementations", "cls": "bad" if top_solo else ""},
-            {"v": str(unowned), "k": "Functions with no team reporting",
-             "d": "Invisible to this page until one signs up",
-             "cls": "bad" if unowned else ""},
         ]
 
     return (build_public_page,)
