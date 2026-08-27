@@ -46,7 +46,7 @@ def stylesheet():
           --k-display:'Archivo',system-ui,sans-serif;
           --k-body:'Inter',system-ui,sans-serif;
           --k-mono:'IBM Plex Mono',ui-monospace,monospace;
-          --k-wrap:1180px; --k-gutter:28px;
+          --k-wrap:1180px; --k-gutter:28px; --k-prose:900px;
 
           /* The page is a self-contained document inside the notebook cell: `clip`
              (not `hidden`) keeps the rounded corners without turning this into a
@@ -71,7 +71,7 @@ def stylesheet():
         .kpage h1,.kpage h2,.kpage h3{font-family:var(--k-display);font-weight:700;letter-spacing:-.025em;line-height:1.05;margin:0;color:var(--k-ink)}
         .kpage h2{font-size:clamp(28px,3.3vw,40px)}
         .kpage h3{font-size:18px;letter-spacing:-.015em;line-height:1.25}
-        .kpage .lede{color:var(--k-ink-2);font-size:16.5px;max-width:86ch;margin:16px 0 0}
+        .kpage .lede{color:var(--k-ink-2);font-size:16.5px;max-width:var(--k-prose);margin:16px 0 0}
         .kpage p{margin:0}
 
         /* nav */
@@ -90,7 +90,7 @@ def stylesheet():
         /* hero */
         .kpage .hero{padding:64px 0 0;border-bottom:1px solid var(--k-rule)}
         .kpage .hero h1{font-size:clamp(34px,5vw,58px);max-width:17ch}
-        .kpage .hero .lede{font-size:18px;max-width:60ch}
+        .kpage .hero .lede{font-size:18px;max-width:var(--k-prose)}
 
         /* substitutability ladder */
         .kpage .ladder{margin-top:46px;padding-bottom:8px}
@@ -113,13 +113,13 @@ def stylesheet():
         /* sections */
         .kpage .sec{padding:76px 0;border-bottom:1px solid var(--k-rule)}
         .kpage .sec-alt{background:var(--k-paper-2)}
-        .kpage .sec-head{max-width:88ch;margin-bottom:42px}
+        .kpage .sec-head{max-width:var(--k-prose);margin-bottom:42px}
 
         /* provenance banner */
         .kpage .prov-bar{background:var(--k-paper-2);border-bottom:1px solid var(--k-rule)}
         .kpage .prov-in{display:flex;gap:14px;align-items:flex-start;padding:15px 0}
         .kpage .prov-in svg{flex:none;margin-top:2px;color:var(--k-t2)}
-        .kpage .prov-in div{font-size:13px;color:var(--k-ink-3);max-width:96ch}
+        .kpage .prov-in div{font-size:13px;color:var(--k-ink-3)}
         .kpage .prov-in b{color:var(--k-ink)}
         .kpage .mono{font-family:var(--k-mono)}
 
@@ -249,7 +249,7 @@ def stylesheet():
 
         /* expanded detail panel */
         .kpage .fn-d{padding:18px}
-        .kpage .fn-purpose{font-size:14.5px;color:var(--k-ink-2);margin:0;max-width:82ch}
+        .kpage .fn-purpose{font-size:14.5px;color:var(--k-ink-2);margin:0;max-width:var(--k-prose)}
         .kpage .fn-grid{display:flex;flex-wrap:wrap;gap:14px 34px;margin-top:17px;padding-top:16px;border-top:1px solid var(--k-rule-soft)}
         .kpage .fm-k{font-family:var(--k-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--k-ink-3)}
         .kpage .fm-v{font-size:14.5px;margin-top:6px;color:var(--k-ink)}
@@ -328,7 +328,7 @@ def stylesheet():
         .kpage .prov{font-family:var(--k-mono);font-size:10px;letter-spacing:.03em;color:var(--k-t2);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
         .kpage .prov.obs{color:var(--k-good)}
         .kpage .cmeta{font-family:var(--k-mono);font-size:10.5px;letter-spacing:.02em;color:var(--k-ink-3);margin-top:7px;word-break:break-word}
-        .kpage .cstmt{font-size:13.5px;color:var(--k-ink-2);margin:11px 0 0;max-width:88ch}
+        .kpage .cstmt{font-size:13.5px;color:var(--k-ink-2);margin:11px 0 0;max-width:var(--k-prose)}
 
         .kpage .srcrow{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:13px;padding-top:12px;border-top:1px solid var(--k-rule-soft)}
         .kpage .srclab{font-family:var(--k-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--k-ink-3)}
