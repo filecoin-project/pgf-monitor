@@ -168,16 +168,27 @@ class GraphqlStaticModelClient:
                 f"message={payload.get('message')!r})"
             )
         run_id = edges[0]["node"]["id"]
+        last = "unknown"
         for attempt in range(self._poll_attempts):
             try:
                 runs = {r.run_id: r for r in self.get_runs(dataset_id)}
                 run = runs.get(run_id)
-                if run and run.status in _TERMINAL:
-                    return
+                if run:
+                    last = run.status
+                    if run.status in _TERMINAL:
+                        return
             except Exception:
                 pass  # transient; retry on the next attempt
             if self._poll_sleep and attempt < self._poll_attempts - 1:
                 time.sleep(self._poll_sleep)
+        # Falling out of the loop is NOT success, and used to be indistinguishable from it: the
+        # caller printed "uploaded ..." either way. A queued run that never got scheduled looked
+        # exactly like a republished table. Say so; don't raise, because queue latency is normal
+        # and the upload itself has already landed -- the next night republishes the same CSV.
+        print(
+            f"WARNING: run {run_id} for dataset {dataset_id} still {last} after "
+            f"{self._poll_attempts * self._poll_sleep:.0f}s; the table may not be refreshed yet"
+        )
 
     def grant_public(self, static_model_id: str) -> None:
         # Public = READ with no target user/org. GrantResourcePermissionInput has no "targets"
