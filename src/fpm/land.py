@@ -88,7 +88,7 @@ class StaticModelClient(Protocol):
     def ensure_static_dataset(self, org_id: str, name: str) -> str: ...
     def ensure_static_model(self, org_id: str, dataset_id: str, name: str) -> str: ...
     def upload_csv(self, static_model_id: str, csv_text: str) -> None: ...
-    def run_static_model(self, dataset_id: str) -> None: ...
+    def run_static_model(self, dataset_id: str, static_model_id: str) -> None: ...
     def grant_public(self, static_model_id: str) -> None: ...
 
 
@@ -101,7 +101,7 @@ class FakeStaticModelClient:
         self.model_ids: dict[tuple[str, str], str] = {}  # (dataset_id, name) -> model_id
         self.uploaded: dict[str, str] = {}  # model_id -> csv text
         self.granted_public: set[str] = set()
-        self.ran: list[str] = []
+        self.ran: list[tuple[str, str]] = []
         self._n = 0
 
     def _next(self, prefix: str) -> str:
@@ -124,8 +124,8 @@ class FakeStaticModelClient:
     def upload_csv(self, static_model_id: str, csv_text: str) -> None:
         self.uploaded[static_model_id] = csv_text
 
-    def run_static_model(self, dataset_id: str) -> None:
-        self.ran.append(dataset_id)
+    def run_static_model(self, dataset_id: str, static_model_id: str) -> None:
+        self.ran.append((dataset_id, static_model_id))
 
     def grant_public(self, static_model_id: str) -> None:
         self.granted_public.add(static_model_id)
@@ -142,7 +142,7 @@ class StaticModelSink:
         dataset_id = self._client.ensure_static_dataset(self._org_id, name)
         model_id = self._client.ensure_static_model(self._org_id, dataset_id, name)
         self._client.upload_csv(model_id, to_csv(rows))
-        self._client.run_static_model(dataset_id)
+        self._client.run_static_model(dataset_id, model_id)
         if public:
             self._client.grant_public(model_id)
         return model_id

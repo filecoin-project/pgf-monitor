@@ -100,8 +100,8 @@ class GraphqlOsoClient:
         # 400 -- every metric raised, every reading landed indeterminate, and the workflow still
         # reported success. The group carries its runs inline and already attached (QUEUED) in
         # the mutation response, so one round trip still yields the run id.
-        # `createStaticModelRunRequest` was NOT changed and still returns `run{ id }`; see
-        # fpm/oso/static_model.py, which is why the CSV republish kept working throughout.
+        # `createStaticModelRunRequest` followed on 2026-08-27 and now returns the same payload;
+        # see fpm/oso/static_model.py. Assume any remaining run-request mutation is next.
         d = self._gql(
             "mutation($i:CreateDataIngestionRunRequestInput!){ "
             "createDataIngestionRunRequest(input:$i){ success message "

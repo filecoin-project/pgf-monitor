@@ -24,8 +24,8 @@ def test_upload_thresholds_targets_its_own_table(monkeypatch):
         def upload_csv(self, model_id, text):
             seen["text"] = text
 
-        def run_static_model(self, dataset_id):
-            pass
+        def run_static_model(self, dataset_id, static_model_id):
+            seen["ran"] = (dataset_id, static_model_id)
 
         def grant_public(self, model_id):
             seen["public"] = True
@@ -36,4 +36,5 @@ def test_upload_thresholds_targets_its_own_table(monkeypatch):
     assert seen["dataset"] == "filpgf_sla_thresholds"
     assert seen["model"] == "filpgf_sla_thresholds"
     assert seen["public"] is True
+    assert seen["ran"] == ("ds-1", "sm-1")  # both ids reach the run request
     assert seen["text"].splitlines()[0].startswith("observed_at,team,function_id,metric")

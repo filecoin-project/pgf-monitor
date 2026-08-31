@@ -135,15 +135,39 @@ class GraphqlStaticModelClient:
                 out.append(RunInfo(run_id=n["id"], status=n["status"], logs_url=n.get("logsUrl")))
         return out
 
-    def run_static_model(self, dataset_id: str) -> None:
+    def run_static_model(self, dataset_id: str, static_model_id: str) -> None:
+        # OSO finished migrating this mutation to run groups on 2026-08-27, five days after it did
+        # the same to `createDataIngestionRunRequest` (see graphql_client.trigger_run): the payload
+        # is now `CreateRunGroupPayload`, which has no `run` field, so the old selection failed
+        # GraphQL validation with a bare 400. That killed the republish half of every `observe`
+        # night from 08-27 to 08-30 -- readings kept landing in the CSVs, but the warehouse, the
+        # public mart and both dashboards froze at 2026-08-25.
+        #
+        # Because thresholds republish FIRST, this one raise also skipped the observations
+        # republish, the structural exports, AND the "did the night collect anything" assertion
+        # added after the 08-22 incident. Keep the raise below: a republish that quietly no-ops is
+        # the failure this system has now been bitten by twice.
+        #
+        # The INPUT changed in the same migration, and independently: CreateStaticModelRunRequestInput
+        # now requires BOTH `datasetId` and `staticModelId` (introspected live 2026-08-31). Fixing
+        # only the payload selection still 400s, with the same bare HTTPError, because `_gql` raises
+        # on status before it can surface the GraphQL message.
         d = self._gql(
             "mutation($i:CreateStaticModelRunRequestInput!){ "
-            "createStaticModelRunRequest(input:$i){ run{ id } } }",
-            {"i": {"datasetId": dataset_id}},
+            "createStaticModelRunRequest(input:$i){ success message "
+            "runGroup{ id runs{ edges{ node{ id } } } } } }",
+            {"i": {"datasetId": dataset_id, "staticModelId": static_model_id}},
         )
-        # ASSUMPTION: response is createStaticModelRunRequest.run.id (mirrors
-        # createDataIngestionRunRequest.run.id). Confirmed live.
-        run_id = d["createStaticModelRunRequest"]["run"]["id"]
+        payload = d["createStaticModelRunRequest"]
+        group = payload.get("runGroup") or {}
+        edges = ((group.get("runs") or {}).get("edges")) or []
+        if not edges:
+            raise RuntimeError(
+                f"createStaticModelRunRequest returned no run for dataset {dataset_id} "
+                f"(runGroup={group.get('id')!r}, success={payload.get('success')!r}, "
+                f"message={payload.get('message')!r})"
+            )
+        run_id = edges[0]["node"]["id"]
         for attempt in range(self._poll_attempts):
             try:
                 runs = {r.run_id: r for r in self.get_runs(dataset_id)}
