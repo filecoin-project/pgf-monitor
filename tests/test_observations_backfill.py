@@ -9,10 +9,17 @@ recorded, so if the method drifts these fail rather than silently producing plau
 from datetime import datetime, timedelta
 
 from scripts.observations import (
+    TARGETED_ONLY,
     _anchor,
     age_days_at,
+    select_strategies,
     trailing_window_sum,
 )
+
+# the full strategy set as backfill() declares it
+ALL = {
+    "usdfc-tvl", "blockscout", "releases", "ages", "snapshots", "status", "statuspage",
+} | set(TARGETED_ONLY)
 
 
 def _dt(s: str) -> datetime:
@@ -109,3 +116,37 @@ def test_anchor_follows_the_cron_change_on_2026_08_25():
 def test_anchor_boundary_is_inclusive_of_the_new_era():
     on_the_day = _anchor(_dt("2026-08-25T00:00:00Z"))
     assert (on_the_day.hour, on_the_day.minute) == (5, 50)
+
+
+# --- which strategies run, and when -----------------------------------------------------------
+
+
+def test_default_rotation_excludes_the_targeted_recovery_strategies():
+    """A plain `backfill` must not write the outage-recovery sources.
+
+    Both emit a row per day for as far back as their source reaches (115 days of GitHub run
+    history, 53 of GeckoTerminal candles), half of which lands beside an existing nightly
+    reading. Useful when asked for, wrong as a side effect of the default --days 365.
+    """
+    chosen = select_strategies(sorted(ALL), None)
+    assert "pipeline-success" not in chosen
+    assert "pool-volume" not in chosen
+    assert "ages" in chosen and "snapshots" in chosen  # the standing rotation is untouched
+
+
+def test_only_reaches_a_targeted_strategy():
+    assert select_strategies(sorted(ALL), ["pool-volume"]) == ["pool-volume"]
+
+
+def test_only_preserves_declaration_order_not_argument_order():
+    chosen = select_strategies(sorted(ALL), ["pool-volume", "ages"])
+    assert chosen == [s for s in sorted(ALL) if s in {"pool-volume", "ages"}]
+
+
+def test_unknown_strategy_is_refused_rather_than_skipped():
+    import pytest
+
+    with pytest.raises(SystemExit) as exc:
+        select_strategies(sorted(ALL), ["typo-here"])
+    assert "typo-here" in str(exc.value)
+    assert "choose from" in str(exc.value)

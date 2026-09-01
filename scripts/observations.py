@@ -541,6 +541,28 @@ def _pool_volume_series(cutoff: datetime) -> list[dict]:
     return out
 
 
+# TARGETED_ONLY strategies are reachable via `--only` and are NOT in the default rotation.
+# Both were written to recover the 2026-08-22/23 outage, and both emit a row per day for as far
+# back as their source reaches -- 115 days for the GitHub run history, 53 for GeckoTerminal's
+# hourly candles. About half of that is genuinely new history and worth having; the other half
+# lands a second row beside an existing nightly reading for the same metric-day, which the mart
+# renders as a second series. That is documented behaviour, not a bug, but it should be a
+# deliberate act rather than a side effect of running `backfill` with its default --days 365.
+TARGETED_ONLY = frozenset({"pipeline-success", "pool-volume"})
+
+
+def select_strategies(available: list[str], only: list[str] | None) -> list[str]:
+    """Which backfill strategies to run. Raises on an unknown name rather than silently skipping."""
+    if only:
+        unknown = sorted(set(only) - set(available))
+        if unknown:
+            raise SystemExit(
+                f"unknown strategy: {', '.join(unknown)}; choose from {', '.join(available)}"
+            )
+        return [s for s in available if s in only]
+    return [s for s in available if s not in TARGETED_ONLY]
+
+
 def backfill(days: int, only: list[str] | None = None) -> list[dict]:
     """Rebuild history from sources that keep their own.
 
@@ -562,12 +584,8 @@ def backfill(days: int, only: list[str] | None = None) -> list[dict]:
         "pipeline-success": lambda: _pipeline_success_series(cutoff),
         "pool-volume": lambda: _pool_volume_series(cutoff),
     }
-    if only:
-        unknown = sorted(set(only) - set(strategies))
-        if unknown:
-            raise SystemExit(f"unknown strategy: {', '.join(unknown)}; "
-                             f"choose from {', '.join(sorted(strategies))}")
-        strategies = {k: v for k, v in strategies.items() if k in only}
+    chosen = select_strategies(sorted(strategies), only)
+    strategies = {k: v for k, v in strategies.items() if k in chosen}
     rows: list[dict] = []
     for name, fn in strategies.items():
         try:
