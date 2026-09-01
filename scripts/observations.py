@@ -410,25 +410,172 @@ def _statuspage_daily_series(cutoff: datetime) -> list[dict]:
     return out
 
 
-def backfill(days: int) -> list[dict]:
+# ---------------------------------------------------------------------------
+# Recovered after the 2026-08-22/23 platform outage. Both sources keep their own history, so
+# these two metric-days are real readings rather than imputations -- which is why they belong
+# here, in the system of record, and not in the mart's presentation layer.
+#
+# READ ANCHOR: 05:30 UTC, the hour the nightly actually reads (cron 05:23, run starts ~05:28).
+# Not cosmetic -- both metrics are time-of-day dependent, and the anchor is what makes a
+# reconstruction comparable to a nightly reading. Validated against two days the nightly DID
+# record: see tests/test_observations_backfill.py.
+# ---------------------------------------------------------------------------
+
+# The anchor is ERA-AWARE, and it has to be. observe.yml's cron moved from 06:17 to 05:23 UTC on
+# 2026-08-25, so a single anchor is wrong on one side of that date or the other. Measured, not
+# assumed: implied read time = (newest run before a nightly reading) + that reading's age, over
+# every nightly row of pipeline_success_age_days.
+#
+#   2026-08-16 .. 2026-08-25   06:32, 06:38, 06:38, 06:33, 06:39, 06:34, 06:39   -> 06:36
+#   2026-08-26 onward          05:42, 06:03, 05:43                               -> 05:50
+#
+# (Dates whose run was re-triggered by hand -- 08-24 at 15:33, 08-27/28 at ~17:00 -- are excluded
+# as contaminated.) Getting this wrong is not cosmetic: a 05:30 anchor reconstructed the outage
+# days 66 minutes early and disagreed with every neighbouring nightly reading by ~7%.
+READ_ANCHORS = (
+    ("2026-08-25", (6, 36)),  # days BEFORE this date: the 06:17 cron era
+    (None, (5, 50)),          # from that date on: the 05:23 cron era
+)
+
+
+def _anchor(day: datetime) -> datetime:
+    """The instant a nightly reading for `day` would have been taken."""
+    iso = day.strftime("%Y-%m-%d")
+    for boundary, (hh, mm) in READ_ANCHORS:
+        if boundary is None or iso < boundary:
+            return day.replace(hour=hh, minute=mm, second=0, microsecond=0)
+    raise AssertionError("unreachable: READ_ANCHORS must end with a None boundary")
+
+
+def age_days_at(event_times: list[datetime], sample: datetime) -> float | None:
+    """Age in days of the newest event at or before `sample`. None when nothing precedes it."""
+    past = [t for t in event_times if t <= sample]
+    if not past:
+        return None
+    return (sample - max(past)).total_seconds() / 86400.0
+
+
+def trailing_window_sum(buckets: list[tuple[datetime, float]], sample: datetime, hours: int = 24):
+    """Sum bucket values in [sample - hours, sample).
+
+    This is what `volume_usd.h24` means: a TRAILING window at read time, not a calendar day.
+    Summing calendar days instead is off by a factor that varies with read hour -- 08-21 reads
+    59,962 as h24 against 29,072 for the calendar day.
+    """
+    start = sample - timedelta(hours=hours)
+    inside = [v for t, v in buckets if start <= t < sample]
+    if not inside:
+        return None
+    return sum(inside)
+
+
+def _pipeline_success_series(cutoff: datetime) -> list[dict]:
+    """filecoin-data-portal pipeline freshness, from GitHub Actions run history.
+
+    A successful run exists on every day of the outage, so the age is exact, not estimated.
+    """
+    runs = _get(
+        "https://api.github.com/repos/davidgasquez/filecoin-data-portal/actions/workflows/"
+        "pipeline.yml/runs?status=success&per_page=100"
+    )
+    dates = sorted(_parse_dt(r["created_at"]) for r in runs.get("workflow_runs", []))
+    if not dates:
+        return []
+    out = []
+    day = max(cutoff, dates[0]).replace(hour=0, minute=0, second=0, microsecond=0)
+    now = datetime.now(timezone.utc)
+    while day <= now:
+        sample = _anchor(day)
+        age = age_days_at(dates, sample)
+        if age is not None and sample >= dates[0]:
+            out.append(
+                _row(
+                    sample,
+                    "filecoin-data-portal",
+                    "network-data-portal-pipeline-freshness",
+                    "pipeline_success_age_days",
+                    age,
+                    "backfill:api.github.com",
+                    "daily sample from pipeline.yml successful-run history",
+                )
+            )
+        day += timedelta(days=1)
+    return out
+
+
+def _pool_volume_series(cutoff: datetime) -> list[dict]:
+    """USDFC pool 24h volume, rebuilt from GeckoTerminal HOURLY candles.
+
+    Hourly, not daily, because the metric is a trailing 24h window (see trailing_window_sum).
+    """
+    pool = "0x21ca72fe39095db9642ca9cc694fa056f906037f"
+    data = _get(
+        f"https://api.geckoterminal.com/api/v2/networks/filecoin/pools/{pool}"
+        "/ohlcv/hour?limit=1000"
+    )
+    lst = (((data.get("data") or {}).get("attributes") or {}).get("ohlcv_list")) or []
+    buckets = sorted(
+        (datetime.fromtimestamp(int(r[0]), timezone.utc), float(r[5])) for r in lst
+    )
+    if not buckets:
+        return []
+    out = []
+    day = max(cutoff, buckets[0][0]).replace(hour=0, minute=0, second=0, microsecond=0)
+    now = datetime.now(timezone.utc)
+    while day <= now:
+        sample = _anchor(day)
+        total = trailing_window_sum(buckets, sample)
+        if total is not None and sample - timedelta(hours=24) >= buckets[0][0]:
+            out.append(
+                _row(
+                    sample,
+                    "secured-finance",
+                    "usdfc-axlusdc-pool-volume",
+                    "usdfc_pool_volume_usd",
+                    total,
+                    "backfill:api.geckoterminal.com",
+                    "trailing-24h volume rebuilt from hourly candles at the nightly read hour",
+                )
+            )
+        day += timedelta(days=1)
+    return out
+
+
+def backfill(days: int, only: list[str] | None = None) -> list[dict]:
+    """Rebuild history from sources that keep their own.
+
+    `only` names strategies to run. Without it every strategy runs, which re-derives rows for
+    every source across the whole window -- correct, but a much wider write than a targeted
+    recovery needs. Naming the strategies (rather than a bare tuple of lambdas) is what makes
+    that possible, and it also puts a source name in the progress output.
+    """
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=days)
+    strategies = {
+        "usdfc-tvl": lambda: _daily_series_usdfc_tvl(cutoff),
+        "blockscout": lambda: _daily_series_blockscout(cutoff),
+        "releases": lambda: _release_series(cutoff),
+        "ages": lambda: _age_series(cutoff, now),
+        "snapshots": lambda: _snapshot_series(cutoff),
+        "status": lambda: _status_series(cutoff),
+        "statuspage": lambda: _statuspage_daily_series(cutoff),
+        "pipeline-success": lambda: _pipeline_success_series(cutoff),
+        "pool-volume": lambda: _pool_volume_series(cutoff),
+    }
+    if only:
+        unknown = sorted(set(only) - set(strategies))
+        if unknown:
+            raise SystemExit(f"unknown strategy: {', '.join(unknown)}; "
+                             f"choose from {', '.join(sorted(strategies))}")
+        strategies = {k: v for k, v in strategies.items() if k in only}
     rows: list[dict] = []
-    for fn in (
-        lambda: _daily_series_usdfc_tvl(cutoff),
-        lambda: _daily_series_blockscout(cutoff),
-        lambda: _release_series(cutoff),
-        lambda: _age_series(cutoff, now),
-        lambda: _snapshot_series(cutoff),
-        lambda: _status_series(cutoff),
-        lambda: _statuspage_daily_series(cutoff),
-    ):
+    for name, fn in strategies.items():
         try:
             got = fn()
             rows.extend(got)
-            print(f"  {fn.__name__ if hasattr(fn, '__name__') else 'strategy'}: +{len(got)}")
+            print(f"  {name}: +{len(got)}")
         except Exception as exc:
-            print(f"  strategy failed (skipped): {exc}", file=sys.stderr)
+            print(f"  {name} failed (skipped): {exc}", file=sys.stderr)
     return rows
 
 
@@ -494,6 +641,8 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("backfill")
     b.add_argument("--days", type=int, default=365)
+    b.add_argument("--only", action="append", default=None,
+                   help="run only this strategy (repeatable)")
     a = sub.add_parser("append")
     a.add_argument("--store", required=True)
     u = sub.add_parser("upload")
@@ -503,7 +652,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     if args.cmd == "backfill":
-        save_csv(load_csv() + backfill(args.days))
+        save_csv(load_csv() + backfill(args.days, args.only))
     elif args.cmd == "append":
         save_csv(load_csv() + live_rows(args.store))
     elif args.cmd == "upload":
