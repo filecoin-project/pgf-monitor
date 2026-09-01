@@ -429,11 +429,15 @@ def _statuspage_daily_series(cutoff: datetime) -> list[dict]:
 #   2026-08-16 .. 2026-08-25   06:32, 06:38, 06:38, 06:33, 06:39, 06:34, 06:39   -> 06:36
 #   2026-08-26 onward          05:42, 06:03, 05:43                               -> 05:50
 #
+# The boundary is 08-26, NOT 08-25: the cron change (8df156b) landed 2026-08-25 06:59 UTC, AFTER
+# that morning's 06:17 run, so 08-25 itself is still old-era. Getting this off by one day left
+# 08-25 reconstructed 46.6 minutes early -- 0.636701 against the nightly's 0.669067.
+#
 # (Dates whose run was re-triggered by hand -- 08-24 at 15:33, 08-27/28 at ~17:00 -- are excluded
 # as contaminated.) Getting this wrong is not cosmetic: a 05:30 anchor reconstructed the outage
 # days 66 minutes early and disagreed with every neighbouring nightly reading by ~7%.
 READ_ANCHORS = (
-    ("2026-08-25", (6, 36)),  # days BEFORE this date: the 06:17 cron era
+    ("2026-08-26", (6, 36)),  # days BEFORE this date: the 06:17 cron era
     (None, (5, 50)),          # from that date on: the 05:23 cron era
 )
 
@@ -486,6 +490,8 @@ def _pipeline_success_series(cutoff: datetime) -> list[dict]:
     now = datetime.now(timezone.utc)
     while day <= now:
         sample = _anchor(day)
+        if sample > now:
+            break  # today's anchor has not arrived yet; a row here would be read from the future
         age = age_days_at(dates, sample)
         if age is not None and sample >= dates[0]:
             out.append(
@@ -524,6 +530,8 @@ def _pool_volume_series(cutoff: datetime) -> list[dict]:
     now = datetime.now(timezone.utc)
     while day <= now:
         sample = _anchor(day)
+        if sample > now:
+            break  # a trailing window ending in the future silently undercounts the tail hours
         total = trailing_window_sum(buckets, sample)
         if total is not None and sample - timedelta(hours=24) >= buckets[0][0]:
             out.append(
@@ -563,13 +571,15 @@ def select_strategies(available: list[str], only: list[str] | None) -> list[str]
     return [s for s in available if s not in TARGETED_ONLY]
 
 
-def backfill(days: int, only: list[str] | None = None) -> list[dict]:
+def backfill(
+    days: int, only: list[str] | None = None, dates: list[str] | None = None
+) -> list[dict]:
     """Rebuild history from sources that keep their own.
 
-    `only` names strategies to run. Without it every strategy runs, which re-derives rows for
-    every source across the whole window -- correct, but a much wider write than a targeted
-    recovery needs. Naming the strategies (rather than a bare tuple of lambdas) is what makes
-    that possible, and it also puts a source name in the progress output.
+    `only` names strategies to run; `dates` restricts which observation days are emitted.
+    Without `only`, every strategy EXCEPT TARGETED_ONLY runs. Naming the strategies (rather
+    than a bare tuple of lambdas) is what makes both filters possible, and it also puts a
+    source name in the progress output.
     """
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=days)
@@ -584,12 +594,21 @@ def backfill(days: int, only: list[str] | None = None) -> list[dict]:
         "pipeline-success": lambda: _pipeline_success_series(cutoff),
         "pool-volume": lambda: _pool_volume_series(cutoff),
     }
+    stale = TARGETED_ONLY - set(strategies)
+    if stale:
+        raise AssertionError(
+            f"TARGETED_ONLY names no such strategy: {', '.join(sorted(stale))}. Left unchecked, a "
+            f"rename silently re-admits it to the default rotation."
+        )
     chosen = select_strategies(sorted(strategies), only)
     strategies = {k: v for k, v in strategies.items() if k in chosen}
+    wanted = set(dates or ())
     rows: list[dict] = []
     for name, fn in strategies.items():
         try:
             got = fn()
+            if wanted:
+                got = [r for r in got if r["observed_at"] in wanted]
             rows.extend(got)
             print(f"  {name}: +{len(got)}")
         except Exception as exc:
@@ -661,6 +680,10 @@ def main(argv=None) -> int:
     b.add_argument("--days", type=int, default=365)
     b.add_argument("--only", action="append", default=None,
                    help="run only this strategy (repeatable)")
+    b.add_argument("--date", action="append", default=None, dest="dates",
+                   help="emit only this observation day, YYYY-MM-DD (repeatable). A backfill row "
+                        "earns its place when it supplies something the nightly did not -- a "
+                        "missing value or a demonstrably wrong one -- not when it merely agrees.")
     a = sub.add_parser("append")
     a.add_argument("--store", required=True)
     u = sub.add_parser("upload")
@@ -670,7 +693,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     if args.cmd == "backfill":
-        save_csv(load_csv() + backfill(args.days, args.only))
+        save_csv(load_csv() + backfill(args.days, args.only, args.dates))
     elif args.cmd == "append":
         save_csv(load_csv() + live_rows(args.store))
     elif args.cmd == "upload":

@@ -113,9 +113,16 @@ def test_anchor_follows_the_cron_change_on_2026_08_25():
     assert (after.hour, after.minute) == (5, 50)
 
 
-def test_anchor_boundary_is_inclusive_of_the_new_era():
-    on_the_day = _anchor(_dt("2026-08-25T00:00:00Z"))
-    assert (on_the_day.hour, on_the_day.minute) == (5, 50)
+def test_the_cron_change_day_itself_is_still_old_era():
+    """8df156b landed 2026-08-25 06:59 UTC -- after that morning's 06:17 run.
+
+    So 08-25 is old-era and 08-26 is the first new-era day. Off by one here left 08-25
+    reconstructed 46.6 minutes early: 0.636701 against the nightly's 0.669067.
+    """
+    on_the_change_day = _anchor(_dt("2026-08-25T00:00:00Z"))
+    first_new_era_day = _anchor(_dt("2026-08-26T00:00:00Z"))
+    assert (on_the_change_day.hour, on_the_change_day.minute) == (6, 36)
+    assert (first_new_era_day.hour, first_new_era_day.minute) == (5, 50)
 
 
 # --- which strategies run, and when -----------------------------------------------------------
@@ -138,9 +145,10 @@ def test_only_reaches_a_targeted_strategy():
     assert select_strategies(sorted(ALL), ["pool-volume"]) == ["pool-volume"]
 
 
-def test_only_preserves_declaration_order_not_argument_order():
-    chosen = select_strategies(sorted(ALL), ["pool-volume", "ages"])
-    assert chosen == [s for s in sorted(ALL) if s in {"pool-volume", "ages"}]
+def test_only_follows_the_order_it_is_handed_not_the_argument_order():
+    """Selection preserves `available`'s order, whatever that is -- not the caller's."""
+    handed = ["zebra", "ages", "pool-volume"]
+    assert select_strategies(handed, ["pool-volume", "ages"]) == ["ages", "pool-volume"]
 
 
 def test_unknown_strategy_is_refused_rather_than_skipped():
@@ -150,3 +158,13 @@ def test_unknown_strategy_is_refused_rather_than_skipped():
         select_strategies(sorted(ALL), ["typo-here"])
     assert "typo-here" in str(exc.value)
     assert "choose from" in str(exc.value)
+
+
+def test_targeted_only_names_are_checked_against_the_real_strategy_set():
+    """Finding 5: a rename would otherwise silently re-admit a strategy to the default rotation.
+
+    `backfill` asserts TARGETED_ONLY is a subset of its strategies dict. This test guards the
+    invariant from the other side: every name must be selectable.
+    """
+    for name in TARGETED_ONLY:
+        assert select_strategies(sorted(ALL), [name]) == [name]
