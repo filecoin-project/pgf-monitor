@@ -18,7 +18,13 @@ from scripts.observations import (
 
 # the full strategy set as backfill() declares it
 ALL = {
-    "usdfc-tvl", "blockscout", "releases", "ages", "snapshots", "status", "statuspage",
+    "usdfc-tvl",
+    "blockscout",
+    "releases",
+    "ages",
+    "snapshots",
+    "status",
+    "statuspage",
 } | set(TARGETED_ONLY)
 
 

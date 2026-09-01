@@ -438,7 +438,7 @@ def _statuspage_daily_series(cutoff: datetime) -> list[dict]:
 # days 66 minutes early and disagreed with every neighbouring nightly reading by ~7%.
 READ_ANCHORS = (
     ("2026-08-26", (6, 36)),  # days BEFORE this date: the 06:17 cron era
-    (None, (5, 50)),          # from that date on: the 05:23 cron era
+    (None, (5, 50)),  # from that date on: the 05:23 cron era
 )
 
 
@@ -516,13 +516,10 @@ def _pool_volume_series(cutoff: datetime) -> list[dict]:
     """
     pool = "0x21ca72fe39095db9642ca9cc694fa056f906037f"
     data = _get(
-        f"https://api.geckoterminal.com/api/v2/networks/filecoin/pools/{pool}"
-        "/ohlcv/hour?limit=1000"
+        f"https://api.geckoterminal.com/api/v2/networks/filecoin/pools/{pool}/ohlcv/hour?limit=1000"
     )
     lst = (((data.get("data") or {}).get("attributes") or {}).get("ohlcv_list")) or []
-    buckets = sorted(
-        (datetime.fromtimestamp(int(r[0]), timezone.utc), float(r[5])) for r in lst
-    )
+    buckets = sorted((datetime.fromtimestamp(int(r[0]), timezone.utc), float(r[5])) for r in lst)
     if not buckets:
         return []
     out = []
@@ -678,12 +675,18 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("backfill")
     b.add_argument("--days", type=int, default=365)
-    b.add_argument("--only", action="append", default=None,
-                   help="run only this strategy (repeatable)")
-    b.add_argument("--date", action="append", default=None, dest="dates",
-                   help="emit only this observation day, YYYY-MM-DD (repeatable). A backfill row "
-                        "earns its place when it supplies something the nightly did not -- a "
-                        "missing value or a demonstrably wrong one -- not when it merely agrees.")
+    b.add_argument(
+        "--only", action="append", default=None, help="run only this strategy (repeatable)"
+    )
+    b.add_argument(
+        "--date",
+        action="append",
+        default=None,
+        dest="dates",
+        help="emit only this observation day, YYYY-MM-DD (repeatable). A backfill row "
+        "earns its place when it supplies something the nightly did not -- a "
+        "missing value or a demonstrably wrong one -- not when it merely agrees.",
+    )
     a = sub.add_parser("append")
     a.add_argument("--store", required=True)
     u = sub.add_parser("upload")
