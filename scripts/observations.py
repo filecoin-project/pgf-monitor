@@ -638,6 +638,45 @@ def live_rows(store_dir: str) -> list[dict]:
     return out
 
 
+def void_readings(voids: list[dict], path=None) -> int:
+    """Replace a published reading with a null and a reason, through the normal merge path.
+
+    For a reading that is WRONG rather than missing. A null is honest -- it says the day has no
+    defensible number, which is exactly true of a reading we can prove false. Inventing a
+    replacement would be worse, and deleting the row would erase the fact that the nightly ran.
+
+    `merge` is last-wins on (team, function_id, metric, observed_at, method), so a void carries
+    the SAME method as the row it replaces; that is what makes it land on the original rather
+    than beside it. Any real value recovered separately keeps its own `backfill:<host>` method
+    and is untouched.
+    """
+    from fpm import observations as obs
+
+    target = path or obs.CSV_PATH
+    rows = obs.load_rows(target)
+    keys = {obs.row_key(r) for r in rows}
+    new = []
+    for v in voids:
+        row = {
+            "observed_at": v["date"],
+            "team": v["team"],
+            "function_id": v["function_id"],
+            "metric": v["metric"],
+            "observed_value": None,
+            "method": v.get("method", "nightly"),
+            "note": v["note"],
+        }
+        if obs.row_key(row) not in keys:
+            raise SystemExit(
+                f"nothing to void: no {v['method']} reading for {v['team']}/{v['metric']} on "
+                f"{v['date']}. Voiding a row that does not exist would ADD a null rather than "
+                f"replace a value."
+            )
+        new.append(row)
+    obs.save_rows(obs.merge(rows, new), target)
+    return len(new)
+
+
 def load_csv() -> list[dict]:
     return fpm_observations.load_rows(CSV_PATH)
 
@@ -689,6 +728,13 @@ def main(argv=None) -> int:
     )
     a = sub.add_parser("append")
     a.add_argument("--store", required=True)
+    vd = sub.add_parser("void", help="null a reading that is wrong rather than missing")
+    vd.add_argument("--date", required=True)
+    vd.add_argument("--team", required=True)
+    vd.add_argument("--function-id", required=True)
+    vd.add_argument("--metric", required=True)
+    vd.add_argument("--method", default="nightly")
+    vd.add_argument("--note", required=True, help="why this reading cannot be trusted")
     u = sub.add_parser("upload")
     u.add_argument("--oso-org", required=True)
     ut = sub.add_parser("upload-thresholds")
@@ -699,6 +745,20 @@ def main(argv=None) -> int:
         save_csv(load_csv() + backfill(args.days, args.only, args.dates))
     elif args.cmd == "append":
         save_csv(load_csv() + live_rows(args.store))
+    elif args.cmd == "void":
+        n = void_readings(
+            [
+                {
+                    "date": args.date,
+                    "team": args.team,
+                    "function_id": args.function_id,
+                    "metric": args.metric,
+                    "method": args.method,
+                    "note": args.note,
+                }
+            ]
+        )
+        print(f"voided {n} reading(s)")
     elif args.cmd == "upload":
         upload(args.oso_org, CSV_PATH, "filpgf_sla_observations")
     elif args.cmd == "upload-thresholds":
