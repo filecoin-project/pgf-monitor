@@ -1215,13 +1215,18 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-08-19,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.6732587719901845,nightly,
 2026-08-20,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.6750552446064022,nightly,
 2026-08-21,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.6726547688438936,nightly,
+2026-08-22,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.673843,backfill:api.github.com,daily sample from pipeline.yml successful-run history
 2026-08-22,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
+2026-08-23,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.682535,backfill:api.github.com,daily sample from pipeline.yml successful-run history
 2026-08-23,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
 2026-08-24,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.04165509302031111,nightly,
 2026-08-25,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.6690669294805438,nightly,
-2026-08-26,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,36.62969586461782,nightly,
-2026-08-27,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,37.732536482535025,nightly,
-2026-08-28,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,38.73519904402671,nightly,
+2026-08-26,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.634734,backfill:api.github.com,daily sample from pipeline.yml successful-run history
+2026-08-26,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,nightly,void: measured against a run from ~2026-07-20; the pipeline ran successfully this day. True value recovered under backfill:api.github.com
+2026-08-27,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.634583,backfill:api.github.com,daily sample from pipeline.yml successful-run history
+2026-08-27,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,nightly,void: measured against a run from ~2026-07-20; the pipeline ran successfully this day. True value recovered under backfill:api.github.com
+2026-08-28,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.267141,backfill:api.github.com,daily sample from pipeline.yml successful-run history
+2026-08-28,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,nightly,void: measured against a run from ~2026-07-20; the pipeline ran successfully this day. True value recovered under backfill:api.github.com
 2026-08-29,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.26291035600558477,nightly,
 2026-08-30,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.5089676377094454,nightly,
 2026-08-31,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.5872157757398155,nightly,
@@ -2447,7 +2452,9 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-08-19,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,12472.7527272604,nightly,
 2026-08-20,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,25907.7581326231,nightly,
 2026-08-21,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,59961.9490695701,nightly,
+2026-08-22,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,16690.079695,backfill:api.geckoterminal.com,trailing-24h volume rebuilt from hourly candles at the nightly read hour
 2026-08-22,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
+2026-08-23,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,54983.570704,backfill:api.geckoterminal.com,trailing-24h volume rebuilt from hourly candles at the nightly read hour
 2026-08-23,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
 2026-08-24,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,49663.5186642616,nightly,
 2026-08-25,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,48355.7506051694,nightly,
