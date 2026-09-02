@@ -36,6 +36,21 @@ def test_metric_rows_carry_the_join_keys():
     assert sum(1 for r in adopted if not r["grant_ref"]) <= 1
 
 
+def test_metric_rows_carry_the_karma_project_identity():
+    rows = metric_rows()
+    funded = [r for r in rows if r["grant_ref"]]
+    assert funded
+    # Every funded entry resolves its grant_ref through registry/_grants.yaml to the stable Karma
+    # project id; the slug rides along but is mutable, so the id is the join key that matters.
+    assert all(r["karma_project_id"].startswith("0x") for r in funded)
+    # ipni's grant maps to the Karma project the application actually points at.
+    ipni = next(r for r in rows if r["grant_ref"] == "APP-O66TN87V-3MDZFT")
+    assert ipni["karma_project_slug"] == "ipni-interplanetary-network-indexer-1"
+    # An entry no grant pays for (the filfox cross-check) carries no Karma identity.
+    unfunded = [r for r in rows if not r["grant_ref"]]
+    assert all(not r["karma_project_id"] and not r["karma_project_slug"] for r in unfunded)
+
+
 def test_drafts_are_included_and_labelled():
     states = {r["state"] for r in metric_rows()}
     assert states == {"adopted", "draft"}
