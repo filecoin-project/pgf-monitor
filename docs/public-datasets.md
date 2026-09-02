@@ -64,12 +64,30 @@ On every row of `kernel_timeseries_metrics_by_project`:
 
 - **`grant_ref`** — the Karma application id (`APP-…`) of the grant that PAYS for this metric. This
   is the key to use when rendering against a grant, and it is not the same thing as the team: one
-  recipient can hold two grants, and `team` cannot tell them apart. Empty on the one entry no grant
-  pays for (a cross-check we run at our own expense).
+  recipient can hold two grants, and `team` cannot tell them apart. **`grant_ref IS NOT NULL` is
+  the filter for "funded projects"** — it currently yields 14 grants, one per funded project.
+  Empty on the one entry no grant pays for (a cross-check we run at our own expense); see
+  `oso_project_slug = 'unfunded'` below.
 - **`oso_project_slug`** — the OSO project slug of the party receiving payment. Carried as a plain
   column, deliberately **not** as a foreign key into `filpgf_public.projects`: a handful of these
   projects are not in that table, and an inner join would silently drop them rather than showing an
   uncovered project.
+
+  The literal **`unfunded`** is a SENTINEL, not a missing mapping, and it is the honest answer
+  rather than a gap to be filled. It marks a reading nobody is paid for: today one row, the
+  `mainnet-block-explorer` freshness check measured from **Filfox**, an explorer no ProPGF grantee
+  operates. Both the FilOz and Plumbline Appendix 1 §4 tables record Filfox as "third party,
+  ProPGF funded? N". It carries no `grant_ref` and a null `project_display_name`.
+
+  It sits in the Blockscout team file because `team` is our registry filename stem — where a
+  commitment is tracked — and NOT a funding attribution; `oso_project_slug` is the attribution.
+  Attributing this reading to Blockscout would assert they are funded to keep a third party's
+  index current. Blockscout's own funded explorer metrics are in the same file under slug
+  `blockscout` with `grant_ref APP-J8CF3XJY-CG03HL`, which is why the slug looks available.
+
+  So a count of distinct `oso_project_slug` is 15 while the funded-project count is 14. Filter on
+  `grant_ref IS NOT NULL` rather than excluding the string: a future third-party cross-check will
+  also be null but may not reuse this value.
 - **`kernel_id`** — the one kernel function this metric evidences. `non-kernel` means the metric is
   real but evidences nothing the inventory names; it is published as itself so it can't be mistaken
   for a missing value.
@@ -79,6 +97,14 @@ On every row of `kernel_timeseries_metrics_by_project`:
   (taken during a review), or `backfill:<host>` where the source's own history was reconstructed
   after the fact. A day can carry more than one row for one commitment when a backfill lands beside
   a nightly reading; they are different observations of the same day, not duplicates.
+
+  **2026-08-22 and 2026-08-23 were OUR outage, not any source's.** OSO migrated the payload type
+  of its run-request mutations and every fetch raised a bare 400, so 38 of 38 commitments recorded
+  a null that night and the next. Those two dates should be excluded from any coverage or
+  availability denominator you compute — charging a team for them measures us, not them. Our own
+  public dashboard drops them outright. Two metric-days were later recovered as real readings
+  under `backfill:api.github.com` and `backfill:api.geckoterminal.com`, because those sources keep
+  their own history; the rest are point-in-time and gone for good.
 - **`threshold_source`** — `signed-appendix` when the bar was read out of a signed appendix,
   `provisional` otherwise. Every row is `provisional` today, and every `threshold_op` is null.
 - **`time_interval`** — always `daily`, for shape-compatibility with the sibling
