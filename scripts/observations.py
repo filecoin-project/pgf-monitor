@@ -8,8 +8,13 @@ A single point-in-time verdict is useless for uptime-style SLAs. This script mai
   daily TVL, Blockscout daily indexing charts, GitHub release/commit event history,
   snapshot-archive listings, status-page incidents). Every backfilled row is labelled
   with its method; nothing is invented — days the source doesn't cover don't exist.
+  `--only <strategy>` runs one source; `--date YYYY-MM-DD` restricts which days are emitted.
 - `append --store DIR` — appends the live readings from a review run's ReviewBundles,
   so history accrues forward with every scheduled review.
+- `void` — nulls a reading that is WRONG rather than missing, with a required reason. For a
+  value we can prove false: a null honestly says the day has no defensible number. Refuses a
+  row that does not exist, or one already indeterminate (that would overwrite the note saying
+  why).
 - `upload --oso-org UUID` — pushes `data/observations.csv` to the public
   `filpgf_sla_observations` static model.
 - `upload-thresholds --oso-org UUID` — pushes `data/thresholds.csv` (see
@@ -652,9 +657,9 @@ def void_readings(voids: list[dict], path=None) -> int:
     """
     from fpm import observations as obs
 
-    target = path or obs.CSV_PATH
+    target = path or CSV_PATH
     rows = obs.load_rows(target)
-    keys = {obs.row_key(r) for r in rows}
+    existing = {obs.row_key(r): r for r in rows}
     new = []
     for v in voids:
         row = {
@@ -666,11 +671,23 @@ def void_readings(voids: list[dict], path=None) -> int:
             "method": v.get("method", "nightly"),
             "note": v["note"],
         }
-        if obs.row_key(row) not in keys:
+        # Two things must hold, and the second is the one that bites: the row must EXIST, and it
+        # must currently carry a value. Voiding an already-indeterminate day would succeed
+        # silently and overwrite its note -- destroying the `fetch_error: ...` text that says WHY
+        # the day had no reading, which is exactly what outage forensics depend on.
+        match = existing.get(obs.row_key(row))
+        if match is None:
             raise SystemExit(
-                f"nothing to void: no {v['method']} reading for {v['team']}/{v['metric']} on "
+                f"nothing to void: no {row['method']} reading for {v['team']}/{v['metric']} on "
                 f"{v['date']}. Voiding a row that does not exist would ADD a null rather than "
                 f"replace a value."
+            )
+        if str(match.get("observed_value") or "").strip() == "":
+            raise SystemExit(
+                f"nothing to void: the {row['method']} reading for {v['team']}/{v['metric']} on "
+                f"{v['date']} is already indeterminate. Voiding it would overwrite its note "
+                f"({match.get('note') or 'no note'!r}), which is the record of why the day has "
+                f"no value."
             )
         new.append(row)
     obs.save_rows(obs.merge(rows, new), target)

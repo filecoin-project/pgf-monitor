@@ -65,3 +65,25 @@ def test_void_matches_on_method_so_it_cannot_hit_the_wrong_row(tmp_path):
     obs.save_rows([ROW], p)
     with pytest.raises(SystemExit):
         void_readings([_void(method="live-review")], p)
+
+
+def test_refusal_message_survives_a_caller_that_omits_method(tmp_path):
+    """The default is documented as 'nightly', so the guard must not KeyError explaining itself."""
+    p = tmp_path / "obs.csv"
+    obs.save_rows([ROW], p)
+    bare = {k: v for k, v in _void(date="2026-08-30").items() if k != "method"}
+    with pytest.raises(SystemExit) as exc:
+        void_readings([bare], p)
+    assert "nightly" in str(exc.value)
+
+
+def test_voiding_an_already_indeterminate_reading_is_refused(tmp_path):
+    """Its note records WHY the day has no value; a void would overwrite that forensic trail."""
+    p = tmp_path / "obs.csv"
+    indeterminate = {**ROW, "observed_value": None, "note": "fetch_error: connection reset"}
+    obs.save_rows([indeterminate], p)
+    with pytest.raises(SystemExit) as exc:
+        void_readings([_void()], p)
+    assert "already indeterminate" in str(exc.value)
+    assert "connection reset" in str(exc.value)
+    assert obs.load_rows(p)[0]["note"] == "fetch_error: connection reset"

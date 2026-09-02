@@ -18,6 +18,7 @@ uv run fpm observe [teams...] [--as-of DATE] [--dry-run] [--live-oso --oso-org U
 uv run fpm report <team> --link URL [--intent "..."] [--out FILE]   # draft an entry from a URL
 uv run fpm land --store DIR --oso-org UUID [--public-name N --private-name N]
 uv run fpm contract <team> [--facts FILE] [--out FILE]   # render a grant contract from manifest + contracts/<team>.facts.yaml
+uv run python scripts/observations.py void --date D --team T --function-id F --metric M --note "..."  # null a reading that is WRONG, not missing
 uv run python -m scripts.exports write                  # regenerate data/kernel_{functions,metrics}.csv from registry/
 uv run python -m scripts.exports upload --oso-org UUID  # regenerate, then republish both public static models
 scripts/demo_project_flow.sh / scripts/demo_reviewer_flow.sh        # offline end-to-end demos
