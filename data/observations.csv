@@ -1222,11 +1222,11 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-08-24,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.04165509302031111,nightly,
 2026-08-25,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.6690669294805438,nightly,
 2026-08-26,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.634734,backfill:api.github.com,daily sample from pipeline.yml successful-run history
-2026-08-26,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,36.62969586461782,nightly,
+2026-08-26,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,nightly,void: measured against a run from ~2026-07-20; the pipeline ran successfully this day. True value recovered under backfill:api.github.com
 2026-08-27,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.634583,backfill:api.github.com,daily sample from pipeline.yml successful-run history
-2026-08-27,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,37.732536482535025,nightly,
+2026-08-27,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,nightly,void: measured against a run from ~2026-07-20; the pipeline ran successfully this day. True value recovered under backfill:api.github.com
 2026-08-28,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.267141,backfill:api.github.com,daily sample from pipeline.yml successful-run history
-2026-08-28,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,38.73519904402671,nightly,
+2026-08-28,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,nightly,void: measured against a run from ~2026-07-20; the pipeline ran successfully this day. True value recovered under backfill:api.github.com
 2026-08-29,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.26291035600558477,nightly,
 2026-08-30,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.5089676377094454,nightly,
 2026-08-31,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.5872157757398155,nightly,
