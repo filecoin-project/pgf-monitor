@@ -69,7 +69,8 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   within a day. This repo owns only the LANDING tables it feeds:
   `filpgf_kernel_functions` (the kernel inventory, including functions nothing measures) and
   `filpgf_kernel_metrics` (one row per SLA entry with its join keys: `kernel_id`, `grant_ref`,
-  `oso_project_slug`, `team`, `state`), beside the two series below. Both are DERIVED from
+  `oso_project_slug`, `team`, `state`, plus `karma_project_id` / `karma_project_slug` resolved from
+  `grant_ref` via `_grants.yaml`), beside the two series below. Both are DERIVED from
   `registry/` by
   `fpm.exports` — regenerate with `scripts/exports.py write`, never hand-edit
   `data/kernel_functions.csv` or `data/kernel_metrics.csv`; `tests/test_exports.py` fails when the

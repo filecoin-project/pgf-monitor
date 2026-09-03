@@ -88,6 +88,14 @@ On every row of `kernel_timeseries_metrics_by_project`:
   So a count of distinct `oso_project_slug` is 15 while the funded-project count is 14. Filter on
   `grant_ref IS NOT NULL` rather than excluding the string: a future third-party cross-check will
   also be null but may not reuse this value.
+- **`karma_project_id`** / **`karma_project_slug`** — the Karma project the grant is attached to,
+  resolved from `grant_ref`. The **id** (`0x…`) is the stable key and the one to join on; the
+  **slug** is human-readable but MUTABLE — Karma derives it from the application title, so it
+  changes on a rename and collisions take a numeric suffix (`filponto-1`). Both are null on the
+  `unfunded` cross-check. Note the Karma project is not the same entity as `oso_project_slug`: it
+  is the applicant's project on Karma (e.g. grant `APP-HDYJESMD-2WLL00` pays OSO slug `filozone`
+  but its Karma project is `curio`), so this is the key for reconciling against Karma, not for
+  funding attribution.
 - **`kernel_id`** — the one kernel function this metric evidences. `non-kernel` means the metric is
   real but evidences nothing the inventory names; it is published as itself so it can't be mistaken
   for a missing value.

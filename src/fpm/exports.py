@@ -33,6 +33,7 @@ from pathlib import Path
 
 from fpm.drafts import split_draft
 from fpm.governance.allowlist import host_of
+from fpm.grants import Grant, by_app_ref, load_grants
 from fpm.kernel import NON_KERNEL_ID, Kernel, load_kernel
 from fpm.manifest import FunctionSpec, load_manifest
 
@@ -50,6 +51,11 @@ METRICS_COLUMNS = [
     "origin",
     "grant_ref",
     "oso_project_slug",
+    # Karma project the grant is attached to: the stable 0x id is the join key, the slug is
+    # human-readable but mutable (Karma derives it from the application title). Both come from
+    # registry/_grants.yaml via grant_ref; empty for an entry no grant pays for.
+    "karma_project_id",
+    "karma_project_slug",
     "source_host",
     "repos",
     "cadence",
@@ -74,7 +80,8 @@ def function_rows(kernel: Kernel | None = None) -> list[Row]:
     ]
 
 
-def _metric_row(team: str, fn: FunctionSpec, state: str) -> Row:
+def _metric_row(team: str, fn: FunctionSpec, state: str, grants: dict[str, Grant]) -> Row:
+    grant = grants.get(fn.grant_ref)
     return {
         "team": team,
         "function_id": fn.function_id,
@@ -87,6 +94,8 @@ def _metric_row(team: str, fn: FunctionSpec, state: str) -> Row:
         "origin": fn.origin,
         "grant_ref": fn.grant_ref,
         "oso_project_slug": fn.funded_project_oso_slug,
+        "karma_project_id": grant.application_karma_project_id if grant else "",
+        "karma_project_slug": grant.application_karma_project_slug if grant else "",
         # `fixture` marks a placeholder awaiting a real feed, which is a different thing from a
         # source whose host we could not parse.
         "source_host": (host_of(fn.source.base_url) or "?")
@@ -110,16 +119,19 @@ def metric_rows(
     """
     registry_dir = Path(registry_dir)
     drafts_dir = registry_dir / "drafts" if drafts_dir is None else Path(drafts_dir)
+    # The grant bridge is a single well-known file, not per-registry: it resolves grant_ref to the
+    # Karma project identity for every manifest, adopted or draft.
+    grants = by_app_ref(load_grants())
     rows: list[Row] = []
     for path in sorted(registry_dir.glob("*.yaml")):
         if path.name.startswith("_"):
             continue
         m = load_manifest(path)
-        rows += [_metric_row(m.team, fn, "adopted") for fn in m.functions]
+        rows += [_metric_row(m.team, fn, "adopted", grants) for fn in m.functions]
     if drafts_dir.is_dir():
         for path in sorted(drafts_dir.glob("*.yaml")):
             m, _ = split_draft(path)
-            rows += [_metric_row(m.team, fn, "draft") for fn in m.functions]
+            rows += [_metric_row(m.team, fn, "draft", grants) for fn in m.functions]
     return sorted(rows, key=lambda r: (r["team"], r["function_id"], r["metric"], r["state"]))
 
 
