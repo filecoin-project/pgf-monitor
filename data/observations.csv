@@ -21,6 +21,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-09-02,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-09-03,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
+2026-09-04,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-08-20,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,0.0,nightly,
 2026-08-21,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
 2026-08-22,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
@@ -36,6 +37,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
 2026-09-02,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
 2026-09-03,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,0.0,nightly,
+2026-09-04,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
 2026-07-15,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,live-review,scheduled review reading
 2026-08-14,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
 2026-08-15,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
@@ -58,6 +60,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
 2026-09-02,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
 2026-09-03,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
+2026-09-04,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
 2026-07-15,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,2293.76634,live-review,scheduled review reading
 2026-08-14,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,52.00825500488281,nightly,
 2026-08-15,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,93.47486710548401,nightly,
@@ -80,6 +83,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,94.55386090278625,nightly,
 2026-09-02,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,70.15218305587769,nightly,
 2026-09-03,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,84.12310600280762,nightly,
+2026-09-04,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,84.55294990539551,nightly,
 2025-07-16,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,12505.0,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2025-07-17,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,12977.0,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2025-07-18,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,14718.0,backfill:filecoin-testnet.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
@@ -479,6 +483,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,91.49748611450195,nightly,
 2026-09-02,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,48.459903955459595,nightly,
 2026-09-03,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,92.11016511917114,nightly,
+2026-09-04,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,93.70183801651001,nightly,
 2025-07-16,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,132078.0,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2025-07-17,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,142820.0,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
 2025-07-18,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,149247.0,backfill:filecoin.blockscout.com,reconstructed operational history (explorer indexed the day); live SLA metric is head-block age
@@ -879,6 +884,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,blockscout,mainnet-block-explorer,explorer_max_tipset_gap_seconds,60.0,nightly,
 2026-09-02,blockscout,mainnet-block-explorer,explorer_max_tipset_gap_seconds,30.0,nightly,
 2026-09-03,blockscout,mainnet-block-explorer,explorer_max_tipset_gap_seconds,30.0,nightly,
+2026-09-04,blockscout,mainnet-block-explorer,explorer_max_tipset_gap_seconds,30.0,nightly,
 2026-08-20,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-08-21,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-08-22,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
@@ -894,6 +900,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-09-02,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-09-03,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
+2026-09-04,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-07-15,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,live-review,scheduled review reading
 2026-08-14,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
 2026-08-15,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
@@ -916,6 +923,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
 2026-09-02,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
 2026-09-03,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
+2026-09-04,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,1.0,nightly,
 2026-07-15,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,live-review,scheduled review reading
 2026-08-14,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
 2026-08-15,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
@@ -938,6 +946,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
 2026-09-02,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
 2026-09-03,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
+2026-09-04,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,nightly,
 2026-08-20,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,99.95725310291161,nightly,
 2026-08-21,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,99.95725310291161,nightly,
 2026-08-22,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
@@ -953,6 +962,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,99.95725308641975,nightly,
 2026-09-02,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,99.95725310291161,nightly,
 2026-09-03,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,99.95725310291161,nightly,
+2026-09-04,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,99.95725308641975,nightly,
 2026-08-20,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,0.008876000609600743,nightly,
 2026-08-21,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,0.00890284224668709,nightly,
 2026-08-22,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
@@ -968,6 +978,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,0.007864803686996652,nightly,
 2026-09-02,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,0.00811985328140607,nightly,
 2026-09-03,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,0.00836829788731525,nightly,
+2026-09-04,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,0.008097730856034852,nightly,
 2026-07-15,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,live-review,scheduled review reading
 2026-08-14,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,0.0,nightly,
 2026-08-15,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,0.0,nightly,
@@ -990,6 +1001,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,0.0,nightly,
 2026-09-02,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,0.0,nightly,
 2026-09-03,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,0.0,nightly,
+2026-09-04,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,0.0,nightly,
 2026-07-15,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,live-review,scheduled review reading
 2026-08-14,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
 2026-08-15,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
@@ -1012,6 +1024,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,nightly,ingestion run FAILED: no value in source response for the measurement window
 2026-09-02,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
 2026-09-03,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
+2026-09-04,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
 2026-07-15,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,13330.032771,live-review,scheduled review reading
 2026-08-14,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,3871.3180849552155,nightly,
 2026-08-15,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,7354.0667769908905,nightly,
@@ -1034,6 +1047,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,4181.529757022858,nightly,
 2026-09-02,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,3671.0537989139557,nightly,
 2026-09-03,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,4882.522444963455,nightly,
+2026-09-04,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,3892.285892009735,nightly,
 2026-07-07,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7979.781,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-08,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7883.856,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
 2026-07-09,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,7887.171,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (calibnet, archive retention window)"
@@ -1078,6 +1092,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chainsafe,forest-release-cadence,avg_days_between_releases,17.166412,nightly,
 2026-09-02,chainsafe,forest-release-cadence,avg_days_between_releases,16.8750579,nightly,
 2026-09-03,chainsafe,forest-release-cadence,avg_days_between_releases,16.8750579,nightly,
+2026-09-04,chainsafe,forest-release-cadence,avg_days_between_releases,16.8750579,nightly,
 2025-07-23,chainsafe,forest-release-cadence,days_between_releases,33.790127,backfill:api.github.com,gap since previous release of ChainSafe/forest
 2025-08-27,chainsafe,forest-release-cadence,days_between_releases,35.016713,backfill:api.github.com,gap since previous release of ChainSafe/forest
 2025-09-08,chainsafe,forest-release-cadence,days_between_releases,12.317616,backfill:api.github.com,gap since previous release of ChainSafe/forest
@@ -1127,6 +1142,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,1642.6281259059906,nightly,
 2026-09-02,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,1253.1058340072632,nightly,
 2026-09-03,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,2531.60466504097,nightly,
+2026-09-04,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,1609.6921899318695,nightly,
 2026-07-03,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,9207.149,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
 2026-07-04,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,7975.735,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
 2026-07-05,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,64428.163,backfill:forest-archive.chainsafe.dev,"max inter-snapshot gap that day (mainnet, archive retention window)"
@@ -1167,6 +1183,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,fil-b,docs-open-issues,docs_open_issues,42.0,nightly,
 2026-09-02,fil-b,docs-open-issues,docs_open_issues,42.0,nightly,
 2026-09-03,fil-b,docs-open-issues,docs_open_issues,42.0,nightly,
+2026-09-04,fil-b,docs-open-issues,docs_open_issues,42.0,nightly,
 2025-08-15,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,0.0,backfill:api.github.com,weekly sample from filecoin-project/filecoin-docs commits history
 2025-08-22,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,2.081296,backfill:api.github.com,weekly sample from filecoin-project/filecoin-docs commits history
 2025-08-29,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,1.075625,backfill:api.github.com,weekly sample from filecoin-project/filecoin-docs commits history
@@ -1240,6 +1257,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,66.0,nightly,
 2026-09-02,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,67.0,nightly,
 2026-09-03,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,0.0,nightly,
+2026-09-04,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,1.0,nightly,
 2026-07-15,fil-b,network-documentation-commit-volume,docs_commits_trailing_90d,,live-review,scheduled review reading
 2026-07-15,fil-ponto,ecosystem-onboarding-placeholder,awaiting_real_source,,live-review,scheduled review reading
 2026-07-15,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,live-review,scheduled review reading
@@ -1269,6 +1287,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.4146433814339064,nightly,
 2026-09-02,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.5087112742358888,nightly,
 2026-09-03,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.4785764810994819,nightly,
+2026-09-04,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,0.5121392322221288,nightly,
 2025-07-01,filecoin-infra-misc,network-monitoring-status-page,incidents_in_month,0.0,backfill:status.filecoin.io,"incident history (informational, no SLA threshold)"
 2025-08-01,filecoin-infra-misc,network-monitoring-status-page,incidents_in_month,0.0,backfill:status.filecoin.io,"incident history (informational, no SLA threshold)"
 2025-09-01,filecoin-infra-misc,network-monitoring-status-page,incidents_in_month,0.0,backfill:status.filecoin.io,"incident history (informational, no SLA threshold)"
@@ -1425,6 +1444,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,1083.0,nightly,
 2026-09-02,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,1085.0,nightly,
 2026-09-03,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,1095.0,nightly,
+2026-09-04,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,1099.0,nightly,
 2026-07-15,filoz,curio-sealing-release-cadence,avg_days_between_releases,,live-review,scheduled review reading
 2026-08-14,filoz,curio-sealing-release-cadence,avg_days_between_releases,26.1740856,nightly,
 2026-08-15,filoz,curio-sealing-release-cadence,avg_days_between_releases,26.1740856,nightly,
@@ -1447,6 +1467,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,filoz,curio-sealing-release-cadence,avg_days_between_releases,26.1820486,nightly,
 2026-09-02,filoz,curio-sealing-release-cadence,avg_days_between_releases,26.1820486,nightly,
 2026-09-03,filoz,curio-sealing-release-cadence,avg_days_between_releases,26.1820486,nightly,
+2026-09-04,filoz,curio-sealing-release-cadence,avg_days_between_releases,26.1820486,nightly,
 2025-08-21,filoz,curio-sealing-release-cadence,days_between_releases,92.709479,backfill:api.github.com,gap since previous release of filecoin-project/curio
 2025-09-09,filoz,curio-sealing-release-cadence,days_between_releases,19.384005,backfill:api.github.com,gap since previous release of filecoin-project/curio
 2025-09-18,filoz,curio-sealing-release-cadence,days_between_releases,8.866586,backfill:api.github.com,gap since previous release of filecoin-project/curio
@@ -1485,6 +1506,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,4.913986013986014,nightly,
 2026-09-02,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,4.991955229101085,nightly,
 2026-09-03,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,4.876745810055866,nightly,
+2026-09-04,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,4.837241862093105,nightly,
 2026-07-15,filoz,evm-eam-actor-maintenance,avg_days_between_releases,,live-review,scheduled review reading
 2026-08-14,filoz,evm-eam-actor-maintenance,avg_days_between_releases,32.7077546,nightly,
 2026-08-15,filoz,evm-eam-actor-maintenance,avg_days_between_releases,32.7077546,nightly,
@@ -1535,6 +1557,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,0.0,nightly,
 2026-09-02,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,0.0,nightly,
 2026-09-03,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,0.0,nightly,
+2026-09-04,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,0.0,nightly,
 2026-07-15,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,46.0,live-review,scheduled review reading
 2026-08-14,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,71.0,nightly,
 2026-08-15,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,41.0,nightly,
@@ -1557,6 +1580,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,26.0,nightly,
 2026-09-02,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,40.0,nightly,
 2026-09-03,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,79.0,nightly,
+2026-09-04,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,46.0,nightly,
 2025-07-30,libp2p-networking,libp2p-release-cadence,days_between_releases,41.942477,backfill:api.github.com,gap since previous release of libp2p/go-libp2p
 2025-08-07,libp2p-networking,libp2p-release-cadence,days_between_releases,8.025544,backfill:api.github.com,gap since previous release of libp2p/go-libp2p
 2025-10-07,libp2p-networking,libp2p-release-cadence,days_between_releases,61.197014,backfill:api.github.com,gap since previous release of libp2p/go-libp2p
@@ -1703,6 +1727,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,oif-ipni,content-routing-ipni,ipni_error_free_ratio,0.8732394366197183,nightly,
 2026-09-02,oif-ipni,content-routing-ipni,ipni_error_free_ratio,0.8758620689655172,nightly,
 2026-09-03,oif-ipni,content-routing-ipni,ipni_error_free_ratio,0.8783783783783784,nightly,
+2026-09-04,oif-ipni,content-routing-ipni,ipni_error_free_ratio,0.8791946308724832,nightly,
 2026-07-15,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,28.0,live-review,scheduled review reading
 2026-08-14,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,31.0,nightly,
 2026-08-15,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,32.0,nightly,
@@ -1725,6 +1750,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,34.0,nightly,
 2026-09-02,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,35.0,nightly,
 2026-09-03,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,38.0,nightly,
+2026-09-04,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,37.0,nightly,
 2026-07-15,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,133.0,live-review,scheduled review reading
 2026-08-14,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,129.0,nightly,
 2026-08-15,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,130.0,nightly,
@@ -1747,6 +1773,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,142.0,nightly,
 2026-09-02,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,145.0,nightly,
 2026-09-03,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,148.0,nightly,
+2026-09-04,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,149.0,nightly,
 2026-08-20,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,1.0,nightly,
 2026-08-21,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,1.0,nightly,
 2026-08-22,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,,nightly,fetch_error: 400 Client Error: Bad Request for url: https://api.oso.xyz/v1/graphql
@@ -1762,6 +1789,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,1.0,nightly,
 2026-09-02,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,1.0,nightly,
 2026-09-03,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,1.0,nightly,
+2026-09-04,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,1.0,nightly,
 2026-07-15,plumbline,calibnet-active-miners,calibnet_active_miners,8.0,live-review,scheduled review reading
 2026-07-15,plumbline,calibnet-block-win-spread,calibnet_avg_blocks_per_tipset,2.707897,live-review,scheduled review reading
 2026-07-15,plumbline,calibnet-chain-liveness,avg_seconds_per_epoch,30.0,live-review,scheduled review reading
@@ -1788,6 +1816,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.33818960576720053,nightly,
 2026-09-02,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.33778206248305365,nightly,
 2026-09-03,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.3374770490322969,nightly,
+2026-09-04,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.33707122027477976,nightly,
 2025-07-15,proving,proving-crypto-primitives-maintenance,bellperson_days_since_last_commit,0.021702,backfill:api.github.com,weekly sample from filecoin-project/bellperson commits history
 2025-07-20,proving,proving-crypto-primitives-maintenance,bellperson_days_since_last_commit,4.977145,backfill:api.github.com,weekly sample from filecoin-project/bellperson commits history
 2025-07-22,proving,proving-crypto-primitives-maintenance,bellperson_days_since_last_commit,7.021702,backfill:api.github.com,weekly sample from filecoin-project/bellperson commits history
@@ -2033,6 +2062,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,0.0,nightly,
 2026-09-02,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,0.0,nightly,
 2026-09-03,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,0.0,nightly,
+2026-09-04,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,0.0,nightly,
 2026-07-15,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,0.0,live-review,scheduled review reading
 2026-08-14,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,0.0,nightly,
 2026-08-15,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,0.0,nightly,
@@ -2055,6 +2085,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,0.0,nightly,
 2026-09-02,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,0.0,nightly,
 2026-09-03,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,,nightly,ingestion run FAILED: no value in source response for the measurement window
+2026-09-04,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,0.0,nightly,
 2025-07-20,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
 2025-07-21,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
 2025-07-22,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,backfill:drand.statuspage.io,operator status page (self-reported): 1 = active incident that day
@@ -2450,6 +2481,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,nightly,
 2026-09-02,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,nightly,
 2026-09-03,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,nightly,
+2026-09-04,randamu,drand-relay-statuspage,statuspage_impact_level,0.0,nightly,
 2026-08-14,randamu,drand-release-cadence,avg_days_between_releases,39.8989931,nightly,
 2026-08-15,randamu,drand-release-cadence,avg_days_between_releases,39.8989931,nightly,
 2026-08-16,randamu,drand-release-cadence,avg_days_between_releases,39.8989931,nightly,
@@ -2471,6 +2503,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,randamu,drand-release-cadence,avg_days_between_releases,39.8989931,nightly,
 2026-09-02,randamu,drand-release-cadence,avg_days_between_releases,39.8989931,nightly,
 2026-09-03,randamu,drand-release-cadence,avg_days_between_releases,39.8989931,nightly,
+2026-09-04,randamu,drand-release-cadence,avg_days_between_releases,39.8989931,nightly,
 2026-07-15,randamu,randomness-beacon,beacon_round_lag,0.0,live-review,scheduled review reading
 2026-08-14,randamu,randomness-beacon,beacon_round_lag,1.0,nightly,
 2026-08-15,randamu,randomness-beacon,beacon_round_lag,0.0,nightly,
@@ -2493,6 +2526,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,randamu,randomness-beacon,beacon_round_lag,0.0,nightly,
 2026-09-02,randamu,randomness-beacon,beacon_round_lag,0.0,nightly,
 2026-09-03,randamu,randomness-beacon,beacon_round_lag,0.0,nightly,
+2026-09-04,randamu,randomness-beacon,beacon_round_lag,0.0,nightly,
 2026-08-14,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,51214.0584,nightly,
 2026-08-15,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,51139.323,nightly,
 2026-08-16,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,51156.4336,nightly,
@@ -2514,6 +2548,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21328.5325,nightly,
 2026-09-02,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,23659.9886,nightly,
 2026-09-03,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,24054.3853,nightly,
+2026-09-04,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,22286.8057,nightly,
 2026-08-14,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,10159.5832982026,nightly,
 2026-08-15,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,17590.6616429085,nightly,
 2026-08-16,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,8767.6372406244,nightly,
@@ -2537,6 +2572,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,16548.168625493,nightly,
 2026-09-02,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,23544.8130020628,nightly,
 2026-09-03,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,0.0,nightly,
+2026-09-04,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,4098.7412479728,nightly,
 2025-07-16,secured-finance,usdfc-collateral-tvl-floor,usdfc_tvl_usd,826747.0,backfill:api.llama.fi,daily protocol TVL history
 2025-07-17,secured-finance,usdfc-collateral-tvl-floor,usdfc_tvl_usd,838092.0,backfill:api.llama.fi,daily protocol TVL history
 2025-07-18,secured-finance,usdfc-collateral-tvl-floor,usdfc_tvl_usd,848823.0,backfill:api.llama.fi,daily protocol TVL history
@@ -2925,6 +2961,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.007942873913820092,nightly,
 2026-09-02,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.04948664706805994,nightly,
 2026-09-03,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.04948664706805994,nightly,
+2026-09-04,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.11847782043427002,nightly,
 2026-07-15,secured-finance,usdfc-peg-stability,usdfc_peg_deviation,0.013057,live-review,scheduled review reading
 2026-08-25,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,0.5002168737746137,nightly,
 2026-08-26,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,0.5103875031653857,nightly,
@@ -2936,6 +2973,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,1.926542976395761,nightly,
 2026-09-02,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,0.5962043162470781,nightly,
 2026-09-03,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,0.5962043162470781,nightly,
+2026-09-04,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,0.5133303321996521,nightly,
 2025-07-15,venus,damocles-maintenance,damocles_days_since_last_commit,97.530487,backfill:api.github.com,weekly sample from ipfs-force-community/damocles commits history
 2025-07-20,venus,damocles-maintenance,damocles_days_since_last_commit,102.48593,backfill:api.github.com,weekly sample from ipfs-force-community/damocles commits history
 2025-07-22,venus,damocles-maintenance,damocles_days_since_last_commit,104.530487,backfill:api.github.com,weekly sample from ipfs-force-community/damocles commits history
@@ -3180,6 +3218,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,zondax,rosetta-release-currency,rosetta_release_age_days,55.48786853692046,nightly,
 2026-09-02,zondax,rosetta-release-currency,rosetta_release_age_days,56.48770759487318,nightly,
 2026-09-03,zondax,rosetta-release-currency,rosetta_release_age_days,57.50213293315912,nightly,
+2026-09-04,zondax,rosetta-release-currency,rosetta_release_age_days,58.48757930769688,nightly,
 2026-07-15,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,100000.0,live-review,scheduled review reading
 2026-08-14,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,100000.0,nightly,
 2026-08-15,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,100000.0,nightly,
@@ -3202,4 +3241,5 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-01,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,100000.0,nightly,
 2026-09-02,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,100000.0,nightly,
 2026-09-03,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,100000.0,nightly,
+2026-09-04,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,100000.0,nightly,
 2026-07-15,zondax,zondax-node-rpc-mainnet-head-lag,rpc_head_lag_epochs,0.0,live-review,scheduled review reading
