@@ -56,6 +56,7 @@ function's current status — green (OK), red (a recent interruption), or amber
 |---|---|
 | A funded team writing or editing your manifest | [docs/guide-projects.md](docs/guide-projects.md) |
 | A ProPGF reviewer or committee member | [docs/guide-reviewers.md](docs/guide-reviewers.md) |
+| Asking why a metric can't be backfilled, or has no history | [docs/metric-history.md](docs/metric-history.md) |
 | Using a coding agent (Claude Code, Cursor, …) | [CLAUDE.md](CLAUDE.md) — both guides are agent-ready too |
 | An agent answering questions without cloning | [SKILL.md](SKILL.md) — point yours at the [raw URL](https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main/SKILL.md) |
 
@@ -131,7 +132,7 @@ data/                observations.csv + thresholds.csv, the append-only time ser
                        (never hand-edited — written only through fpm.observations / fpm.thresholds)
 scripts/             validate_pr (the PR gate), validate_draft / promote_draft, offline demos
 dashboards/          propgf-kernel-health.py (marimo; uv sync --extra dashboards)
-docs/                guides (project · reviewer · governance · coverage)
+docs/                guides (project · reviewer · governance · coverage · metric history)
 .github/workflows/   static gate on every PR + label-gated live dry-run + tests
 ```
 
