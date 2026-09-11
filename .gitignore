@@ -35,3 +35,7 @@ contracts/
 
 # marimo export cache
 __marimo__/
+
+# direnv (loads .env; local tooling)
+.envrc
+.direnv/
