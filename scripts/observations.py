@@ -34,6 +34,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -833,6 +834,148 @@ def _release_avg_series(cutoff: datetime, now: datetime, already: set) -> list[d
     return out
 
 
+# Filecoin Pay settled volume, rebuilt from the settlement events behind it.
+#
+# The nightly reads `Token.totalSettledAmount` -- a running total the subgraph maintains, with no
+# time dimension, so the metric would otherwise start from the day it was adopted and never gain a
+# past. The settlements that produced that total DO carry `createdAt`, so the cumulative series is
+# recoverable by summing them forward.
+#
+# That is only legitimate if the two agree, and this asserts it rather than assuming: summing every
+# settlement for a token must reproduce that token's `totalSettledAmount` exactly. Verified
+# 2026-09-11 for axlUSDC -- 36 settlements, equal to the wei. If the identity ever breaks, the
+# reconstruction is measuring something else and the run stops instead of writing a series whose
+# history means something different from its present. That failure is not hypothetical: the
+# neighbouring `days_between_releases` backfill spent a year attached to no commitment because
+# nobody checked it computed the committed quantity.
+_FILPAY_SUBGRAPH_MARKER = "subgraphs/filecoin-pay-mainnet"
+_FILPAY_SQL_PREFIX = "SELECT SUM(CAST(total_settled_amount AS DOUBLE)"
+
+
+def filecoin_pay_target(registry_dir: str = "registry"):
+    """(team, function_id, metric, endpoint, allowed_symbols) for the Filecoin Pay volume metric.
+
+    Located by its ENDPOINT rather than hardcoded, so renaming the function cannot leave this
+    writing rows under a name nothing joins to.
+    """
+    from fpm.manifest import load_manifest
+
+    found = []
+    for path in sorted(Path(registry_dir).glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        manifest = load_manifest(path)
+        for fn in manifest.functions:
+            if _FILPAY_SUBGRAPH_MARKER not in (fn.source.endpoint or ""):
+                continue
+            sql = " ".join((fn.transform.sql if fn.transform else "").split())
+            if not sql.startswith(_FILPAY_SQL_PREFIX):
+                raise ValueError(
+                    f"{fn.function_id}: transform is not the settled-volume sum this strategy "
+                    f"reconstructs ({sql[:80]}...). Reconcile them before backfilling."
+                )
+            syms = re.findall(r"'([^']+)'", sql.split("WHERE", 1)[1]) if "WHERE" in sql else []
+            if not syms:
+                raise ValueError(f"{fn.function_id}: no token filter found; refusing to guess one")
+            found.append((manifest.team, fn.function_id, fn.sla.metric, fn.source.endpoint, syms))
+    if len(found) != 1:
+        raise ValueError(f"expected exactly one Filecoin Pay volume metric, found {len(found)}")
+    return found[0]
+
+
+def _gql(endpoint: str, query: str) -> dict:
+    r = requests.post(endpoint, json={"query": query}, headers=UA, timeout=90)
+    r.raise_for_status()
+    body = r.json()
+    if body.get("errors"):
+        raise RuntimeError(str(body["errors"])[:300])
+    return body["data"]
+
+
+def _filecoin_pay_series(cutoff: datetime, now: datetime, already: set) -> list[dict]:
+    team, fid, metric, endpoint, symbols = filecoin_pay_target()
+
+    tokens = {
+        t["id"]: (t["symbol"], int(t["decimals"]), int(t["totalSettledAmount"]))
+        for t in _gql(endpoint, "{ tokens { id symbol decimals totalSettledAmount } }")["tokens"]
+    }
+
+    # every settlement, paged by id so the walk is stable under concurrent writes
+    events, last = [], None
+    while True:
+        where = f', where: {{id_gt: "{last}"}}' if last else ""
+        page = _gql(
+            endpoint,
+            "{ settlements(first:1000, orderBy: id, orderDirection: asc%s) "
+            "{ id createdAt totalSettledAmount token { id } } }" % where,
+        )["settlements"]
+        if not page:
+            break
+        events.extend(page)
+        last = page[-1]["id"]
+        if len(page) < 1000:
+            break
+    print(f"    {fid}: {len(events)} settlement events")
+
+    # THE CHECK: settlements must reproduce the running total the nightly reads.
+    summed: dict[str, int] = {}
+    for e in events:
+        summed[e["token"]["id"]] = summed.get(e["token"]["id"], 0) + int(e["totalSettledAmount"])
+    for tid, (sym, _dec, running) in tokens.items():
+        if sym not in symbols:
+            continue
+        if summed.get(tid, 0) != running:
+            raise RuntimeError(
+                f"{fid}: settlements for {sym} sum to {summed.get(tid, 0)} but the subgraph's "
+                f"running total is {running}. The reconstruction is NOT the nightly's quantity; "
+                "refusing to write a series whose history means something else."
+            )
+    print(f"    {fid}: identity holds for {', '.join(sorted(symbols))}")
+
+    counted = [
+        (
+            datetime.fromtimestamp(int(e["createdAt"]), timezone.utc),
+            int(e["totalSettledAmount"]) / 10 ** tokens[e["token"]["id"]][1],
+        )
+        for e in events
+        if tokens.get(e["token"]["id"], ("", 0, 0))[0] in symbols
+    ]
+    counted.sort()
+    if not counted:
+        return []
+
+    out: list[dict] = []
+    emitted = skipped = 0
+    # Before the first settlement the true cumulative total is zero, but the metric did not exist
+    # and a flat zero line would read as "nothing is being paid" rather than "nothing is recorded".
+    day = max(cutoff, counted[0][0]).replace(hour=0, minute=0, second=0, microsecond=0)
+    idx, running_total = 0, 0.0
+    while day <= now:
+        end = day + timedelta(days=1)
+        while idx < len(counted) and counted[idx][0] < end:
+            running_total += counted[idx][1]
+            idx += 1
+        iso = day.strftime("%Y-%m-%d")
+        if (iso, team, fid, metric) in already:
+            skipped += 1
+        else:
+            out.append(
+                _row(
+                    day,
+                    team,
+                    fid,
+                    metric,
+                    running_total,
+                    "backfill:api.goldsky.com",
+                    "cumulative settled volume rebuilt from Filecoin Pay settlement events",
+                )
+            )
+            emitted += 1
+        day += timedelta(days=1)
+    print(f"    {fid}: +{emitted} ({skipped} already recorded; from {counted[0][0]:%Y-%m-%d})")
+    return out
+
+
 # TARGETED_ONLY strategies are reachable via `--only` and are NOT in the default rotation.
 # Both were written to recover the 2026-08-22/23 outage, and both emit a row per day for as far
 # back as their source reaches -- 115 days for the GitHub run history, 53 for GeckoTerminal's
@@ -845,7 +988,9 @@ def _release_avg_series(cutoff: datetime, now: datetime, already: set) -> list[d
 # per oso-sql metric as a side effect. It is a one-time fill, so it must be asked for.
 # `release-cadence` joins them because it emits a row per day per repo across the whole
 # window -- a year is ~2,000 rows across six functions -- so it must be asked for.
-TARGETED_ONLY = frozenset({"pipeline-success", "pool-volume", "warehouse", "release-cadence"})
+TARGETED_ONLY = frozenset(
+    {"pipeline-success", "pool-volume", "warehouse", "release-cadence", "filecoin-pay"}
+)
 
 
 def select_strategies(available: list[str], only: list[str] | None) -> list[str]:
@@ -884,6 +1029,7 @@ def backfill(
         "pool-volume": lambda: _pool_volume_series(cutoff),
         "warehouse": lambda: _warehouse_series(cutoff, now, set(dates) if dates else None),
         "release-cadence": lambda: _release_avg_series(cutoff, now, _recorded_keys()),
+        "filecoin-pay": lambda: _filecoin_pay_series(cutoff, now, _recorded_keys()),
     }
     stale = TARGETED_ONLY - set(strategies)
     if stale:
