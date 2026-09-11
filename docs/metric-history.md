@@ -51,11 +51,12 @@ changes every few seconds.
 
 ## The split today
 
-Across the 60 SLA entries in `registry/` as of 2026-09-10 (40 adopted and running, 20 in draft):
+Across the 60 SLA entries in `registry/` as of 2026-09-11 (41 adopted and running, 19 in draft):
 
 | Status of past dates | Metrics |
 |---|---|
-| **Recomputable from the source, and we have actually done it** | 22 |
+| **Recomputable from the source, and the history actually JOINS the commitment** | 17 |
+| Recomputed, but under a name no commitment uses (see the warning below) | 11 |
 | Dated items, but no historical query established | 2 |
 | Provider publishes *related* history under a different measurement | 3 |
 | No historical evidence found anywhere | 31 |
@@ -78,32 +79,47 @@ counts what we *can recompute*, the second what shape of endpoint each metric *c
 Two Filfox rows are dated lists we cannot query historically; two gauge-shaped metrics turn out to
 be recoverable from a second endpoint.
 
-### The warehouse shape is different in kind, not degree
+### A backfill only counts if it reproduces the live number
 
-Every other row above describes an endpoint we *fetch*. The `oso-sql` source kind
-(`filoz/curio-filecoin-pay-service-volume`, added 2026-09-10) reads a table OSO has already
-ingested — Filecoin Data Portal's `daily_filecoin_pay_operators_metrics`, which carries a `date`
-column and 309 consecutive days of it. That makes it the only shape here where the third property
-in [The test](#the-test) is satisfied without qualification: there is no window to run out of.
+The hardest lesson in this file, learned 2026-09-11 and worth reading before writing any new
+recovery.
 
-Three consequences worth stating, because they cut both ways.
+`avg_days_between_releases` looked un-backfillable for a year, and it was not. 377 rows of history
+existed the whole time under the name `days_between_releases`, reaching neither the mart nor the
+dashboard. That was CORRECT behaviour: the backfill computed the gap since the previous release,
+dated on the release day, while the registry commits to a rolling average over the fetch window.
+Different quantities, so the join dropped them, so the metric showed thirty days of history while
+four hundred sat in the system of record attached to nothing.
 
-- **Backfill needs no bespoke code.** Every strategy in `scripts/observations.py` is hand-written
-  per source, and two of them needed era-aware read-time reconstruction that took three attempts
-  to get right. A warehouse replay is the metric's OWN declared statement with a different `:now`
-  bind, so the backfilled number is the nightly's computation rather than an approximation of it.
-  `backfill --only warehouse` is generic over every current and future `oso-sql` metric.
-- **It is immune to our own outages.** The 2026-08-22/23 platform outage cost 38 metrics a day
-  each because they were point-in-time. A warehouse-sourced metric would have lost nothing: those
-  days are still in FDP, so the gap is refillable whenever anyone notices.
-- **But the reading is OURS, not the team's.** It depends on our ingestion cron rather than an
-  endpoint the recipient controls, so a stalled ingest looks exactly like a stalled metric. That
-  is why the statement carries a staleness floor (`date > :now - INTERVAL '4' DAY`): past it, the
-  metric goes **indeterminate** instead of quietly repeating a frozen number. And because FDP
-  publishes its parquet in the evening (~18:08 UTC) with content through the previous day, our
-  ingest is scheduled at 21:00 UTC — after the publish and hours before `observe` at 05:23 UTC.
-  Get that order wrong and the nightly silently reads three-day-old data, which is what it did
-  until 2026-09-10.
+Nobody noticed because nothing fails when this happens. The rows write, the tests pass, the mart
+builds, the page renders — it just renders less than it could, with no indication that it is.
+
+**So the test for any recovery is: does it reproduce the value the nightly reads, today?** Not "is
+it plausible", not "does it look like the same shape". The two backfills written on 2026-09-11
+both assert it, and one asserts it every run:
+
+- release cadence recomputes the registry's own formula, over the registry's own window, and was
+  checked against every overlapping nightly day — agreement to ~1e-5 days.
+- Filecoin Pay sums the settlement events behind `Token.totalSettledAmount` and **refuses to
+  write** unless they reproduce that running total to the wei.
+
+The corollary is the second row in the table above. Eleven keys carry recomputed history that
+joins no commitment — `daily_indexed_transactions`, `snapshot_age_seconds_daily_max_gap`,
+`incidents_in_month` and others. Each is a real measurement of a real thing, and each is invisible.
+They are kept deliberately; just do not count them as coverage.
+
+### Where two of these metrics now get their history
+
+- **`filecoin_pay_volume_curio_services`** reads a public Goldsky subgraph — the one behind
+  `pay.filecoin.cloud`, which renders client-side and exposes no API of its own. The metric is a
+  running total with no time dimension, but the settlements that produced it carry `createdAt`, so
+  the cumulative series is recoverable. 246 days, back to the first settlement on 2026-01-09.
+- **`pdp_active_proof_sets` is NOT recoverable, and this is the record of why so nobody re-tries
+  it.** The nightly reads `networkMetric.totalActiveProofSets` = 1,127. The obvious reconstruction,
+  counting `isActive` datasets, gives 1,171. `DataSet` carries `createdAt` but no deactivation
+  timestamp, and `eventLogs` holds one `DataSetCreated` in its first thousand rows, so the
+  lifecycle cannot be replayed either. The counter is maintained internally by the subgraph's event
+  handlers. Recovering it needs the PDP explorer to publish a dated snapshot.
 
 The shape of the endpoint decides it, not the vendor. No source in this registry is better or worse
 than another on this axis, and two of the exceptions below are cases where a provider we read as a
@@ -233,7 +249,7 @@ Leads we consider worth investigating, none of them yet verified:
 | State snapshot | provider OHLCV history; block-pinned subgraph queries; per-address message history |
 | Health probe | a monitor's ranged-uptime API; a status page's `/incidents` endpoint |
 | RPC pointer | a block-pinned `eth_call` against an archival node |
-| Any shape | **a dated table already in the OSO warehouse, read with `kind: oso-sql`** — proven 2026-09-10 for Filecoin Pay volume, whose own endpoint (`pay.filecoin.cloud`) exposes no API and names no service at all |
+| Any shape | **the API behind a dashboard that has none of its own** — `pay.filecoin.cloud` renders client-side and exposes no endpoint, but its JS names the public Goldsky subgraph underneath, which is already an allowlisted host. Worth opening the bundle before concluding a source cannot answer |
 
 These are leads, not one-line changes. Any of them may need a new selector or new transform SQL,
 may need authentication or pagination, and a new source host must be added to

@@ -72,6 +72,42 @@ Prerequisites:
    breaches/indeterminates with their evidence. The dashboard
    (`dashboards/propgf-kernel-health.py`) is the visual companion.
 
+## Backfilling history
+
+A metric adopted today starts with one point. Some can be given a past; the rule for whether they
+should is narrow, and getting it wrong is invisible rather than loud.
+
+**A backfill is only real if it reproduces the value the nightly reads TODAY.** Not "looks like the
+same shape", not "is plausible for that source". `avg_days_between_releases` sat with 377 rows of
+recovered history for a year, reaching neither the mart nor the dashboard, because the strategy
+computed the gap since the previous release while the registry commits to a rolling average. Both
+are real measurements; only one is the commitment. Nothing failed — the rows wrote, the tests
+passed, the page just showed thirty days instead of four hundred.
+
+So before writing any recovery:
+
+1. **Recompute the registry's own formula, in the registry's own window.** Read the manifest's
+   `transform.sql` and `source.endpoint` rather than reimplementing the idea of the metric. Where
+   a filter exists, apply it in the same ORDER the pipeline does — the fetch bounds the window,
+   then the SQL filters what came back.
+2. **Check it against the overlap.** Reconstruct a day the nightly already measured and compare.
+   Agreement to a few decimal places is the pass; anything else means it is a different quantity.
+3. **Assert it in the strategy where you can**, so it cannot silently drift later. The Filecoin Pay
+   recovery refuses to write unless the settlement events sum to the running total the nightly reads.
+4. **Derive targets from the registry**, not a second table in `scripts/observations.py`. A
+   hardcoded copy is how the metric name drifted out of joining range in the first place.
+
+**Mind the two grains, which differ by one field.** `row_key` dedupes on `(observed_at, team,
+function_id, metric, METHOD)`; the mart and both dashboards join on the same four WITHOUT method.
+So a `backfill:` row does not replace a `nightly` row for the same day — it lands beside it and
+draws a second point. Skip any day already recorded under ANY method.
+
+Recoveries live in `scripts/observations.py` as named strategies and belong in `TARGETED_ONLY`:
+they write hundreds to thousands of rows and must be asked for, never fire as a side effect of a
+bare `backfill`. Afterwards, verify against the registry that every new key joins a commitment and
+that no day gained a duplicate at the render grain. `docs/metric-history.md` records which metrics
+have a recoverable past, which do not, and why — update it rather than rediscovering it.
+
 ## PR review (manifest changes)
 
 Static gate output → goalpost report (`MATERIAL`/`loosened` lines need committee eyes)
