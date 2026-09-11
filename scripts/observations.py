@@ -552,6 +552,18 @@ def _pool_volume_series(cutoff: datetime) -> list[dict]:
     return out
 
 
+def _recorded_keys() -> set:
+    """(observed_at, team, function_id, metric) already in the record, under ANY method.
+
+    `row_key` includes `method`, so a backfill row does NOT replace a nightly one for the same
+    day -- it lands beside it, and both dashboards draw a point per row. The render/join grain is
+    the four fields here, without method, so a duplicate day double-counts. Skipping on the FOUR
+    is what keeps the two grains from disagreeing.
+    """
+    rows = fpm_observations.load_rows(CSV_PATH) if CSV_PATH.exists() else []
+    return {(r["observed_at"], r["team"], r["function_id"], r["metric"]) for r in rows}
+
+
 def warehouse_rows_for(
     fn, team, tree, client, cutoff, now, already, wanted_dates=None
 ) -> tuple[list[dict], int]:
@@ -690,6 +702,137 @@ def _warehouse_series(cutoff: datetime, now: datetime, wanted_dates=None) -> lis
     return out
 
 
+# The rolling release-average that the REGISTRY actually commits to, reconstructed per past day.
+#
+# Not to be confused with `_release_series` above, which emits `days_between_releases`: the gap
+# since the previous release, dated on the release day. That is a different quantity, deliberately
+# under a different name, and it joins to no commitment -- which is exactly why 377 of its rows sit
+# in the system of record attached to nothing. The registry's metric is
+#
+#     date_diff('second', MIN(published_at), MAX(published_at)) / (COUNT(*) - 1) / 86400.0
+#
+# over the releases the fetch returns, i.e. the most recent `per_page` of them. Reconstructing it
+# at date D means: releases published on or before D, newest `per_page`, then the manifest's own
+# tag filter, then the same arithmetic. Same formula, same window, so the backfilled half of the
+# series means what the nightly half means.
+_RELEASE_AVG_SQL = (
+    "SELECT date_diff('second', MIN(published_at), MAX(published_at)) "
+    "/ NULLIF(COUNT(*) - 1, 0) / 86400.0 FROM raw"
+)
+#: transform suffix -> a predicate over a release dict. Anything else RAISES rather than guessing:
+#: silently ignoring an unrecognized filter would compute a different metric under the right name,
+#: which is the failure this whole strategy exists to undo.
+_RELEASE_AVG_FILTERS = {
+    "": lambda r: True,
+    " WHERE tag_name LIKE 'v%' AND tag_name NOT LIKE '%-rc%'": lambda r: (
+        (r.get("tag_name") or "").startswith("v") and "-rc" not in (r.get("tag_name") or "")
+    ),
+}
+
+
+def release_avg_targets(registry_dir: str = "registry") -> list[tuple]:
+    """(team, fid, metric, repo, per_page, predicate) for every registry function whose transform
+    is the rolling release-average. Derived from the registry rather than copied into a second
+    table here, so a manifest edit cannot leave this strategy measuring the old thing."""
+    from urllib.parse import parse_qs, urlparse
+
+    from fpm.drafts import split_draft
+    from fpm.manifest import load_manifest
+
+    out = []
+    paths = [p for p in sorted(Path(registry_dir).glob("*.yaml")) if not p.name.startswith("_")]
+    paths += sorted(Path(registry_dir, "drafts").glob("*.yaml"))
+    for path in paths:
+        manifest = load_manifest(path) if path.parent.name == registry_dir else split_draft(path)[0]
+        for fn in manifest.functions:
+            sql = " ".join((fn.transform.sql if fn.transform else "").split())
+            if not sql.startswith(_RELEASE_AVG_SQL):
+                continue
+            suffix = sql[len(_RELEASE_AVG_SQL) :]
+            if suffix not in _RELEASE_AVG_FILTERS:
+                raise ValueError(
+                    f"{fn.function_id}: unrecognized release-average filter {suffix!r}. Add it to "
+                    "_RELEASE_AVG_FILTERS rather than letting this strategy ignore it."
+                )
+            repo = (
+                fn.repos[0]
+                if fn.repos
+                else urlparse(fn.source.endpoint).path.split("/repos/")[-1].split("/releases")[0]
+            )
+            per_page = int(
+                (parse_qs(urlparse(fn.source.endpoint).query).get("per_page") or ["30"])[0]
+            )
+            out.append(
+                (
+                    manifest.team,
+                    fn.function_id,
+                    fn.sla.metric,
+                    repo,
+                    per_page,
+                    _RELEASE_AVG_FILTERS[suffix],
+                )
+            )
+    return out
+
+
+def release_avg_at(releases: list[dict], day: datetime, per_page: int, keep) -> float | None:
+    """The value the nightly would have read on `day`. None when the window cannot support one.
+
+    Order matters and mirrors the pipeline: the fetch returns the newest `per_page` releases, and
+    the transform's WHERE runs on what came back. Filtering BEFORE taking the window would reach
+    further back than the nightly ever sees and quietly report a different number.
+    """
+    upto = [r for r in releases if r["_dt"] <= day]
+    window = sorted(upto, key=lambda r: r["_dt"], reverse=True)[:per_page]
+    kept = sorted((r["_dt"] for r in window if keep(r)))
+    if len(kept) < 2:
+        return None
+    return (kept[-1] - kept[0]).total_seconds() / (len(kept) - 1) / 86400.0
+
+
+def _release_avg_series(cutoff: datetime, now: datetime, already: set) -> list[dict]:
+    out: list[dict] = []
+    for team, fid, metric, repo, per_page, keep in release_avg_targets():
+        try:
+            rels = _get(f"https://api.github.com/repos/{repo}/releases?per_page=100")
+        except Exception as exc:
+            print(f"    {fid}: fetch failed, skipped ({exc})", file=sys.stderr)
+            continue
+        releases = [
+            {**r, "_dt": _parse_dt(r["published_at"])} for r in rels if r.get("published_at")
+        ]
+        if not releases:
+            continue
+        # 100 is GitHub's page cap and this does not paginate, so history older than the 100th
+        # release cannot be reconstructed. Say where the floor is rather than emitting silence.
+        floor = min(r["_dt"] for r in releases)
+        emitted = skipped = 0
+        day = cutoff.replace(hour=0, minute=0, second=0, microsecond=0)
+        while day <= now:
+            iso = day.strftime("%Y-%m-%d")
+            if (iso, team, fid, metric) in already:
+                skipped += 1
+                day += timedelta(days=1)
+                continue
+            val = release_avg_at(releases, day, per_page, keep)
+            if val is not None:
+                out.append(
+                    _row(
+                        day,
+                        team,
+                        fid,
+                        metric,
+                        val,
+                        "backfill:api.github.com",
+                        f"rolling average over the newest {per_page} releases of {repo} as of this date",
+                    )
+                )
+                emitted += 1
+            day += timedelta(days=1)
+        print(f"    {fid}: +{emitted} ({skipped} already recorded; window floor {floor:%Y-%m-%d})")
+    return out
+
+
 # TARGETED_ONLY strategies are reachable via `--only` and are NOT in the default rotation.
 # Both were written to recover the 2026-08-22/23 outage, and both emit a row per day for as far
 # back as their source reaches -- 115 days for the GitHub run history, 53 for GeckoTerminal's
@@ -700,7 +843,9 @@ def _warehouse_series(cutoff: datetime, now: datetime, wanted_dates=None) -> lis
 # `warehouse` joins them for a different reason: it needs OSO_API_KEY and issues one query
 # per metric-day, so a bare `backfill` (default --days 365) would fire ~365 Trino queries
 # per oso-sql metric as a side effect. It is a one-time fill, so it must be asked for.
-TARGETED_ONLY = frozenset({"pipeline-success", "pool-volume", "warehouse"})
+# `release-cadence` joins them because it emits a row per day per repo across the whole
+# window -- a year is ~2,000 rows across six functions -- so it must be asked for.
+TARGETED_ONLY = frozenset({"pipeline-success", "pool-volume", "warehouse", "release-cadence"})
 
 
 def select_strategies(available: list[str], only: list[str] | None) -> list[str]:
@@ -738,6 +883,7 @@ def backfill(
         "pipeline-success": lambda: _pipeline_success_series(cutoff),
         "pool-volume": lambda: _pool_volume_series(cutoff),
         "warehouse": lambda: _warehouse_series(cutoff, now, set(dates) if dates else None),
+        "release-cadence": lambda: _release_avg_series(cutoff, now, _recorded_keys()),
     }
     stale = TARGETED_ONLY - set(strategies)
     if stale:
