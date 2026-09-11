@@ -1,8 +1,21 @@
-# FilOz maintains Curio, the SP sealing/proving/PDP stack. This manifest tracks Curio's
-# release cadence, its WindowPoSt/WinningPoSt scheduler, and PDP proof sets on mainnet.
+# FilOz maintains Curio, the SP sealing/proving/PDP stack. This manifest tracks Curio's release
+# cadence, its WindowPoSt/WinningPoSt scheduler, PDP proof sets on mainnet, and Filecoin Pay
+# settled volume.
 #
-# Appendix reconciliation 2026-08-18: all three thresholds are marked "(to confirm)" in the
-# signed s3, so all three are measured and not scored. Detail in contracts/filoz.facts.yaml.
+# Appendix reconciliation, updated 2026-09-11. The Curio agreement's s3 names FIVE metrics and
+# four of them are here. NONE is scored, for two different reasons that should not be conflated:
+#
+#   - release cadence, blocks per tipset, PDP proof sets -- the s3 states a bar for the first and
+#     marks the other two "(to confirm)", but the agreement carrying them is a DRAFT with both
+#     signature dates blank, so nobody has promised any of them yet. (An earlier version of this
+#     note said all three were "(to confirm)"; that was not accurate for release cadence.)
+#   - Filecoin Pay volume -- the s3 proposes no bar at all, only "Cadence: daily or monthly".
+#
+# The fifth s3 metric, curio_porep_miner_power_share, is NOT here: ProbeLab publishes the data
+# only as JSON embedded in an HTML page and exposes no JSON URL, so it cannot be fetched. The host
+# is already allowlisted so it can land the day that changes.
+#
+# Money, contract terms and the reasoning behind each absent bar stay in contracts/filoz.facts.yaml.
 team: filoz
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:
@@ -100,3 +113,67 @@ functions:
       # braces in param/json values as placeholder expressions
       params: { query: '{{ networkMetric(id: "0x7064705f6e6574776f726b5f7374617473") {{ totalActiveProofSets }} }}' }
       extract: { column: data__network_metric__total_active_proof_sets, cast: float, reduce: single, derive: value, unit: proof_sets }
+
+  # ---------------------------------------------------------------------------
+  # FILECOIN PAY VOLUME — new in the 2026-09-08 Curio agreement draft's §3.
+  #
+  # SOURCE NOTE, because §3 names a different URL. §3 cites
+  # pay.filecoin.cloud/mainnet/operators, which renders client-side and exposes no API. Its data
+  # comes from a PUBLIC Goldsky subgraph, which is what this reads — the same host as
+  # curio-pdp-active-proofsets, already on the allowlist. So this is the source §3 points at, one
+  # layer down, rather than a substitute for it.
+  #
+  # SCOPE: EVERY OPERATOR, ruled 2026-09-11. This sums Filecoin Pay across the whole network —
+  # all 49 operators — not a Curio-attributed subset. Read the consequence honestly: the number
+  # moves when ANY operator moves, including ones with no Curio involvement at all (the frontend's
+  # label dictionary includes Filosign, Tippy, PinMe, Qave and two DealBots alongside FWSS and
+  # FIL One Storage). So this is a Filecoin Pay adoption signal that Curio's work contributes to,
+  # not a measure of Curio's own share, and the statement below says so. §3's metric NAME still
+  # reads `filecoin_pay_volume_curio_services`; it is kept because that is the identifier §3 uses,
+  # but it oversells what is measured and is worth renaming when §3 is next edited.
+  #
+  # Because the scope is "everything", the query carries no operator filter — `Token` totals are
+  # network-wide, so a new operator is included the day it appears with no edit here. That is the
+  # point of reading tokens rather than operatorTokens.
+  #
+  # WHAT IT MEASURES: cumulative settled volume. `totalSettledAmount` is money that actually
+  # moved. The sibling `volume` field is much larger and is NOT the same thing — network-wide it
+  # reads 113,611 against 3,570 settled for axlUSDC alone, so a metric built on `volume` would
+  # report payment activity that never happened. Cumulative means monotonic: read this as a
+  # running total, the same shape as pdp_active_proof_sets. A fall is a data problem, not a refund.
+  #
+  # TOKENS ARE FILTERED, AND THE FILTER IS LOAD-BEARING. Face-value summing only holds while every
+  # token counted is pegged to ~$1. USDFC (18 decimals) and axlUSDC (6) are; FIL is not, and it is
+  # present in this subgraph with 0 settled today. Summing FIL at face would be wrong rather than
+  # approximate the moment it carries volume, so the transform names the two stablecoins and a new
+  # token is excluded until someone rules on it. Decimals differ per token, so the division uses
+  # each token's own `decimals` — a constant would read the axlUSDC leg 10^12x too large.
+  - function_id: curio-filecoin-pay-service-volume
+    kernel_id: dealmaking-pdp-retrieval
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Block Production (mining)'
+    funded_project_oso_slug: filozone
+    grant_ref: APP-HDYJESMD-2WLL00
+    sla:
+      statement: "Filecoin Pay network-wide: cumulative settled payment volume in USD-pegged stablecoins across all operators, a rail Curio-powered storage services depend on, measured daily"
+      metric: filecoin_pay_volume_curio_services
+      cadence: daily
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://api.goldsky.com"
+      endpoint: "https://api.goldsky.com/api/public/project_cmb9tuo8r1xdw01ykb8uidk7h/subgraphs/filecoin-pay-mainnet/prod/gn"
+      query: "/api/public/project_cmb9tuo8r1xdw01ykb8uidk7h/subgraphs/filecoin-pay-mainnet/prod/gn"
+      method: POST
+      # literal GraphQL braces are doubled ({{ }}) — dlt's rest_api treats single braces in
+      # param/json values as placeholder expressions. Same as curio-pdp-active-proofsets.
+      params: { query: '{{ tokens {{ symbol decimals totalSettledAmount }} }}' }
+      # the response is a LIST; without this it lands in an unreachable child table
+      data_selector: "data.tokens"
+    transform:
+      # `decimals` arrives as the STRING "18" from GraphQL, so cast it rather than trust dlt's
+      # type inference; and CAST the base to DOUBLE because Trino integer division truncates.
+      sql: "SELECT SUM(CAST(total_settled_amount AS DOUBLE) / POWER(CAST(10 AS DOUBLE), CAST(decimals AS DOUBLE))) FROM raw WHERE symbol IN ('USDFC', 'axlUSDC')"
