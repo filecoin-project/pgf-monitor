@@ -5,6 +5,9 @@
 # workflows) once those teams exist in the org.
 /registry/            @ccerv1
 /registry/_allowlist.txt   @ccerv1
+# The warehouse-table allowlist is the same kind of committee decision as the host one:
+# it is what stands between an `oso-sql` metric and a private table this org's key can read.
+/registry/_sql_allowlist.txt   @ccerv1
 /adapters/            @ccerv1
 /src/fpm/governance/  @ccerv1
 /scripts/             @ccerv1

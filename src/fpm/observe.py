@@ -119,7 +119,7 @@ def measure(
 def _note(reading: Reading, sla: SlaResult) -> str:
     """Why a reading is what it is — the failure cause when there is one, else empty."""
     meta = reading.source_metadata
-    for key in ("fetch_error", "transform_error"):
+    for key in ("fetch_error", "transform_error", "sql_error"):
         if meta.get(key):
             return f"{key}: {meta[key]}"
     # A failed ingestion run leaves no rows, which then reads as "no value in source response" —
@@ -156,6 +156,7 @@ def observe(
     allowlist: set[str] | None = None,
     poll_sleep: float = 0.0,
     on_observation: Callable[[Observation], None] | None = None,
+    sql_allowlist: set[str] | None = None,
 ) -> list[Observation]:
     """Measure every function in one manifest. One Observation per function, always.
 
@@ -169,6 +170,7 @@ def observe(
         org_id=org_id,
         allowlist=allowlist,
         poll_sleep=poll_sleep,
+        sql_allowlist=sql_allowlist,
     )
     out = []
     for fn in manifest.functions:

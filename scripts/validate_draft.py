@@ -16,7 +16,7 @@ import argparse
 from pathlib import Path
 
 from fpm.drafts import promotion_problems, split_draft
-from fpm.governance.allowlist import load_allowlist
+from fpm.governance.allowlist import load_allowlist, load_sql_allowlist
 from fpm.kernel import load_kernel
 from fpm.manifest import ManifestError
 
@@ -26,6 +26,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("paths", nargs="*", help="draft file(s) to validate")
     ap.add_argument("--all", action="store_true", help="validate every registry/drafts/*.yaml")
     ap.add_argument("--allowlist", default="registry/_allowlist.txt")
+    ap.add_argument("--sql-allowlist", default="registry/_sql_allowlist.txt")
     ap.add_argument(
         "--strict", action="store_true", help="treat allowlist misses as failures (promotion mode)"
     )
@@ -43,6 +44,8 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("no drafts given (pass paths or --all)")
 
     allowlist = load_allowlist(args.allowlist)
+    _sql_path = Path(args.sql_allowlist)
+    sql_allowlist = load_sql_allowlist(_sql_path) if _sql_path.exists() else set()
     kernel = load_kernel()
     failed = False
     for path in paths:
@@ -52,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"FAIL {path}: schema error: {exc}")
             failed = True
             continue
-        problems = promotion_problems(manifest, kernel, allowlist)
+        problems = promotion_problems(manifest, kernel, allowlist, sql_allowlist)
         hard = [p for p in problems if "allowlist" not in p]
         soft = [p for p in problems if "allowlist" in p]
         for p in hard:

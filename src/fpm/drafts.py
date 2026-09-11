@@ -16,7 +16,11 @@ import yaml
 from fpm.governance.allowlist import host_allowed, host_of
 from fpm.kernel import Kernel, conformance_error
 from fpm.manifest import Manifest, manifest_from_raw
-from fpm.transform.validate import TransformSqlError, validate_transform_sql
+from fpm.transform.validate import (
+    TransformSqlError,
+    validate_transform_sql,
+    validate_warehouse_sql,
+)
 
 
 def split_draft(path: str | Path) -> tuple[Manifest, dict]:
@@ -26,8 +30,19 @@ def split_draft(path: str | Path) -> tuple[Manifest, dict]:
     return manifest_from_raw(raw), x_draft or {}
 
 
-def promotion_problems(manifest: Manifest, kernel: Kernel, allowlist: set[str]) -> list[str]:
-    """Everything the PR gate would reject, in one list. Empty = promotable as-is."""
+def promotion_problems(
+    manifest: Manifest,
+    kernel: Kernel,
+    allowlist: set[str],
+    sql_allowlist: set[str] | None = None,
+) -> list[str]:
+    """Everything the PR gate would reject, in one list. Empty = promotable as-is.
+
+    Callers split these into hard failures and soft ones by looking for "allowlist" in the text:
+    a pending committee addition is not a drafting error. That split works for warehouse SQL too —
+    an unlisted TABLE says "not on the warehouse allowlist" and reads as soft, while a rejected
+    SHAPE (two statements, two projections, an unqualified name) has no such wording and stays hard.
+    """
     problems: list[str] = []
     for fn in manifest.functions:
         err = conformance_error(fn.tier, fn.category, fn.sub_category, kernel, fn.kernel_id)
@@ -39,6 +54,12 @@ def promotion_problems(manifest: Manifest, kernel: Kernel, allowlist: set[str]) 
             except TransformSqlError as exc:
                 problems.append(f"{fn.function_id}: transform SQL rejected ({exc})")
         if fn.source.kind == "fixture":
+            continue
+        if fn.source.kind == "oso-sql":
+            try:
+                validate_warehouse_sql(fn.source.sql, sql_allowlist or set())
+            except TransformSqlError as exc:
+                problems.append(f"{fn.function_id}: warehouse SQL rejected ({exc})")
             continue
         if not host_allowed(fn.source.base_url, allowlist):
             problems.append(

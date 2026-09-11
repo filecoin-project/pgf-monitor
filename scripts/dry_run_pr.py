@@ -1,6 +1,7 @@
 """Committee-labeled live dry-run over CHANGED functions only. Client injected (fake in tests).
 
-Re-checks egress against the base allowlist so a label cannot smuggle an off-allowlist endpoint.
+Re-checks egress against the base allowlist so a label cannot smuggle an off-allowlist endpoint,
+and warehouse tables against the base `_sql_allowlist.txt` for the same reason.
 
 The measurement runs through the real OsoAdapter, so what the gate proves is what the nightly
 will do — extract and transform alike, read back the same way. It provisions its OWN dataset,
@@ -18,6 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fpm.adapters.oso import OsoAdapter
+from fpm.adapters.oso_sql import OsoSqlAdapter
 from fpm.domain import window_for
 from fpm.governance.diff import manifest_diff
 from fpm.governance.fields import bucket_for
@@ -54,9 +56,24 @@ def resolve_as_of(value: str) -> datetime:
     return datetime.fromisoformat(value).replace(tzinfo=timezone.utc)
 
 
-def _one(fn, team, client, org_id, allowlist, as_of, poll_sleep, run_tag) -> tuple[bool, str]:
+def _one(
+    fn, team, client, org_id, allowlist, as_of, poll_sleep, run_tag, sql_allowlist=None
+) -> tuple[bool, str]:
     window = window_for(fn.sla.cadence, as_of)
     name = ephemeral_name(team, fn.function_id, run_tag)
+    if fn.source.kind == "oso-sql":
+        # Nothing is provisioned, so there is no throwaway dataset and no cleanup. The gate the
+        # host allowlist provides for a fetch is provided here by the TABLE allowlist, which this
+        # script must receive from the BASE ref for the same reason: otherwise a PR could add a
+        # private table to _sql_allowlist.txt and have its own metric read it.
+        sql_adapter = OsoSqlAdapter(client, allowed_tables=sql_allowlist or set())
+        reading = sql_adapter.fetch(fn, team, window)
+        if reading.claim.value is None:
+            return (
+                False,
+                f"{fn.function_id}: {reading.source_metadata.get('sql_error', 'no value')}",
+            )
+        return True, f"{fn.function_id}: observed {reading.claim.value}"
     adapter = OsoAdapter(
         client,
         org_id=org_id,
@@ -101,6 +118,7 @@ def dry_run(
     as_of: datetime,
     poll_sleep: float = 0.0,
     run_tag: str = "dryrun",
+    sql_allowlist=None,
 ):
     if not _TAG.match(run_tag):
         raise ValueError(
@@ -111,7 +129,9 @@ def dry_run(
     for fn in head.functions:
         if fn.function_id not in changed or fn.source.kind == "fixture":
             continue
-        passed, msg = _one(fn, head.team, client, org_id, allowlist, as_of, poll_sleep, run_tag)
+        passed, msg = _one(
+            fn, head.team, client, org_id, allowlist, as_of, poll_sleep, run_tag, sql_allowlist
+        )
         ok = ok and passed
         lines.append(("PASS " if passed else "FAIL ") + msg)
     md = "### Live dry-run\n\n" + (
@@ -125,6 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("head", help="path to the head (PR) manifest")
     ap.add_argument("--base", default="", help="path to the base manifest (empty for a new file)")
     ap.add_argument("--allowlist", default="registry/_allowlist.txt")
+    ap.add_argument("--sql-allowlist", default="registry/_sql_allowlist.txt")
     ap.add_argument("--as-of", default="", help="measurement date (default: today, UTC)")
     ap.add_argument("--oso-org", default="", help="OSO org id (falls back to OSO_ORG_ID env var)")
     ap.add_argument(
@@ -141,12 +162,16 @@ def main(argv: list[str] | None = None) -> int:
 
     import os
 
-    from fpm.governance.allowlist import load_allowlist
+    from fpm.governance.allowlist import load_allowlist, load_sql_allowlist
     from fpm.manifest import load_manifest
     from fpm.oso.graphql_client import GraphqlOsoClient
 
     as_of = resolve_as_of(args.as_of)
     allowlist = load_allowlist(args.allowlist)
+    # Absent means EMPTY, not permissive: on a base that predates the file, every warehouse table
+    # is refused and an oso-sql metric reports that it cannot be proven — never a silent pass.
+    _sql_path = Path(args.sql_allowlist)
+    sql_allowlist = load_sql_allowlist(_sql_path) if _sql_path.exists() else set()
     head = load_manifest(args.head)
     base = load_manifest(args.base) if args.base else None
     changed = changed_function_ids(base, head)
@@ -154,7 +179,15 @@ def main(argv: list[str] | None = None) -> int:
     client = GraphqlOsoClient(api_key=os.environ["OSO_API_KEY"], org_id=org_id)
 
     ok, md = dry_run(
-        head, changed, client, org_id, allowlist, as_of, poll_sleep=10.0, run_tag=args.run_tag
+        head,
+        changed,
+        client,
+        org_id,
+        allowlist,
+        as_of,
+        poll_sleep=10.0,
+        run_tag=args.run_tag,
+        sql_allowlist=sql_allowlist,
     )
     if args.summary:
         Path(args.summary).open("a").write(md + "\n")

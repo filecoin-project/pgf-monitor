@@ -197,6 +197,51 @@ export OSO_API_KEY=...
 uv run marimo run dashboards/propgf-kernel-health.py
 ```
 
+## 4c. Adopting an `oso-sql` metric (committee only)
+
+Most metrics fetch a public endpoint. `kind: oso-sql` instead runs ONE Trino SELECT over tables
+already in the warehouse — reach for it when the number needs a join, which `transform` cannot
+express because it binds exactly one `raw` table. The Filecoin Pay case is the worked example:
+per-operator volume lives in `data_portal.daily_filecoin_pay_operators_metrics`, but the column
+that says which operators belong to a service is in `data_portal.filecoin_pay_rails`.
+
+```yaml
+source:
+  adapter: oso-sql
+  kind: oso-sql          # no base_url / endpoint / query / params: nothing is fetched
+  sql: |
+    SELECT SUM(m.filecoin_pay_gross_payment_volume_run_rate_usd)
+    FROM filecoin.data_portal.daily_filecoin_pay_operators_metrics AS m
+    WHERE m.operator IN (
+        SELECT DISTINCT operator FROM filecoin.data_portal.filecoin_pay_rails
+        WHERE service = 'FWSS'
+      )
+```
+
+**Why this is committee-only.** The provisioning host's `OSO_API_KEY` is org-scoped: it can read
+`filpgf_private.*` and `funding_model_static.applicant_identity`. Unrestricted warehouse SQL in a
+community PR could therefore lift applicant identity into a PUBLIC observation value — the same
+objection that ruled out the Python-UDM escape hatch. So the guard mirrors the `raw` binding: one
+SELECT, one scalar projection, and every table reference **fully qualified** and listed in
+`registry/_sql_allowlist.txt`.
+
+Two rules when allowlisting a table:
+
+1. **It lands in an earlier PR than the metric.** `validate.yml` and `dry-run.yml` read the list
+   from the BASE branch, never the PR head — exactly as with `_allowlist.txt` hosts.
+2. **Prefer a table whose upstream is public.** Every http-json metric can be re-derived by an
+   outside reader; a warehouse read breaks that unless the source data is public too. The two
+   Filecoin Pay tables come from FDP's public parquet, so the numbers stay checkable.
+
+Worth saying out loud when you adopt one: the reading is now **ours, not the team's**. It depends
+on OSO's own ingestion cron rather than an endpoint the recipient controls, so a gap in our
+pipeline looks like a gap in their metric and needs the same treatment as the 2026-08-22/23
+outage. Prove it end to end before merging:
+
+```bash
+uv run python scripts/live_oso_sql_smoke.py     # needs OSO_API_KEY; also asserts a private table is refused
+```
+
 ## Trust properties worth knowing
 
 - **Evidence, not labels**: every reading carries an evidence bundle hash; citations
@@ -209,3 +254,7 @@ uv run marimo run dashboards/propgf-kernel-health.py
 - **`indeterminate` is first-class**: a broken source is a fact to adjudicate, not a
   pass, not a fail. **`unscored`** is a different fact: the reading is fine, there is
   just no agreed bar to judge it against yet.
+- **Two structural read guards, not a keyword blocklist**: an http-json `transform` may name only
+  the `raw` table its own fetch landed, and an `oso-sql` metric may name only fully-qualified
+  tables on `registry/_sql_allowlist.txt`. Both are enforced by parsing the SQL, so there is
+  nothing to spell around.

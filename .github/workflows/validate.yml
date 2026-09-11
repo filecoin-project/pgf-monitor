@@ -18,6 +18,12 @@ jobs:
           git fetch origin "${{ github.base_ref }}" --depth=1 || true
           # allowlist ALWAYS from base, never the PR head
           git show "origin/${{ github.base_ref }}:registry/_allowlist.txt" > /tmp/base_allowlist.txt
+          # Same rule for the warehouse-table allowlist an `oso-sql` metric is checked against:
+          # reading the PR head here would let one PR both allowlist a private table and read it.
+          # An empty file when the base predates it -- empty refuses every table, which is the
+          # correct fail-closed default.
+          git show "origin/${{ github.base_ref }}:registry/_sql_allowlist.txt" \
+            > /tmp/base_sql_allowlist.txt 2>/dev/null || : > /tmp/base_sql_allowlist.txt
           # :(glob) confines '*' to ONE path segment. Without it git's default pathspec lets
           # '*' cross '/', so registry/drafts/<team>.yaml gets handed to validate_pr — which
           # validates against the adopted-manifest schema and rejects the draft's x_draft block.
@@ -29,6 +35,8 @@ jobs:
             base_arg=""
             if [ -n "$base_content" ]; then echo "$base_content" > /tmp/base.yaml; base_arg="--base /tmp/base.yaml"; fi
             uv run python -m scripts.validate_pr "$head" $base_arg \
-              --allowlist /tmp/base_allowlist.txt --summary "$GITHUB_STEP_SUMMARY" || rc=1
+              --allowlist /tmp/base_allowlist.txt \
+              --sql-allowlist /tmp/base_sql_allowlist.txt \
+              --summary "$GITHUB_STEP_SUMMARY" || rc=1
           done
           exit $rc

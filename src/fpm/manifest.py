@@ -14,7 +14,7 @@ from fpm.domain import Cadence, ComparisonOperator, Tier, _Model
 
 _SCHEMA_PATH = Path(__file__).resolve().parents[2] / "registry" / "_schema.json"
 
-SourceKind = Literal["fixture", "http-json", "onchain-indexsupply"]
+SourceKind = Literal["fixture", "http-json", "oso-sql", "onchain-indexsupply"]
 ReduceOp = Literal["single", "latest", "avg", "min", "max", "null_ratio"]
 ThresholdSource = Literal["signed-appendix", "to-confirm", "provisional"]
 # Why a function carries no threshold. Absent bars used to be explained in long YAML comments,
@@ -95,6 +95,12 @@ class SourceSpec(_Model):
     auth_secret_ref: str | None = None
     fixture: str | None = None
     extract: ExtractSpec | None = None
+    # kind `oso-sql` only: one SELECT over warehouse tables that are already on
+    # registry/_sql_allowlist.txt. Not a transform — a transform binds the single `raw` table its
+    # own ingestion landed, whereas this reads tables OSO already holds and so can join them.
+    # Kept as its own field rather than reusing `transform.sql` so a reviewer can see at a glance
+    # which validation regime applies; the two are checked against different table rules.
+    sql: str = ""
 
 
 class FunctionSpec(_Model):
@@ -149,6 +155,22 @@ def manifest_from_raw(raw: object) -> Manifest:
     if len(ids) != len(set(ids)):
         raise ManifestError("duplicate function_id in manifest")
     for f in raw["functions"]:
+        # Coherence before kind-specific rules, so a mismatch reports itself rather than whatever
+        # the mis-declared kind happens to complain about first.
+        #
+        # The static gates branch on `source.kind`; `measure` dispatches on `source.adapter`.
+        # Left free to disagree, a function can declare kind http-json -- so validate_pr checks a
+        # host, an ingestion config and an extract, and dry_run_pr measures it through OsoAdapter
+        # and reports PASS -- while the nightly dispatches to OsoSqlAdapter and runs source.sql
+        # instead. The committee would approve and live-prove a derivation that never executes.
+        _kind = f.get("source", {}).get("kind", "fixture")
+        _adapter = f.get("source", {}).get("adapter", "")
+        if (_kind == "oso-sql") != (_adapter == "oso-sql"):
+            raise ManifestError(
+                f"function {f['function_id']} has source.kind {_kind!r} with source.adapter "
+                f"{_adapter!r}; `oso-sql` must be both or neither, because the PR gates read the "
+                "kind and the runtime reads the adapter"
+            )
         has_extract = bool(f.get("source", {}).get("extract"))
         has_transform = bool(f.get("transform"))
         if has_extract and has_transform:
@@ -160,10 +182,31 @@ def manifest_from_raw(raw: object) -> Manifest:
                 f"function {f['function_id']} states a threshold and an unscored_reason; "
                 "a scored bar has no reason for being unscored"
             )
-        if f.get("source", {}).get("kind") == "http-json" and not (has_extract or has_transform):
+        if _kind == "http-json" and not (has_extract or has_transform):
             raise ManifestError(
                 f"function {f['function_id']} (http-json) needs exactly one of source.extract or transform"
             )
+        if _kind == "oso-sql":
+            # The warehouse path derives its value from source.sql alone. Accepting an extract or
+            # a transform beside it would leave two candidate derivations in one entry, and the
+            # reader could not tell which one produced the number.
+            if not (f["source"].get("sql") or "").strip():
+                raise ManifestError(f"function {f['function_id']} (oso-sql) needs source.sql")
+            if has_extract or has_transform:
+                raise ManifestError(
+                    f"function {f['function_id']} (oso-sql) must not also declare "
+                    "source.extract or transform; source.sql is the whole derivation"
+                )
+            # Nothing is fetched, so a fetch declaration here would misrepresent the metric to a
+            # reviewer -- and base_url is what the egress host allowlist is checked against.
+            fetchy = sorted(
+                k for k in ("base_url", "endpoint", "query", "params") if f["source"].get(k)
+            )
+            if fetchy:
+                raise ManifestError(
+                    f"function {f['function_id']} (oso-sql) performs no HTTP fetch; remove "
+                    f"{fetchy} from source"
+                )
     functions = [
         FunctionSpec(
             function_id=f["function_id"],
@@ -200,6 +243,7 @@ def manifest_from_raw(raw: object) -> Manifest:
                 extract=(
                     ExtractSpec(**f["source"]["extract"]) if f["source"].get("extract") else None
                 ),
+                sql=f["source"].get("sql", ""),
             ),
             transform=(TransformSpec(sql=f["transform"]["sql"]) if f.get("transform") else None),
         )

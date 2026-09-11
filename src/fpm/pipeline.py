@@ -44,6 +44,7 @@ def run_review(
     org_id: str = "",
     allowlist: set[str] | None = None,
     poll_sleep: float = 0.0,
+    sql_allowlist: set[str] | None = None,
 ) -> list[ReviewBundle]:
     manifest = load_manifest(manifest_path)
     adapters = build_adapters(
@@ -52,6 +53,7 @@ def run_review(
         org_id=org_id,
         allowlist=allowlist,
         poll_sleep=poll_sleep,
+        sql_allowlist=sql_allowlist,
     )
     detectors = build_detectors(oso_client)
     persisted: list[ReviewBundle] = []

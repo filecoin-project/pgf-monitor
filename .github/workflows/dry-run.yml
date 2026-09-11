@@ -76,7 +76,8 @@ jobs:
             base_arg=""
             if [ -f "/tmp/pr_base/$f" ]; then base_arg="--base /tmp/pr_base/$f"; fi
             uv run python -m scripts.dry_run_pr "/tmp/pr_head/$f" $base_arg \
-              --allowlist registry/_allowlist.txt --oso-org "$OSO_ORG_ID" \
+              --allowlist registry/_allowlist.txt \
+              --sql-allowlist registry/_sql_allowlist.txt --oso-org "$OSO_ORG_ID" \
               --run-tag "$RUN_TAG" --summary "$GITHUB_STEP_SUMMARY" || rc=1
           done < /tmp/changed_manifests.txt
           exit $rc

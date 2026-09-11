@@ -17,9 +17,11 @@ from fpm.manifest import (
     manifest_from_raw,
 )
 
-# Function 0 is http-json with an extract; function 1 is a fixture with a transform. Two are
-# needed because a function may declare source.extract or transform but never both, and because
-# a scored threshold and an unscored_reason describe mutually exclusive states.
+# Function 0 is http-json with an extract; function 1 is a fixture with a transform; function 2 is
+# oso-sql. Three are needed because the kinds are mutually exclusive by construction: a function
+# may declare source.extract or transform but never both, a scored threshold and an
+# unscored_reason describe mutually exclusive states, and an oso-sql entry may carry neither a
+# derivation block nor any fetch field.
 _RAW = {
     "team": "acme",
     "maintainers": ["acme-bot", "acme-ops"],
@@ -80,6 +82,25 @@ _RAW = {
             "source": {"adapter": "fixture", "fixture": "acme.json"},
             "transform": {"sql": "SELECT max(lag) FROM raw"},
         },
+        {
+            "function_id": "acme-warehouse",
+            "kernel_id": "chain-sync-state",
+            "tier": "essential",
+            "category": "UX/DX",
+            "sub_category": "Tooling",
+            "funded_project_oso_slug": "drand",
+            "sla": {
+                "statement": "the warehouse total holds up",
+                "metric": "widget_total_usd",
+                "unscored_reason": "no-signed-bar",
+                "cadence": "daily",
+            },
+            "source": {
+                "adapter": "oso-sql",
+                "kind": "oso-sql",
+                "sql": "SELECT SUM(v) FROM acme.things.widgets",
+            },
+        },
     ],
 }
 
@@ -89,7 +110,7 @@ _CASES = {
     Manifest: {
         "team": (None, "acme"),
         "maintainers": (None, ["acme-bot", "acme-ops"]),
-        "functions": (None, 2),  # length, not identity
+        "functions": (None, 3),  # length, not identity
     },
     FunctionSpec: {
         "function_id": (0, "acme-http"),
@@ -128,6 +149,7 @@ _CASES = {
         "auth_secret_ref": (0, "ACME_API_TOKEN"),
         "fixture": (1, "acme.json"),
         "extract": (0, ExtractSpec),
+        "sql": (2, "SELECT SUM(v) FROM acme.things.widgets"),
     },
     ExtractSpec: {
         "path": (0, "$.items"),

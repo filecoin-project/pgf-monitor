@@ -65,6 +65,15 @@ METRICS_COLUMNS = [
 Row = dict[str, str]
 
 
+def _source_host(fn) -> str:
+    """The host a metric reads, or a named reason it has none. See the call site for why."""
+    if fn.source.kind == "fixture":
+        return "fixture"
+    if fn.source.kind == "oso-sql":
+        return "oso-warehouse"
+    return host_of(fn.source.base_url) or "?"
+
+
 def function_rows(kernel: Kernel | None = None) -> list[Row]:
     kernel = load_kernel() if kernel is None else kernel
     return [
@@ -96,11 +105,11 @@ def _metric_row(team: str, fn: FunctionSpec, state: str, grants: dict[str, Grant
         "oso_project_slug": fn.funded_project_oso_slug,
         "karma_project_id": grant.application_karma_project_id if grant else "",
         "karma_project_slug": grant.application_karma_project_slug if grant else "",
-        # `fixture` marks a placeholder awaiting a real feed, which is a different thing from a
-        # source whose host we could not parse.
-        "source_host": (host_of(fn.source.base_url) or "?")
-        if fn.source.kind != "fixture"
-        else "fixture",
+        # Three distinct facts, three distinct values: `fixture` is a placeholder awaiting a
+        # real feed, `oso-warehouse` is a live source that legitimately has no host, and `?` is
+        # a source whose host we could not parse. This column reaches an outside consumer via
+        # filpgf_kernel_metrics, so collapsing them would publish a parse failure as fact.
+        "source_host": _source_host(fn),
         "repos": " ".join(sorted(fn.repos)),
         "cadence": fn.sla.cadence,
         "sla_statement": fn.sla.statement,

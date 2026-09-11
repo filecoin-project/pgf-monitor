@@ -51,11 +51,11 @@ changes every few seconds.
 
 ## The split today
 
-Across the 59 SLA entries in `registry/` as of 2026-09-07 (40 adopted and running, 19 in draft):
+Across the 60 SLA entries in `registry/` as of 2026-09-10 (40 adopted and running, 20 in draft):
 
 | Status of past dates | Metrics |
 |---|---|
-| **Recomputable from the source, and we have actually done it** | 21 |
+| **Recomputable from the source, and we have actually done it** | 22 |
 | Dated items, but no historical query established | 2 |
 | Provider publishes *related* history under a different measurement | 3 |
 | No historical evidence found anywhere | 31 |
@@ -65,6 +65,7 @@ Sorted by the shape of the endpoint the metric currently reads:
 
 | Endpoint shape | Metrics | Past dates available? |
 |---|---|---|
+| **Dated warehouse table** — a `date` column in a table OSO already holds | 1 | yes, in FULL: no window, no pagination, no read-time anchor to reconstruct |
 | **Dated list** — timestamped items with stable IDs | 21 | 19 yes, within the source's window; the 2 Filfox rows have no historical query |
 | State snapshot — current roster, price, power | 13 | 1 yes (pool volume, from OHLCV candles); 12 no |
 | Health probe — "am I up right now" | 11 | 1 yes (drand status, from the incidents endpoint); 10 no |
@@ -72,10 +73,37 @@ Sorted by the shape of the endpoint the metric currently reads:
 | Search count — a `total_count` over a changing set | 2 | no |
 | Fixture placeholder — nothing measured yet | 2 | n/a |
 
-The two tables both total 21 by coincidence, not because they name the same metrics: the first
+The two tables both total 22 by coincidence, not because they name the same metrics: the first
 counts what we *can recompute*, the second what shape of endpoint each metric *currently reads*.
 Two Filfox rows are dated lists we cannot query historically; two gauge-shaped metrics turn out to
 be recoverable from a second endpoint.
+
+### The warehouse shape is different in kind, not degree
+
+Every other row above describes an endpoint we *fetch*. The `oso-sql` source kind
+(`filoz/curio-filecoin-pay-service-volume`, added 2026-09-10) reads a table OSO has already
+ingested — Filecoin Data Portal's `daily_filecoin_pay_operators_metrics`, which carries a `date`
+column and 309 consecutive days of it. That makes it the only shape here where the third property
+in [The test](#the-test) is satisfied without qualification: there is no window to run out of.
+
+Three consequences worth stating, because they cut both ways.
+
+- **Backfill needs no bespoke code.** Every strategy in `scripts/observations.py` is hand-written
+  per source, and two of them needed era-aware read-time reconstruction that took three attempts
+  to get right. A warehouse replay is the metric's OWN declared statement with a different `:now`
+  bind, so the backfilled number is the nightly's computation rather than an approximation of it.
+  `backfill --only warehouse` is generic over every current and future `oso-sql` metric.
+- **It is immune to our own outages.** The 2026-08-22/23 platform outage cost 38 metrics a day
+  each because they were point-in-time. A warehouse-sourced metric would have lost nothing: those
+  days are still in FDP, so the gap is refillable whenever anyone notices.
+- **But the reading is OURS, not the team's.** It depends on our ingestion cron rather than an
+  endpoint the recipient controls, so a stalled ingest looks exactly like a stalled metric. That
+  is why the statement carries a staleness floor (`date > :now - INTERVAL '4' DAY`): past it, the
+  metric goes **indeterminate** instead of quietly repeating a frozen number. And because FDP
+  publishes its parquet in the evening (~18:08 UTC) with content through the previous day, our
+  ingest is scheduled at 21:00 UTC — after the publish and hours before `observe` at 05:23 UTC.
+  Get that order wrong and the nightly silently reads three-day-old data, which is what it did
+  until 2026-09-10.
 
 The shape of the endpoint decides it, not the vendor. No source in this registry is better or worse
 than another on this axis, and two of the exceptions below are cases where a provider we read as a
@@ -205,6 +233,7 @@ Leads we consider worth investigating, none of them yet verified:
 | State snapshot | provider OHLCV history; block-pinned subgraph queries; per-address message history |
 | Health probe | a monitor's ranged-uptime API; a status page's `/incidents` endpoint |
 | RPC pointer | a block-pinned `eth_call` against an archival node |
+| Any shape | **a dated table already in the OSO warehouse, read with `kind: oso-sql`** — proven 2026-09-10 for Filecoin Pay volume, whose own endpoint (`pay.filecoin.cloud`) exposes no API and names no service at all |
 
 These are leads, not one-line changes. Any of them may need a new selector or new transform SQL,
 may need authentication or pagination, and a new source host must be added to

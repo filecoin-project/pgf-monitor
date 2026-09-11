@@ -56,7 +56,7 @@
             "required": ["adapter"],
             "properties": {
               "adapter": {"type": "string", "minLength": 1},
-              "kind": {"enum": ["fixture", "http-json", "onchain-indexsupply"]},
+              "kind": {"enum": ["fixture", "http-json", "oso-sql", "onchain-indexsupply"]},
               "endpoint": {"type": "string"},
               "query": {"type": "string"},
               "base_url": {"type": "string"},
@@ -68,6 +68,7 @@
               "auth": {"type": "object", "additionalProperties": false,
                        "properties": {"secret_ref": {"type": "string"}}},
               "fixture": {"type": "string"},
+              "sql": {"type": "string", "minLength": 1},
               "extract": {
                 "type": "object",
                 "additionalProperties": false,
@@ -92,6 +93,10 @@
               {
                 "if": {"properties": {"kind": {"const": "http-json"}}, "required": ["kind"]},
                 "then": {"required": ["base_url", "query"]}
+              },
+              {
+                "if": {"properties": {"kind": {"const": "oso-sql"}}, "required": ["kind"]},
+                "then": {"required": ["sql"]}
               }
             ]
           },
