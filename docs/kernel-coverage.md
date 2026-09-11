@@ -323,8 +323,8 @@ _No monitoring entry yet._
 | team | metric | source | state |
 |---|---|---|---|
 | filoz | `pdp_active_proof_sets` (curio-pdp-active-proofsets) | api.goldsky.com | adopted |
+| filoz | `filecoin_pay_volume_curio_services` (curio-filecoin-pay-service-volume) | api.goldsky.com | adopted |
 | filoz | `pdp_total_providers` (pdp-active-providers) | api.goldsky.com | draft |
-| filoz | `filecoin_pay_volume_curio_services` (curio-filecoin-pay-service-volume) | api.goldsky.com | draft |
 
 ## IMPORTANT
 
