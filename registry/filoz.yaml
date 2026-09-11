@@ -124,13 +124,38 @@ functions:
   # layer down, rather than a substitute for it.
   #
   # SCOPE: EVERY OPERATOR, ruled 2026-09-11. This sums Filecoin Pay across the whole network —
-  # all 49 operators — not a Curio-attributed subset. Read the consequence honestly: the number
-  # moves when ANY operator moves, including ones with no Curio involvement at all (the frontend's
-  # label dictionary includes Filosign, Tippy, PinMe, Qave and two DealBots alongside FWSS and
-  # FIL One Storage). So this is a Filecoin Pay adoption signal that Curio's work contributes to,
-  # not a measure of Curio's own share, and the statement below says so. §3's metric NAME still
-  # reads `filecoin_pay_volume_curio_services`; it is kept because that is the identifier §3 uses,
-  # but it oversells what is measured and is worth renaming when §3 is next edited.
+  # all 49 operators — not a Curio-attributed subset.
+  #
+  # WHAT IS ACTUALLY IN THE NUMBER, measured 2026-09-11 rather than assumed:
+  #
+  #   FIL One Storage           3,186.25   55.9%   1 operator,  1 rail
+  #   FWSS                      2,421.01   42.5%  21 operators, 2,655 rails
+  #   Storacha                     89.58    1.6%   1 operator,  12 rails
+  #                             --------
+  #                             5,696.84
+  #
+  # Every dollar is storage. The other names in the pay.filecoin.cloud label dictionary —
+  # Filosign, Tippy, PinMe, Qave, two DealBots — have settled NOTHING, so the "sums non-storage
+  # activity too" worry is theoretical today, and an earlier version of this comment overstated
+  # it. What is true is that nothing STOPS a non-storage operator counting the day it settles.
+  #
+  # FWSS RUNS UNDER 21 OPERATOR ADDRESSES, not one, which is why a per-operator filter was a trap.
+  # 1,572 rails route through the canonical FWSS contract (0x8408…, validator and fee recipient
+  # both itself); 290 more name it as fee recipient only; the remaining 20 are single self-operated
+  # rails where the provider is its own validator and there is no fee recipient. FDP labels all of
+  # them FWSS. Filtering on the frontend dictionary would have counted the 229 flowing through the
+  # canonical contract and missed the 2,192 that does not — and would also have missed Storacha
+  # entirely, whose dictionary address is not the address operating its rails.
+  #
+  # Payee evidence, for anyone re-deciding scope later: 26 of FWSS's 34 payees and 10 of 10 of
+  # Storacha's are registered PDP service providers. FIL One Storage's single payee is not, and
+  # its payer address is itself labelled "FIL One" — first-party payment, and the largest single
+  # component here.
+  #
+  # So this is a Filecoin Pay adoption signal that Curio's work underpins, not a measure of
+  # Curio's own share, and the statement below says so. §3's metric NAME still reads
+  # `filecoin_pay_volume_curio_services`; it is kept because that is the identifier §3 uses, but
+  # it oversells what is measured and is worth renaming when §3 is next edited.
   #
   # Because the scope is "everything", the query carries no operator filter — `Token` totals are
   # network-wide, so a new operator is included the day it appears with no edit here. That is the
