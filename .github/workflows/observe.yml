@@ -22,6 +22,18 @@ on:
     # eleven minutes to spare. That margin shrank with every metric added and would have gone
     # negative on its own. 05:23 leaves about an hour and a half, which absorbs both a longer
     # run and a late scheduler.
+    #
+    # THERE IS NOW A SECOND CONSTRAINT, AND IT PULLS THE OTHER WAY. Any `kind: oso-sql` metric
+    # reads a table OSO has already ingested, so its freshness depends on that ingestion having
+    # run FIRST. Filecoin Data Portal publishes its parquet around 18:08 UTC carrying data
+    # through the previous day, and the `data_portal` ingestion dataset is scheduled 21:00 UTC to
+    # pick it up -- eight hours before this job. Until 2026-09-10 that ingest ran at 06:00 UTC,
+    # i.e. 37 minutes AFTER this job, so the nightly silently read three-day-old data.
+    #
+    # So: if you move this cron, keep it after 21:00 UTC ingest and before the 07:00 UTC
+    # staging_external rebuild -- and if you move the ingest, keep it after FDP publishes and
+    # before this job. The oso-sql statements carry a staleness floor so a broken order shows up
+    # as `indeterminate` rather than a stale number, but the floor is a tripwire, not a fix.
     - cron: "23 5 * * *"
   workflow_dispatch:
     inputs:

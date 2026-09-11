@@ -39,6 +39,24 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   gate rejects a shared slot without it and lists the choices); it's optional when the slot is unique.
 - Exactly one of `source.extract` / `transform` per http-json function. Transform SQL:
   single SELECT, single scalar, only the `raw` table (structural exfiltration guard).
+- **`kind: oso-sql` reads the WAREHOUSE, not an endpoint** — one Trino SELECT over tables already
+  in OSO, for metrics needing a join that `transform` cannot express (it binds one `raw` table).
+  Declares `source.sql` and NOTHING fetch-shaped: no base_url/endpoint/query/params, no
+  extract/transform (`manifest_from_raw` rejects each). Same guard shape, different table rule:
+  single SELECT, single scalar, every table **fully qualified** and on
+  `registry/_sql_allowlist.txt`. That list is the whole safety story — the provisioning
+  `OSO_API_KEY` is org-scoped and CAN read `filpgf_private.*` and
+  `funding_model_static.applicant_identity`, so an unguarded warehouse read could put applicant
+  identity into a PUBLIC observation. Additions follow the host rule (earlier PR, base branch),
+  and prefer tables whose upstream is public so an outsider can still re-derive the number.
+  `scripts/live_oso_sql_smoke.py` proves both halves live. **Freshness is an ORDERING
+  property**: an oso-sql metric is only as fresh as the ingestion feeding it, so the
+  `data_portal` dataset runs 21:00 UTC (after FDP's ~18:08 publish) and `observe` 05:23 UTC.
+  Until 2026-09-10 the ingest ran at 06:00 UTC -- 37 min AFTER observe -- and the reading was
+  silently three days stale. Statements carry a staleness floor (`date > :now - INTERVAL '4'
+  DAY`) so a broken order reads `indeterminate`, not a frozen number. History is rebuilt with
+  `observations.py backfill --only warehouse`, which replays each metric's OWN statement per
+  day (TARGETED_ONLY; it is not in the default rotation).
 - New source hosts require a `registry/_allowlist.txt` addition, and it must land in an EARLIER PR
   than the manifest that uses it -- not the same one. `validate.yml` and `dry-run.yml` both read the
   allowlist from the BASE branch, never the PR head, so a host added in the same PR is not yet

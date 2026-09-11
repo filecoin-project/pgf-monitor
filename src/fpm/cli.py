@@ -92,7 +92,7 @@ def run_observe_cli(
     import time
     from collections import Counter
 
-    from fpm.governance.allowlist import load_allowlist
+    from fpm.governance.allowlist import load_allowlist, load_sql_allowlist
     from fpm.observations import append_observations
     from fpm.observe import observe, thresholds_for
     from fpm.thresholds import append_thresholds
@@ -106,13 +106,18 @@ def run_observe_cli(
 
     oso_client = None
     allowlist: set[str] | None = None
+    sql_allowlist: set[str] | None = None
     if live_oso:
         from fpm.oso.graphql_client import GraphqlOsoClient
 
         oso_client = GraphqlOsoClient(api_key=os.environ["OSO_API_KEY"], org_id=oso_org)
-        # The committee-maintained allowlist, not one derived from the manifest being run: a
-        # scheduled job must not be able to reach a host the committee never approved.
+        # The committee-maintained allowlists, not ones derived from the manifest being run: a
+        # scheduled job must not be able to reach a host, or read a warehouse table, that the
+        # committee never approved. The key this client holds is org-scoped and can read private
+        # tables, so the table list is the only thing standing between an `oso-sql` metric and
+        # applicant identity.
         allowlist = load_allowlist(Path(registry_dir) / "_allowlist.txt")
+        sql_allowlist = load_sql_allowlist(Path(registry_dir) / "_sql_allowlist.txt")
 
     paths = manifest_paths(registry_dir, teams)
     if reprovision and oso_client is not None:
@@ -167,6 +172,7 @@ def run_observe_cli(
                 allowlist=allowlist,
                 poll_sleep=10.0 if live_oso else 0.0,
                 on_observation=progress,
+                sql_allowlist=sql_allowlist,
             )
         except Exception as exc:
             failed.append(path.stem)
@@ -380,10 +386,12 @@ def main(argv: list[str] | None = None) -> int:
 
     oso_client = None
     allowlist: set[str] | None = None
+    sql_allowlist: set[str] | None = None
     if args.live_oso:
         import os
         from urllib.parse import urlparse
 
+        from fpm.governance.allowlist import load_sql_allowlist
         from fpm.manifest import load_manifest
         from fpm.oso.graphql_client import GraphqlOsoClient
 
@@ -393,6 +401,17 @@ def main(argv: list[str] | None = None) -> int:
             urlparse(f.source.base_url).hostname for f in _m.functions if f.source.base_url
         }
         allowlist.discard(None)
+        # Deliberately NOT derived from the manifest the way the host list above is. Deriving the
+        # table list from the file being reviewed would allow whatever that file asks for, which
+        # is the entire guard gone; and unlike a host, a table can be a private one this key can
+        # already read. So the committee file is the only source, even in an interactive run.
+        # Guarded like every other caller: this path is relative, so a review run from
+        # outside the repo root (or against a checkout predating the file) would otherwise
+        # die with FileNotFoundError before measuring anything. Absent means empty, which
+        # refuses every table -- an oso-sql metric reports indeterminate, nothing silently
+        # passes, and every other metric in the run is unaffected.
+        _sql_path = Path("registry/_sql_allowlist.txt")
+        sql_allowlist = load_sql_allowlist(_sql_path) if _sql_path.exists() else set()
 
     as_of = datetime.fromisoformat(args.as_of).replace(tzinfo=timezone.utc)
     manifest_path = args.manifest or f"registry/{args.team}.yaml"
@@ -409,6 +428,7 @@ def main(argv: list[str] | None = None) -> int:
         allowlist=allowlist,
         poll_sleep=10.0 if args.live_oso else 0.0,
         manifest_commit_sha=manifest_sha,
+        sql_allowlist=sql_allowlist,
     )
     for b in bundles:
         rec = b.recommendation

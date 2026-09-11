@@ -10,22 +10,39 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fpm.domain import window_for
-from fpm.governance.allowlist import host_allowed, load_allowlist
+from fpm.governance.allowlist import host_allowed, load_allowlist, load_sql_allowlist
 from fpm.governance.classify import classify
 from fpm.governance.diff import manifest_diff
 from fpm.kernel import conformance_error, load_kernel
 from fpm.manifest import Manifest, ManifestError, load_manifest
 from fpm.provision import build_ingestion_config
-from fpm.transform.validate import TransformSqlError, validate_transform_sql
+from fpm.transform.validate import (
+    TransformSqlError,
+    validate_transform_sql,
+    validate_warehouse_sql,
+)
 from scripts.pr_report import render_report
 
 
 def validate_manifest(
-    base: Manifest | None, head: Manifest, allowlist: set[str], as_of: datetime
+    base: Manifest | None,
+    head: Manifest,
+    allowlist: set[str],
+    as_of: datetime,
+    sql_allowlist: set[str] | None = None,
 ) -> tuple[bool, str]:
     problems: list[str] = []
     for fn in head.functions:
         if fn.source.kind == "fixture":
+            continue
+        if fn.source.kind == "oso-sql":
+            # Nothing is fetched, so there is no host to check and no ingestion config to
+            # translate. The equivalent gate is the table allowlist, and like the host list it is
+            # read from the BASE ref -- a table added in this same PR is not yet trusted.
+            try:
+                validate_warehouse_sql(fn.source.sql, sql_allowlist or set())
+            except TransformSqlError as exc:
+                problems.append(f"{fn.function_id}: warehouse SQL rejected ({exc})")
             continue
         if not host_allowed(fn.source.base_url, allowlist):
             problems.append(
@@ -80,6 +97,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("head", help="path to the head (PR) manifest")
     ap.add_argument("--base", default="", help="path to the base manifest (empty for a new file)")
     ap.add_argument("--allowlist", default="registry/_allowlist.txt")
+    ap.add_argument("--sql-allowlist", default="registry/_sql_allowlist.txt")
     ap.add_argument("--as-of", default="2026-07-01")
     ap.add_argument(
         "--summary",
@@ -89,6 +107,10 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     as_of = datetime.fromisoformat(args.as_of).replace(tzinfo=timezone.utc)
     allowlist = load_allowlist(args.allowlist)
+    # Missing is treated as empty, not as permissive: a checkout whose base predates this
+    # file must reject every warehouse table rather than accept every one.
+    sql_path = Path(args.sql_allowlist)
+    sql_allowlist = load_sql_allowlist(sql_path) if sql_path.exists() else set()
     try:
         if not Path(args.head).exists():
             if not args.base:
@@ -111,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
                         "Head is validated in full; the before/after comparison is unavailable "
                         "and every function should be read as new.\n\n"
                     )
-            ok, md = validate_manifest(base, head, allowlist, as_of)
+            ok, md = validate_manifest(base, head, allowlist, as_of, sql_allowlist)
             md = base_note + md
     except ManifestError as exc:
         md = f"### Validation failed\n\nschema error: {exc}"

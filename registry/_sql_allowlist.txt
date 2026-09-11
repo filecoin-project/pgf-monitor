@@ -1,0 +1,20 @@
+# Committee-maintained allowlist of warehouse tables an `oso-sql` metric may read.
+# Adding a table is a committee decision (CODEOWNERS-guarded). One fully-qualified
+# catalog.schema.table per line — no wildcards, because a wildcard cannot be reviewed.
+#
+# Why this list exists at all: the provisioning host's OSO_API_KEY is org-scoped, so it can read
+# filpgf_private.* and funding_model_static.applicant_identity. Unrestricted warehouse SQL in a
+# community PR could therefore lift applicant identity into a PUBLIC observation value. This list
+# is the structural guard, exactly as the `raw` binding is for an http-json transform.
+#
+# Two rules when adding one:
+#   1. It must land in an EARLIER pull request than the metric that reads it. validate.yml and
+#      dry-run.yml read this file from the BASE branch, never the PR head, so a table added in the
+#      same PR is not yet trusted when its metric is checked.
+#   2. Prefer a table whose UPSTREAM is itself public. Every http-json metric can be re-derived by
+#      any outside reader from a public endpoint; a warehouse read breaks that unless the source
+#      data is public too. Both tables below come from Filecoin Data Portal's public parquet at
+#      https://data.filecoindataportal.xyz/, so the numbers stay independently checkable.
+
+filecoin.data_portal.daily_filecoin_pay_operators_metrics
+filecoin.data_portal.filecoin_pay_rails

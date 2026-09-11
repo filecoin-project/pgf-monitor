@@ -79,7 +79,16 @@ def collect(registry_dir: Path = Path("registry"), drafts_dir: Path | None = Non
             if why is not None:
                 unresolved.append((team, fn.function_id, why))
             return  # non-kernel: real metric, no kernel function to credit
-        host = host_of(fn.source.base_url) if fn.source.kind == "http-json" else "fixture"
+        # `fixture` means "nothing is measured yet" and both the 🟢 rollup and the
+        # adopted-live count below exclude it. An oso-sql metric reads the warehouse and
+        # has no host, but it IS a live source -- labelling it `fixture` would have
+        # understated kernel coverage the moment one was promoted.
+        if fn.source.kind == "http-json":
+            host = host_of(fn.source.base_url)
+        elif fn.source.kind == "oso-sql":
+            host = "oso-warehouse"
+        else:
+            host = "fixture"
         by_function = index[(team, fn.function_id, fn.sla.metric)]
         seen = by_function.get(name)
         if seen is not None:

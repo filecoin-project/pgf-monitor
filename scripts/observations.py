@@ -41,6 +41,7 @@ from pathlib import Path
 import requests
 
 from fpm import observations as fpm_observations
+from fpm.transform.validate import bind_warehouse_sql
 
 CSV_PATH = Path("data/observations.csv")
 COLUMNS = fpm_observations.COLUMNS
@@ -551,6 +552,144 @@ def _pool_volume_series(cutoff: datetime) -> list[dict]:
     return out
 
 
+def warehouse_rows_for(
+    fn, team, tree, client, cutoff, now, already, wanted_dates=None
+) -> tuple[list[dict], int]:
+    """Replay ONE validated statement once per day in [cutoff, now]. Returns (rows, skipped).
+
+    Split out of `_warehouse_series` so the day loop is testable with a fake client: the wrapper
+    does the disk walking and credential handling, this does the part with the rules in it.
+    """
+    from fpm.domain import window_for
+
+    out: list[dict] = []
+    skipped = 0
+    day = cutoff.replace(hour=0, minute=0, second=0, microsecond=0)
+    # One Trino query per day means a ten-month fill runs for tens of minutes. Say so as it goes:
+    # stdout is block-buffered whenever it is not a tty, so an unflushed loop shows an empty log
+    # for half an hour and a hang looks exactly like slow progress (same lesson as observe.yml).
+    seen = 0
+    while day <= now:
+        iso = day.strftime("%Y-%m-%d")
+        seen += 1
+        if seen % 30 == 0:
+            print(f"      {fn.function_id} … {iso} (+{len(out)} so far)", flush=True)
+        # `--date` has to be applied HERE, not to the returned rows. Every other strategy fetches
+        # a bulk history once and filtering the output costs nothing; this one issues a query per
+        # day, so filtering afterwards still fires ~365 of them to keep one row.
+        if wanted_dates is not None and iso not in wanted_dates:
+            day += timedelta(days=1)
+            continue
+        if (iso, team, fn.function_id, fn.sla.metric) in already:
+            skipped += 1
+            day += timedelta(days=1)
+            continue
+        try:
+            # The nightly binds the function's real measurement window, so the backfill must too.
+            # Binding day/day/day gave a ZERO-WIDTH window: harmless for a `:now`-only statement
+            # like today's, but a monthly metric aggregating over :window_start/:window_end would
+            # have silently written empty-window numbers into the system of record under a note
+            # claiming it replayed the manifest's own statement.
+            window = window_for(fn.sla.cadence, day)
+            rows = client.query(bind_warehouse_sql(tree, window.start, window.end, day))
+        except Exception as exc:
+            # One unanswerable day must not abandon the rest of the window.
+            print(f"    {fn.function_id} {iso}: query failed ({exc})", file=sys.stderr)
+            day += timedelta(days=1)
+            continue
+        cells = list(rows[0].values()) if len(rows) == 1 else []
+        # No row, or a NULL cell, means the warehouse cannot answer for that day. Emit NOTHING
+        # rather than a null row: unlike a failed nightly, a day the source never covered is not
+        # a fact about the metric, and a null here would read as an outage we caused.
+        if len(cells) == 1 and cells[0] is not None:
+            out.append(
+                _row(
+                    day,
+                    team,
+                    fn.function_id,
+                    fn.sla.metric,
+                    cells[0],
+                    "backfill:oso-warehouse",
+                    "replayed the manifest's own oso-sql statement at this date",
+                )
+            )
+        day += timedelta(days=1)
+    return out, skipped
+
+
+def _warehouse_series(cutoff: datetime, now: datetime, wanted_dates=None) -> list[dict]:
+    """Replay every `oso-sql` metric's OWN declared SQL, once per day, to rebuild its history.
+
+    Unlike every other strategy in this file this one is GENERIC: it reads the registry instead of
+    hardcoding a source, so a new `oso-sql` metric gets history with no new code here. That is
+    only possible because a warehouse table is already dated. There is no pagination window to
+    walk and no read-time anchor to reconstruct (see the `_age_series` era comment for how much
+    work those cost) -- "what was it on day D" is the SAME query with a different `:now` bind. So a
+    backfilled row is computed by the identical SQL the nightly runs, under the identical
+    allowlist guard, which is the property that makes the two halves of the series comparable.
+
+    Two deliberate limits:
+
+    - One query per metric-day. A ten-month fill is ~300 Trino queries per metric: slow, but a
+      one-time job. `--date` genuinely narrows it (the filter is applied before the query, not
+      to the results). Batching would need a second, GROUPed SQL in the
+      manifest, and then the backfilled number would no longer be provably the nightly's
+      computation -- which is the whole point of replaying the declared statement.
+    - EXPECT PLATEAUS AT THE TAIL, and do not "fix" them. The declared SQL answers "the newest
+      day available at or before :now", so while FDP's parquet lags, consecutive days reconstruct
+      to the SAME number -- 2026-09-08/09/10 all read 18,801.89 on 2026-09-10. That is correct:
+      it is what a nightly run on each of those days would have read, which is the definition
+      `_anchor` uses for every other strategy here, and it is what keeps the backfilled half of
+      the series comparable with the nightly half. A flat run means the source was late, not that
+      the metric stalled.
+    - A day already recorded is SKIPPED, whatever method recorded it. `row_key` includes `method`,
+      so a `backfill:` row would otherwise land BESIDE an existing `nightly` one and both
+      dashboards would draw two points for that day (see the TARGETED_ONLY note below -- 26 of 30
+      rows in the first attempt at #55 were exactly this). Skipping makes the fill idempotent and
+      re-runnable.
+    """
+    import os
+
+    from fpm.drafts import split_draft
+    from fpm.governance.allowlist import load_sql_allowlist
+    from fpm.manifest import load_manifest
+    from fpm.oso.graphql_client import GraphqlOsoClient
+    from fpm.transform.validate import validate_warehouse_sql
+
+    allowed = load_sql_allowlist("registry/_sql_allowlist.txt")
+    org_id = os.environ.get("OSO_ORG_ID") or "35c17c26-4aa8-47ba-ba75-be8fe1e3718c"
+    client = GraphqlOsoClient(api_key=os.environ["OSO_API_KEY"], org_id=org_id)
+
+    # Adopted manifests and drafts alike: a draft's history is exactly what you want BEFORE
+    # promotion, so a reviewer can see the series a proposed threshold would be judged against.
+    targets = []
+    for path in sorted(Path("registry").glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        targets.append((load_manifest(path), path))
+    for path in sorted(Path("registry/drafts").glob("*.yaml")):
+        targets.append((split_draft(path)[0], path))
+
+    existing = fpm_observations.load_rows(CSV_PATH) if CSV_PATH.exists() else []
+    already = {(r["observed_at"], r["team"], r["function_id"], r["metric"]) for r in existing}
+    out: list[dict] = []
+    for manifest, _path in targets:
+        for fn in manifest.functions:
+            if fn.source.kind != "oso-sql":
+                continue
+            try:
+                tree = validate_warehouse_sql(fn.source.sql, allowed)
+            except Exception as exc:
+                print(f"    {fn.function_id}: SQL rejected, skipped ({exc})", file=sys.stderr)
+                continue
+            rows, skipped = warehouse_rows_for(
+                fn, manifest.team, tree, client, cutoff, now, already, wanted_dates
+            )
+            out.extend(rows)
+            print(f"    {fn.function_id}: +{len(rows)} ({skipped} day(s) already recorded)")
+    return out
+
+
 # TARGETED_ONLY strategies are reachable via `--only` and are NOT in the default rotation.
 # Both were written to recover the 2026-08-22/23 outage, and both emit a row per day for as far
 # back as their source reaches -- 115 days for the GitHub run history, 53 for GeckoTerminal's
@@ -558,7 +697,10 @@ def _pool_volume_series(cutoff: datetime) -> list[dict]:
 # lands a second row beside an existing nightly reading for the same metric-day, which the mart
 # renders as a second series. That is documented behaviour, not a bug, but it should be a
 # deliberate act rather than a side effect of running `backfill` with its default --days 365.
-TARGETED_ONLY = frozenset({"pipeline-success", "pool-volume"})
+# `warehouse` joins them for a different reason: it needs OSO_API_KEY and issues one query
+# per metric-day, so a bare `backfill` (default --days 365) would fire ~365 Trino queries
+# per oso-sql metric as a side effect. It is a one-time fill, so it must be asked for.
+TARGETED_ONLY = frozenset({"pipeline-success", "pool-volume", "warehouse"})
 
 
 def select_strategies(available: list[str], only: list[str] | None) -> list[str]:
@@ -595,6 +737,7 @@ def backfill(
         "statuspage": lambda: _statuspage_daily_series(cutoff),
         "pipeline-success": lambda: _pipeline_success_series(cutoff),
         "pool-volume": lambda: _pool_volume_series(cutoff),
+        "warehouse": lambda: _warehouse_series(cutoff, now, set(dates) if dates else None),
     }
     stale = TARGETED_ONLY - set(strategies)
     if stale:

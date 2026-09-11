@@ -102,8 +102,10 @@ On every row of `kernel_timeseries_metrics_by_project`:
 - **`project_display_name`** — the payee's display name where OSSD has one, null otherwise. Render
   this rather than `team`; `team` is our filename stem, not what anyone calls themselves.
 - **`method`** — how that day's reading was taken: `nightly` (the unattended run), `live-review`
-  (taken during a review), or `backfill:<host>` where the source's own history was reconstructed
-  after the fact. A day can carry more than one row for one commitment when a backfill lands beside
+  (taken during a review), `backfill:<host>` where the source's own history was reconstructed
+  after the fact, or `backfill:oso-warehouse` — the one value that is not a host — where the
+  metric reads a dated table already in the OSO warehouse and its history was rebuilt by
+  replaying the metric's own statement once per past day. A day can carry more than one row for one commitment when a backfill lands beside
   a nightly reading; they are different observations of the same day, not duplicates.
 
   **2026-08-22 and 2026-08-23 were OUR outage, not any source's.** OSO migrated the payload type

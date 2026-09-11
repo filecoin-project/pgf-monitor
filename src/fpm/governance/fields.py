@@ -71,6 +71,9 @@ FIELD_BUCKETS: dict[str, Bucket] = {
     "source.max_table_nesting": "material",
     "source.auth_secret_ref": "material",
     "source.fixture": "material",
+    # The whole derivation for an `oso-sql` metric: which warehouse tables are read, how
+    # they are joined and what is aggregated. Changing it changes the number outright.
+    "source.sql": "material",
     # --- how the number is derived
     "source.extract.path": "material",
     "source.extract.column": "material",

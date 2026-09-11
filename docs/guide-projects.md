@@ -82,6 +82,13 @@ Two ways to turn a response into a number:
   Time binds: `:now`/`:window_start`/`:window_end` (naive, for unix-epoch columns) and
   `:now_tz`/... (tz-aware, for ISO timestamp columns). Exactly one of extract/transform.
 
+There is a third source kind, **`oso-sql`**, which reads tables already in the OSO warehouse
+instead of fetching anything — use it when the number needs a join, which `transform` cannot
+express. It is **not something you can adopt in your own PR**: every table it reads has to be on
+`registry/_sql_allowlist.txt`, and adding one is a committee decision that must land in an earlier
+PR. If your metric looks like it needs this, say so in your draft and the committee will take it
+from there. Details in `docs/guide-reviewers.md`.
+
 Gotchas the validator will catch (and some it can't):
 - Nested JSON **arrays** land in child tables your transform cannot reach — metrics must
   be computable from top-level fields. Nested **objects** flatten into columns
