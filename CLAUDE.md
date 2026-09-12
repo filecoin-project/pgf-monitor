@@ -101,6 +101,14 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   dedupe the day. Compliance is NOT stored: the dashboard joins the two on
   (observed_at, team, function_id, metric) and derives pass/fail/unscored/indeterminate at render,
   so a corrected threshold fixes history instead of leaving it judged against a superseded bar.
+  **Two grains, differing by one field:** `row_key` dedupes on (observed_at, team, function_id,
+  metric, METHOD); the mart and both dashboards join on the same four WITHOUT method. So a
+  `backfill:` row lands BESIDE a `nightly` one for the same day and draws a second point -- skip any
+  day already recorded under any method. And a backfill is only real if it REPRODUCES THE VALUE THE
+  NIGHTLY READS TODAY: `avg_days_between_releases` carried 377 recovered rows for a year that
+  reached neither mart nor dashboard, because the strategy computed the gap since the previous
+  release while the registry commits to a rolling average. Nothing failed; the page just showed
+  30 days instead of 400. `docs/metric-history.md` records what is recoverable and what is not.
 - Nothing unattended may write a verdict, and this is now ENFORCED, not just stated:
   `fpm.land.assert_adjudicated` refuses any batch carrying `approver="dev-auto"` (what
   `fpm review --dev-auto-approve` stamps), whole and before publishing anything.
