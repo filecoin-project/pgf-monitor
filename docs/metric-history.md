@@ -56,17 +56,25 @@ Across the 60 SLA entries in `registry/` as of 2026-09-11 (41 adopted and runnin
 | Status of past dates | Metrics |
 |---|---|
 | **Recomputable from the source, and the history actually JOINS the commitment** | 17 |
-| Recomputed, but under a name no commitment uses (see the warning below) | 11 |
 | Dated items, but no historical query established | 2 |
 | Provider publishes *related* history under a different measurement | 3 |
-| No historical evidence found anywhere | 31 |
+| No historical evidence found anywhere | 36 |
 | No live measurement configured yet (fixture placeholder) | 2 |
+
+Those five rows partition the 60. Counted 2026-09-11 by asking, for each registry entry, whether
+`data/observations.csv` holds a `backfill:` row under that entry's own
+`(team, function_id, metric)` — which is the only definition that means anything, because it is the
+one the mart joins on.
+
+**Separately, and NOT part of that partition: 11 recovered series join no commitment at all.** They
+carry metric names no registry entry uses, so they are invisible downstream. See the warning below;
+do not count them as coverage.
 
 Sorted by the shape of the endpoint the metric currently reads:
 
 | Endpoint shape | Metrics | Past dates available? |
 |---|---|---|
-| **Dated warehouse table** — a `date` column in a table OSO already holds | 1 | yes, in FULL: no window, no pagination, no read-time anchor to reconstruct |
+| **Running total in a subgraph** — one cumulative number, no time dimension | 1 | yes, in FULL: the events behind the total are dated, so it is rebuildable by replaying them |
 | **Dated list** — timestamped items with stable IDs | 21 | 19 yes, within the source's window; the 2 Filfox rows have no historical query |
 | State snapshot — current roster, price, power | 13 | 1 yes (pool volume, from OHLCV candles); 12 no |
 | Health probe — "am I up right now" | 11 | 1 yes (drand status, from the incidents endpoint); 10 no |
@@ -74,10 +82,12 @@ Sorted by the shape of the endpoint the metric currently reads:
 | Search count — a `total_count` over a changing set | 2 | no |
 | Fixture placeholder — nothing measured yet | 2 | n/a |
 
-The two tables both total 22 by coincidence, not because they name the same metrics: the first
-counts what we *can recompute*, the second what shape of endpoint each metric *currently reads*.
-Two Filfox rows are dated lists we cannot query historically; two gauge-shaped metrics turn out to
-be recoverable from a second endpoint.
+Both tables total 60 because both partition the same registry, but they cut it differently: the
+first by whether a past is recoverable, the second by the shape of the endpoint each metric reads.
+The cuts disagree in interesting places, and those are the rows worth reading twice. Two Filfox
+entries are dated lists we cannot query historically. Two gauge-shaped metrics turn out to be
+recoverable from a second endpoint. And the single running-total row is recoverable only from a
+different entity of the same source — the shape of the endpoint does not decide it there.
 
 ### A backfill only counts if it reproduces the live number
 
@@ -142,6 +152,16 @@ gauge also publishes a perfectly good history elsewhere.
 | libp2p-networking | `libp2p-release-cadence` *(draft)* | `libp2p/go-libp2p` |
 | zondax | `rosetta-release-currency` | `Zondax/rosetta-filecoin-proxy` |
 
+### Subgraph settlement events — 1 metric · key: settlement `id`
+
+| Team | Function | Source |
+|---|---|---|
+| filoz | `curio-filecoin-pay-service-volume` | Goldsky `filecoin-pay-mainnet` subgraph |
+
+The metric itself reads a running total with no time dimension, so this is the one case here where
+the recoverable history lives in a *different entity* of the same source rather than in the one the
+nightly reads. 246 days recovered, 2026-01-09 onward.
+
 ### GitHub commits — 6 metrics · key: commit `sha`
 
 | Team | Function | Repo |
@@ -197,10 +217,14 @@ unrecoverable until someone demonstrates otherwise.
 
 ## Metrics where our nightly reading is the only record
 
-For 31 of the 59, the endpoint reports "how are you right now?" — chain head lag, RPC uptime and
+For 36 of the 60, the endpoint reports "how are you right now?" — chain head lag, RPC uptime and
 latency, health checks, current miner power, current pool price and peg, subgraph indexing
 freshness, the IPNI provider roster — and we have found no historical source for the same
 measurement anywhere.
+
+`filoz/curio-pdp-active-proofsets` belongs here, and belongs here for an unusual reason: its
+subgraph DOES carry history, just not of the thing the metric measures. See
+[the note above](#where-two-of-these-metrics-now-get-their-history) before attempting it.
 
 **For these, the row written each night is the only record that exists.** Two consequences worth
 stating plainly, because they affect how the published series should be read:
