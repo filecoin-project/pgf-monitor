@@ -29,6 +29,7 @@ from fpm.domain import (
     window_for,
 )
 from fpm.evaluate import evaluate_sla
+from fpm.guards import age_growth_violation
 from fpm.manifest import FunctionSpec, Manifest, load_manifest
 
 
@@ -146,6 +147,35 @@ def to_observation(
     )
 
 
+def apply_age_guard(
+    fn: FunctionSpec, obs: Observation, previous: dict[tuple[str, str, str], tuple[str, float]]
+) -> None:
+    """Null an age reading that grew faster than wall time. Mutates `obs` in place.
+
+    Applies only to `derive: age_*` metrics, because the invariant only holds for them: a release
+    count or a pool balance may jump by any amount overnight and be perfectly true. See
+    `fpm.guards` for why a null beats publishing the number.
+    """
+    extract = fn.source.extract
+    if obs.observed_value is None or extract is None:
+        return
+    if not str(extract.derive).startswith("age_"):
+        return
+    prior = previous.get((obs.team, obs.function_id, obs.metric))
+    if prior is None:
+        return
+    prev_day, prev_value = prior
+    unit_seconds = 1.0 if str(extract.derive) == "age_seconds" else 86400.0
+    reason = age_growth_violation(
+        prev_value, prev_day, obs.observed_value, obs.observed_at, unit_seconds
+    )
+    if reason is None:
+        return
+    obs.observed_value = None
+    obs.note = reason
+    obs.outcome = "indeterminate"
+
+
 def observe(
     manifest_path: str | Path,
     fixtures_dir: Path,
@@ -157,11 +187,17 @@ def observe(
     poll_sleep: float = 0.0,
     on_observation: Callable[[Observation], None] | None = None,
     sql_allowlist: set[str] | None = None,
+    previous: dict[tuple[str, str, str], tuple[str, float]] | None = None,
 ) -> list[Observation]:
     """Measure every function in one manifest. One Observation per function, always.
 
     `on_observation` fires as each metric lands, so a caller can report progress during a run
     that takes tens of minutes rather than only at the end.
+
+    `previous` maps (team, function_id, metric) -> (day, value) for the last recorded reading, and
+    is what lets the age guard compare today against yesterday. Injected rather than read here so
+    this stays testable without a CSV; the CLI supplies it from the series. Omitted means no guard,
+    which is the right default for a first run with no history to check against.
     """
     manifest: Manifest = load_manifest(manifest_path)
     adapters = build_adapters(
@@ -176,6 +212,7 @@ def observe(
     for fn in manifest.functions:
         _, reading, sla = measure(fn, manifest.team, adapters, as_of)
         obs = to_observation(fn, manifest.team, reading, sla, as_of, method)
+        apply_age_guard(fn, obs, previous or {})
         out.append(obs)
         if on_observation is not None:
             on_observation(obs)

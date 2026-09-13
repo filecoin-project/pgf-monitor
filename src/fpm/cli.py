@@ -143,6 +143,22 @@ def run_observe_cli(
                     dropped += 1
         _say(f"reprovision: dropped {dropped} datasets; they rebuild with the current credentials")
 
+    # Last recorded value per commitment, for the age guard in `observe`. Read once here rather
+    # than inside the loop: it is the series as it stood BEFORE tonight, which is exactly what
+    # today's readings must be checked against.
+    previous: dict[tuple[str, str, str], tuple[str, float]] = {}
+    _csv = Path(csv_path)
+    if _csv.exists():
+        from fpm import observations as _obs
+
+        for _r in sorted(_obs.load_rows(_csv), key=lambda r: r["observed_at"]):
+            if _r["observed_value"] in (None, ""):
+                continue
+            previous[(_r["team"], _r["function_id"], _r["metric"])] = (
+                _r["observed_at"],
+                float(_r["observed_value"]),
+            )
+
     started = time.monotonic()
     _say(f"observing {len(paths)} manifests at {as_of.date().isoformat()}")
 
@@ -173,6 +189,7 @@ def run_observe_cli(
                 poll_sleep=10.0 if live_oso else 0.0,
                 on_observation=progress,
                 sql_allowlist=sql_allowlist,
+                previous=previous,
             )
         except Exception as exc:
             failed.append(path.stem)
