@@ -32,7 +32,19 @@ functions:
       kind: http-json
       base_url: "https://api.github.com"
       auth: { secret_ref: GH_API_TOKEN }
-      endpoint: "https://api.github.com/repos/davidgasquez/filecoin-data-portal/actions/workflows/pipeline.yml/runs?status=success&per_page=5"
-      query: "/repos/davidgasquez/filecoin-data-portal/actions/workflows/pipeline.yml/runs?status=success&per_page=5"
+      # NO `status=success` filter, deliberately. That filtered view returned a coherent but
+      # MONTHS-OLD page four times between 2026-08-26 and 2026-09-14 -- on 09-14 the five newest
+      # "successful" runs came back as #511-#521 from March 2026, and the dlt load id proves they
+      # were fetched live that morning rather than read from a stale table. The unfiltered listing
+      # is the primary index; we select the successful runs ourselves. 30 rows is a month of daily
+      # runs, so a window of nothing but failures is implausible without the pipeline being down.
+      endpoint: "https://api.github.com/repos/davidgasquez/filecoin-data-portal/actions/workflows/pipeline.yml/runs?per_page=30"
+      query: "/repos/davidgasquez/filecoin-data-portal/actions/workflows/pipeline.yml/runs?per_page=30"
       # response is a single object; runs live under workflow_runs -> select them as rows
-      extract: { path: workflow_runs, column: created_at, timestamp_column: created_at, cast: date, reduce: latest, derive: age_days, unit: days }
+      data_selector: "workflow_runs"
+    transform:
+      # `updated_at` is when the run finished; `created_at` is when it was QUEUED, ~30 min earlier
+      # in every sample. The commitment is the age of the most recent successful RUN, so measure
+      # from when it succeeded. Seconds, not date_diff('day', ...), because the healthy value is
+      # ~0.5 days and whole-day truncation would flatten the entire series to 0.
+      sql: "SELECT date_diff('second', MAX(updated_at), :now_tz) / CAST(86400 AS DOUBLE) FROM raw WHERE status = 'completed' AND conclusion = 'success'"
