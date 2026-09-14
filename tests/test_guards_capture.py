@@ -169,3 +169,40 @@ def test_rows_never_reach_a_dump_of_the_reading():
     dumped = _reading(STALE).model_dump(mode="json")
     assert "raw_rows" not in dumped
     assert "2026-08-26T14:36:00Z" not in json.dumps(dumped)
+
+
+def test_the_capture_records_the_url_that_was_asked_for(tmp_path):
+    """Without the endpoint there is nothing for a control fetch to repeat, and the capture can
+    say WHAT came back but never WHERE it came from."""
+    fn = _fn()
+    fn.source.endpoint = "https://api.github.com/repos/x/y/actions/workflows/p.yml/runs?per_page=30"
+    apply_age_guard(fn, _obs(), PRIOR, reading=_reading(STALE), capture_dir=tmp_path)
+    rec = json.loads(next(tmp_path.glob("*.json")).read_text())
+    assert rec["endpoint"].endswith("per_page=30")
+
+
+def test_the_control_fetch_script_is_quarantined_from_the_test_suite():
+    """It makes live network calls. Tests are offline-deterministic, so nothing may import it."""
+    import pathlib
+
+    path = pathlib.Path("scripts/capture_control_fetch.py")
+    assert path.exists()
+    offenders = [
+        p.name
+        for p in pathlib.Path("tests").glob("*.py")
+        if "capture_control_fetch" in p.read_text() and p.name != "test_guards_capture.py"
+    ]
+    assert not offenders, f"live script imported by tests: {offenders}"
+
+
+def test_the_filtered_variant_restores_exactly_the_shape_that_failed():
+    """The comparison is only meaningful if the variant is the query the episodes came through."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("ccf", "scripts/capture_control_fetch.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    got = mod._filtered_variant("https://api.github.com/repos/x/y/runs?per_page=30")
+    assert "status=success" in got and "per_page=30" in got
+    # and it must not stack a second copy when one is already there
+    assert mod._filtered_variant(got).count("status=success") == 1

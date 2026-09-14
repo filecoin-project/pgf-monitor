@@ -97,6 +97,7 @@ def capture_refused_reading(
     reason: str,
     reading: Any = None,
     directory: str | Path | None = None,
+    endpoint: str = "",
 ) -> Path | None:
     """Preserve what produced a reading the guard refused. Returns the file written, or None.
 
@@ -136,6 +137,9 @@ def capture_refused_reading(
             # Already secret-stripped where it is built; see the fingerprint note in CLAUDE.md.
             "request_fingerprint": getattr(evidence, "request_fingerprint", None),
             "source_ref": getattr(claim, "source_ref", None),
+            # The exact URL asked for, so `scripts/capture_control_fetch.py` can repeat the
+            # request directly and record what GitHub says to US at the same moment.
+            "endpoint": endpoint,
             "source_metadata": getattr(reading, "source_metadata", None),
             "row_count": len(rows),
             "rows_truncated": len(rows) > MAX_CAPTURED_ROWS,
