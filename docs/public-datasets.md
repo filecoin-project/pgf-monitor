@@ -58,6 +58,29 @@ ORDER BY metric_name, sample_date
 landing tables `observed_at` is a **varchar** `YYYY-MM-DD` instead — compare it to `'2026-08-19'`,
 and `CAST(observed_at AS DATE)` if you need date arithmetic.
 
+### One documented exception to the triple
+
+`data/observations.csv` carries **1,269 rows, across 24 triples, that `data/kernel_metrics.csv`
+does not declare** — all dated on or before **2026-08-24**, when the registry was reconciled.
+They are readings written under a metric name the function never carried: a per-interval
+`days_between_releases` where the SLA states a trailing average, an explorer's
+`daily_indexed_transactions` standing in as evidence the service ran that day, and a handful of
+readings for commitments since renamed or retired.
+
+**Nothing public is wrong because of them.** The mart's join is an inner join on the full triple
+plus `state = 'adopted'`, so every one of these rows is dropped before it reaches
+`kernel_timeseries_metrics_by_project`. A consumer joining on the documented contract sees exactly
+what the contract promises.
+
+They are left in place rather than deleted — git history is the audit trail here, and voiding a
+measurement because its name was wrong would be the one edit this table does not allow. Their
+per-class disposition is tracked in OSO-5005.
+
+**Nothing new can join them.** `fpm.observations.append_observations` refuses a triple the
+registry does not declare, and `tests/test_observations_declared.py` fails on any undeclared
+reading dated after 2026-08-24 — which catches the backfill path too, since that one writes
+through `merge` and never sees the guard.
+
 ## What each column is for
 
 On every row of `kernel_timeseries_metrics_by_project`:
