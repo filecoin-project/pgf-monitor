@@ -29,7 +29,7 @@ from fpm.domain import (
     window_for,
 )
 from fpm.evaluate import evaluate_sla
-from fpm.guards import age_growth_violation
+from fpm.guards import age_growth_violation, capture_refused_reading
 from fpm.manifest import FunctionSpec, Manifest, load_manifest
 
 
@@ -148,13 +148,21 @@ def to_observation(
 
 
 def apply_age_guard(
-    fn: FunctionSpec, obs: Observation, previous: dict[tuple[str, str, str], tuple[str, float]]
+    fn: FunctionSpec,
+    obs: Observation,
+    previous: dict[tuple[str, str, str], tuple[str, float]],
+    reading: Reading | None = None,
+    capture_dir: str | Path | None = None,
 ) -> None:
     """Null an age reading that grew faster than wall time. Mutates `obs` in place.
 
     Applies only to `derive: age_*` metrics, because the invariant only holds for them: a release
     count or a pool balance may jump by any amount overnight and be perfectly true. See
     `fpm.guards` for why a null beats publishing the number.
+
+    When `reading` is supplied, the rows and the OSO run reference behind the refused value are
+    written to a capture file first. The refusal is the only moment that evidence exists -- the
+    ingestion table is overwritten on the next run -- so it is preserved before it is discarded.
     """
     extract = fn.source.extract
     if obs.observed_value is None or extract is None:
@@ -171,6 +179,19 @@ def apply_age_guard(
     )
     if reason is None:
         return
+    if reading is not None:
+        capture_refused_reading(
+            team=obs.team,
+            function_id=obs.function_id,
+            metric=obs.metric,
+            observed_at=obs.observed_at,
+            refused_value=obs.observed_value,
+            previous_day=prev_day,
+            previous_value=prev_value,
+            reason=reason,
+            reading=reading,
+            directory=capture_dir,
+        )
     obs.observed_value = None
     obs.note = reason
     obs.outcome = "indeterminate"
@@ -188,6 +209,7 @@ def observe(
     on_observation: Callable[[Observation], None] | None = None,
     sql_allowlist: set[str] | None = None,
     previous: dict[tuple[str, str, str], tuple[str, float]] | None = None,
+    capture_dir: str | Path | None = None,
 ) -> list[Observation]:
     """Measure every function in one manifest. One Observation per function, always.
 
@@ -212,7 +234,7 @@ def observe(
     for fn in manifest.functions:
         _, reading, sla = measure(fn, manifest.team, adapters, as_of)
         obs = to_observation(fn, manifest.team, reading, sla, as_of, method)
-        apply_age_guard(fn, obs, previous or {})
+        apply_age_guard(fn, obs, previous or {}, reading=reading, capture_dir=capture_dir)
         out.append(obs)
         if on_observation is not None:
             on_observation(obs)

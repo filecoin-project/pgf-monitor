@@ -109,6 +109,18 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   reached neither mart nor dashboard, because the strategy computed the gap since the previous
   release while the registry commits to a rolling average. Nothing failed; the page just showed
   30 days instead of 400. `docs/metric-history.md` records what is recoverable and what is not.
+- **An age metric cannot outrun wall time, and `fpm.guards` enforces it at write time.** A
+  `derive: age_*` reading that grew by more than the elapsed days (plus 0.5d of scheduler jitter)
+  is nulled, noted and marked `indeterminate` rather than published — a fall is always fine, that
+  is the clock resetting. Born from `pipeline_success_age_days`, which four times claimed FDP's
+  pipeline was weeks stale while it ran nightly; the cause is upstream of this repo and was never
+  root-caused. `tests/test_observations_age_invariant.py` re-checks the invariant over the whole
+  committed series on every PR, because `scripts/observations.py backfill` writes via
+  `fpm.observations` directly and never passes through the guard. When the guard fires it first
+  writes the rows AND the `oso_run_ref` to `evidence/refused-readings/` (gitignored; uploaded as an
+  `observe.yml` workflow artifact, 90d) — that run reference is the only way to ask OSO what its
+  ingestion did that night, and the ingestion table is overwritten on the next run. Do NOT put
+  captures under `data/`: that is the published record, this is diagnostic material.
 - Nothing unattended may write a verdict, and this is now ENFORCED, not just stated:
   `fpm.land.assert_adjudicated` refuses any batch carrying `approver="dev-auto"` (what
   `fpm review --dev-auto-approve` stamps), whole and before publishing anything.

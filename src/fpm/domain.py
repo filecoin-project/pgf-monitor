@@ -67,6 +67,11 @@ class Reading(_Model):
     source_metadata: dict[str, Any] = Field(default_factory=dict)
     adapter: str
     adapter_version: str
+    # The rows the value was computed from. `exclude=True` keeps them out of every dump, so they
+    # never reach an evidence bundle, a store record or a CSV — they exist only in memory, for the
+    # one case that needs them: a guard refusing a reading wants to preserve what produced it.
+    # See fpm.guards.capture_refused_reading.
+    raw_rows: list[dict[str, Any]] | None = Field(default=None, exclude=True)
 
 
 class SlaResult(_Model):

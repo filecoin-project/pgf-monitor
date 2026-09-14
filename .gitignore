@@ -39,3 +39,7 @@ __marimo__/
 # direnv (loads .env; local tooling)
 .envrc
 .direnv/
+
+# Guard captures: diagnostic evidence for a refused reading, not a published fact.
+# Rides out of CI as a workflow artifact instead (see .github/workflows/observe.yml).
+evidence/

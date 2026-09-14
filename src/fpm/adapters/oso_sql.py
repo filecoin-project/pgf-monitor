@@ -113,4 +113,5 @@ class OsoSqlAdapter:
             source_metadata=source_metadata,
             adapter=self.name,
             adapter_version=self.version,
+            raw_rows=rows,
         )

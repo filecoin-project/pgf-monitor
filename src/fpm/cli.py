@@ -93,6 +93,7 @@ def run_observe_cli(
     from collections import Counter
 
     from fpm.governance.allowlist import load_allowlist, load_sql_allowlist
+    from fpm.guards import capture_dir as guard_capture_dir
     from fpm.observations import append_observations
     from fpm.observe import observe, thresholds_for
     from fpm.thresholds import append_thresholds
@@ -236,6 +237,17 @@ def run_observe_cli(
             _say(f"  {host}: {len(group)}{flag}")
             for o in group:
                 _say(f"    {o.team}/{o.function_id}\t{o.metric}\t{o.note[:70]}")
+
+    # A refused reading is a different event from a source that went quiet, and it reads as just
+    # another `indeterminate` in the list above. Call it out: it means a source returned a number
+    # we could prove false, and it is the only night the evidence for that exists.
+    refused = [o for o in observations if o.note.startswith("impossible age growth")]
+    if refused:
+        _say(
+            f"\n{len(refused)} reading(s) REFUSED as impossible, evidence in {guard_capture_dir()}:"
+        )
+        for o in refused:
+            _say(f"  {o.team}/{o.function_id}\t{o.metric}\t{o.note[:90]}")
 
     if dry_run:
         _say("\ndry run: nothing written")
