@@ -18,6 +18,7 @@ same metric-day, which is exactly the bug that normalization closes.
 from __future__ import annotations
 
 import csv
+from collections.abc import Iterable
 from pathlib import Path
 
 from fpm.observe import Observation
@@ -35,6 +36,37 @@ COLUMNS = [
 ]
 
 Row = dict[str, str]
+
+Triple = tuple[str, str, str]
+
+
+class UndeclaredTriple(ValueError):
+    """A reading was offered for a (team, function_id, metric) the registry does not declare."""
+
+
+def declared_triples(
+    registry_dir: str | Path = Path("registry"),
+    drafts_dir: str | Path | None = None,
+) -> set[Triple]:
+    """Every (team, function_id, metric) the registry declares, adopted or draft.
+
+    Drafts count as declared. A draft is monitored-but-unscored, not undeclared -- the mart
+    filters `state = 'adopted'` when it wants today's commitments -- and refusing a draft reading
+    here would stop a team being measured in the window between staging a manifest and signing
+    its appendix, which is the window the draft exists for.
+    """
+    # Local import: fpm.exports pulls in grants, kernel and manifest loading, and this module is
+    # imported by anything that touches the CSV, including scripts that never look at a registry.
+    from fpm.exports import metric_rows
+
+    return {
+        (r["team"], r["function_id"], r["metric"]) for r in metric_rows(registry_dir, drafts_dir)
+    }
+
+
+def undeclared(rows: Iterable[Row], declared: set[Triple]) -> list[Triple]:
+    """The distinct triples in `rows` that `declared` does not contain, sorted."""
+    return sorted({(r["team"], r["function_id"], r["metric"]) for r in rows} - declared)
 
 
 def normalize_date(value: object) -> str:
@@ -116,8 +148,41 @@ def collection_status(rows: list[Row], day: str) -> tuple[int, int]:
     return len(todays), carried
 
 
-def append_observations(observations: list[Observation], path: Path = CSV_PATH) -> list[Row]:
-    """Merge observations into the CSV on disk and write it back. Returns the full table."""
-    rows = merge(load_rows(path), [to_row(o) for o in observations])
+def append_observations(
+    observations: list[Observation],
+    path: Path = CSV_PATH,
+    *,
+    allow_undeclared: bool = False,
+    declared: set[Triple] | None = None,
+) -> list[Row]:
+    """Merge observations into the CSV on disk and write it back. Returns the full table.
+
+    Refuses to write a reading whose (team, function_id, metric) the registry does not declare.
+    `docs/public-datasets.md` promises outside consumers that this triple "is the identity of a
+    monitored commitment, and it is stable"; a row written under a name no manifest carries is
+    invisible to anyone who joins on the documented contract, and the mart's inner join drops it
+    silently. Nothing tells the writer.
+
+    The check covers the INCOMING rows only. The table already carries 1,269 such rows from
+    before the registry was reconciled on 2026-08-24, and re-validating history on every append
+    would make the file unwritable without fixing anything -- those are a closed historical set
+    with a disposition of their own (OSO-5005).
+
+    `allow_undeclared` exists for the deliberate case, not the convenient one: a backfill that
+    knowingly lands a superseded series, or a test exercising merge semantics rather than
+    registry validity. Reach for it and say why in the call site.
+    """
+    new_rows = [to_row(o) for o in observations]
+    if not allow_undeclared:
+        known = declared_triples() if declared is None else declared
+        offenders = undeclared(new_rows, known)
+        if offenders:
+            listed = "\n".join(f"  {t} / {f} / {m}" for t, f, m in offenders)
+            raise UndeclaredTriple(
+                f"{len(offenders)} triple(s) not declared in the registry:\n{listed}\n"
+                "Declare the metric on the function, correct the emitted name, or pass "
+                "allow_undeclared=True if landing superseded history on purpose."
+            )
+    rows = merge(load_rows(path), new_rows)
     save_rows(rows, path)
     return rows

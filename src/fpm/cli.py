@@ -94,7 +94,7 @@ def run_observe_cli(
 
     from fpm.governance.allowlist import load_allowlist, load_sql_allowlist
     from fpm.guards import capture_dir as guard_capture_dir
-    from fpm.observations import append_observations
+    from fpm.observations import append_observations, declared_triples
     from fpm.observe import observe, thresholds_for
     from fpm.thresholds import append_thresholds
 
@@ -252,7 +252,11 @@ def run_observe_cli(
     if dry_run:
         _say("\ndry run: nothing written")
     elif observations:
-        rows = append_observations(observations, Path(csv_path))
+        # Validate against the registry this run actually read, not whatever sits under the
+        # working directory -- a fixture run must be judged by its own fixtures.
+        rows = append_observations(
+            observations, Path(csv_path), declared=declared_triples(registry_dir)
+        )
         _say(f"\n{csv_path}: {len(rows)} rows")
         trows = append_thresholds(threshold_records, Path(thresholds_csv))
         _say(f"{thresholds_csv}: {len(trows)} rows")
