@@ -174,3 +174,74 @@ def test_targeted_only_names_are_checked_against_the_real_strategy_set():
     """
     for name in TARGETED_ONLY:
         assert select_strategies(sorted(ALL), [name]) == [name]
+
+
+# ---------------------------------------------------------------------------
+# The reconstruction has to compute the SAME quantity the nightly does, from the SAME query.
+# Both halves drifted apart on 2026-09-14 when the manifest moved off `?status=success` and off
+# `created_at` (PR #71); a backfill left behind would have quietly written a neighbouring number
+# under the right name, and inherited the stale-page fault the filter causes.
+# ---------------------------------------------------------------------------
+
+
+def _obs_module():
+    import importlib.util
+    import sys
+
+    spec = importlib.util.spec_from_file_location("obs_pipe", "scripts/observations.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["obs_pipe"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_pipeline_backfill_asks_the_unfiltered_endpoint_and_uses_finish_times(monkeypatch):
+    """One behavioral check over the three things that must match the manifest: the query it
+    sends, the timestamp it measures from, and which runs it counts."""
+    mod = _obs_module()
+    seen = []
+
+    def fake_get(url):
+        seen.append(url)
+        return {
+            "workflow_runs": [
+                # queued 17:09, finished 17:55 -- the manifest measures from the latter
+                {
+                    "created_at": "2026-09-13T17:09:32Z",
+                    "updated_at": "2026-09-13T17:55:55Z",
+                    "status": "completed",
+                    "conclusion": "success",
+                },
+                # a FAILURE after it: counting this would report the pipeline healthier than it is
+                {
+                    "created_at": "2026-09-13T20:00:00Z",
+                    "updated_at": "2026-09-13T20:30:00Z",
+                    "status": "completed",
+                    "conclusion": "failure",
+                },
+                # and a run still going: no success to measure yet
+                {
+                    "created_at": "2026-09-14T04:00:00Z",
+                    "updated_at": "2026-09-14T04:10:00Z",
+                    "status": "in_progress",
+                    "conclusion": None,
+                },
+            ]
+        }
+
+    monkeypatch.setattr(mod, "_get", fake_get)
+    monkeypatch.setattr(mod, "datetime", mod.datetime)
+    rows = mod._pipeline_success_series(_dt("2026-09-13T00:00:00Z"))
+
+    assert len(seen) == 1
+    assert "status=success" not in seen[0], "the filtered query is what served months-old pages"
+    assert "per_page=100" in seen[0]
+
+    by_day = {r["observed_at"]: float(r["observed_value"]) for r in rows}
+    assert "2026-09-14" in by_day, "the day after a successful run must be recoverable"
+    # anchor 05:50 on 2026-09-14, measured from the 17:55:55 FINISH, not the 17:09:32 queue
+    expected = (_dt("2026-09-14T05:50:00Z") - _dt("2026-09-13T17:55:55Z")).total_seconds() / 86400
+    assert abs(by_day["2026-09-14"] - expected) < 1e-6  # rows are written rounded to 6dp
+    # the created_at basis would read ~0.032 days higher; that is the drift being prevented
+    queued = (_dt("2026-09-14T05:50:00Z") - _dt("2026-09-13T17:09:32Z")).total_seconds() / 86400
+    assert abs(by_day["2026-09-14"] - queued) > 0.03
