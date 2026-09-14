@@ -179,6 +179,17 @@ nightly reads. 246 days recovered, 2026-01-09 onward.
 |---|---|---|
 | filecoin-data-portal | `network-data-portal-pipeline-freshness` | `davidgasquez/filecoin-data-portal` → `pipeline.yml/runs` |
 
+**A basis change on 2026-09-14, worth knowing before comparing across it.** Until that date the
+reading measured from a run's `created_at` (when it was QUEUED); it now measures from `updated_at`
+(when it finished). In every sample those differ by about 30 minutes, so readings before 09-14 sit
+roughly **0.02 days LOWER** than the same run would read today. That is well inside the day-to-day
+scatter of the series (0.47-0.55) and no threshold is attached, so nothing is rescored — but it is
+a real discontinuity and the old rows were not rewritten, because they are honest records of what
+was measured at the time under the definition then in force.
+
+The same change dropped the `status=success` query filter; see the registry comment for why. That
+affects which rows are fetched, not what the number means, so it introduces no discontinuity.
+
 ### Snapshot archive listings — 4 metrics · key: snapshot filename
 
 Host: `forest-archive.chainsafe.dev`
