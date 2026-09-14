@@ -25,7 +25,11 @@ that project exists to do well.
 
 from __future__ import annotations
 
-from datetime import date
+import json
+import os
+from datetime import date, datetime, timezone
+from pathlib import Path
+from typing import Any
 
 #: Wall-clock tolerance, in days. The nightly does not fire at a fixed instant — GitHub Actions
 #: has started it up to ~9 minutes late — so two consecutive readings can legitimately sit slightly
@@ -61,3 +65,84 @@ def age_growth_violation(
         f"across {elapsed} day(s) elapsed. An age clock can reset but cannot outrun wall time, "
         f"so this reading is false rather than alarming; nulled instead of published"
     )
+
+
+#: Where a refused reading's evidence is written. Deliberately NOT under `data/` — that directory
+#: is the published system of record and `observe.yml` commits an explicit pathspec of CSVs from
+#: it. A capture is diagnostic material for us, not a published fact, so it stays out of git and
+#: rides out of CI as a workflow artifact instead.
+CAPTURE_DIR_ENV = "FPM_GUARD_CAPTURE_DIR"
+DEFAULT_CAPTURE_DIR = Path("evidence/refused-readings")
+
+#: A refused reading is rare and its rows are a handful; a runaway source should not be able to
+#: write an unbounded file into CI.
+MAX_CAPTURED_ROWS = 200
+
+
+def capture_dir(explicit: str | Path | None = None) -> Path:
+    if explicit is not None:
+        return Path(explicit)
+    return Path(os.environ.get(CAPTURE_DIR_ENV) or DEFAULT_CAPTURE_DIR)
+
+
+def capture_refused_reading(
+    *,
+    team: str,
+    function_id: str,
+    metric: str,
+    observed_at: str,
+    refused_value: float,
+    previous_day: str,
+    previous_value: float,
+    reason: str,
+    reading: Any = None,
+    directory: str | Path | None = None,
+) -> Path | None:
+    """Preserve what produced a reading the guard refused. Returns the file written, or None.
+
+    Refusing the reading is the right call and it is also the only sample we will ever get. The
+    fault behind `pipeline_success_age_days` has now fired four times across three weeks and was
+    never root-caused, because by the time anyone looked the ingestion table had been overwritten
+    (`write_disposition: replace`) and the run logs had aged out. Nulling the value and moving on
+    throws away the evidence at the exact moment it exists.
+
+    What matters most here is NOT the rows -- it is `oso_run_ref`. Those identifiers are what let
+    someone ask OSO what its ingestion actually did that night, which is the question the
+    investigation could not answer: whether GitHub served a bad response, or whether something
+    between GitHub and the table produced one. The rows alone cannot separate those.
+
+    Never raises. A capture is a diagnostic nicety; failing to write one must not take down a
+    night's collection or turn a refused reading into a crashed run.
+    """
+    try:
+        target = capture_dir(directory)
+        target.mkdir(parents=True, exist_ok=True)
+        rows = list(getattr(reading, "raw_rows", None) or [])
+        claim = getattr(reading, "claim", None)
+        evidence = getattr(claim, "evidence", None)
+        run_ref = getattr(evidence, "oso_run_ref", None)
+        record = {
+            "captured_at": datetime.now(timezone.utc).isoformat(),
+            "reason": reason,
+            "observed_at": observed_at,
+            "team": team,
+            "function_id": function_id,
+            "metric": metric,
+            "refused_value": refused_value,
+            "previous_day": previous_day,
+            "previous_value": previous_value,
+            # The handle on OSO's side of the fetch. This is the point of the whole exercise.
+            "oso_run_ref": run_ref.model_dump(mode="json") if run_ref is not None else None,
+            # Already secret-stripped where it is built; see the fingerprint note in CLAUDE.md.
+            "request_fingerprint": getattr(evidence, "request_fingerprint", None),
+            "source_ref": getattr(claim, "source_ref", None),
+            "source_metadata": getattr(reading, "source_metadata", None),
+            "row_count": len(rows),
+            "rows_truncated": len(rows) > MAX_CAPTURED_ROWS,
+            "rows": rows[:MAX_CAPTURED_ROWS],
+        }
+        path = target / f"{observed_at}_{team}_{metric}.json"
+        path.write_text(json.dumps(record, indent=2, default=str) + "\n")
+        return path
+    except Exception:
+        return None

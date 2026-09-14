@@ -147,6 +147,7 @@ class OsoAdapter:
             source_metadata=source_metadata,
             adapter=self.name,
             adapter_version=self.version,
+            raw_rows=rows,
         )
 
     def _transform_value(

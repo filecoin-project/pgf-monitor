@@ -96,6 +96,20 @@ jobs:
             ${{ inputs.dry_run && '--dry-run' || '' }} \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
+      # A refused reading is the only moment the evidence behind it exists: the ingestion table is
+      # overwritten on the next run (`write_disposition: replace`) and OSO's run logs age out. The
+      # capture is deliberately NOT committed -- it is diagnostic material, not a published fact,
+      # and `data/` carries the published record. `if: always()` because a later step failing must
+      # not cost us the sample; `if-no-files-found: ignore` because the normal night writes none.
+      - name: Preserve evidence for any refused reading
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: refused-readings-${{ github.run_id }}
+          path: evidence/refused-readings/
+          if-no-files-found: ignore
+          retention-days: 90
+
       # The two structural exports are DERIVED from registry/, so regenerate before committing
       # rather than trusting whoever last touched a manifest to have run it. Cheap, and it means
       # the published mapping cannot lag the registry by longer than a night.
