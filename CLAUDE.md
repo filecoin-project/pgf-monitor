@@ -72,8 +72,13 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 - Thresholds are human commitments: the report drafter deliberately omits them; drafts
   mark ours `PLACEHOLDER`. Don't invent tight thresholds without probe evidence.
 - Secrets never enter the repo; live smokes read `OSO_API_KEY` from the environment.
-- **The registry is PUBLIC.** Do not put quoted agreement text, money figures, DocuSign or other
-  contract identifiers, or characterisations of a recipient's paperwork into `registry/`. Where a
+- **The registry is PUBLIC.** Do not put quoted agreement text, DocuSign or other contract
+  identifiers, or characterisations of a recipient's paperwork into `registry/`. A **final award
+  amount** is fine to publish -- ProPGF awards are public, and `dashboards/data/kernel_fallback.json`
+  carries `committed_usd` on purpose, which the root `SKILL.md` documents as an answer to "how much
+  funding is attached". What stays out is everything AROUND the number: target ranges, a committee
+  status like Re-scope or Unresolved, and anything that reveals where a negotiation stands. That
+  distinction is what the retired internal dashboard got wrong (see `dashboards/README.md`). Where a
   bar is absent, say why with `sla.unscored_reason` (an enum) and keep the reasoning in
   `contracts/<team>.facts.yaml`, which is gitignored. `contracts/` being absent is the normal state
   for a collaborator, so nothing in tests or CI may require it.
@@ -92,8 +97,11 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   `registry/` by
   `fpm.exports` — regenerate with `scripts/exports.py write`, never hand-edit
   `data/kernel_functions.csv` or `data/kernel_metrics.csv`; `tests/test_exports.py` fails when the
-  committed copies disagree with the registry. Keep money, agreement terms and contract identifiers
-  out of them: `grant_ref` is safe (Karma issues it publicly), what a grant is worth is not.
+  committed copies disagree with the registry. Keep agreement terms, contract identifiers and
+  negotiation state out of them, and keep money out too -- not because an award is secret, but
+  because these two tables are a metric inventory and a funding column would invite joins that
+  judge a team's readings against what it was paid. `grant_ref` is the join key for anyone who
+  wants that; Karma issues it publicly.
 - `data/observations.csv` (values) and `data/thresholds.csv` (the bar as it stood that day) are
   the system of record for the time series — OSO's `filpgf_sla_observations` and
   `filpgf_sla_thresholds` are full-table republishes of them. Never hand-edit either, and never
