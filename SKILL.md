@@ -1,6 +1,6 @@
 ---
 name: filecoin-kernel-monitor
-description: Answer questions about the Filecoin kernel and what each ProPGF-funded team committed to monitor — from public raw URLs, without cloning the repo. Use for "what did team X promise", "who maintains kernel function Y", "is it currently green", "how much ProPGF funding is attached".
+description: Answer questions about the Filecoin kernel and what each ProPGF-funded team committed to monitor — from public raw URLs, without cloning the repo. Use for "what did team X promise", "who maintains kernel function Y", "is it currently green".
 ---
 
 # Filecoin Kernel Monitor — read-only agent skill
@@ -35,7 +35,6 @@ BASE=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main
 | `$BASE/badges.json` | headline counts: kernel functions, monitored metrics, teams, coverage | regenerated from the registry |
 | `$BASE/data/observations.csv` | every reading: `observed_at, team, function_id, metric, observed_value, method, note` | rewritten nightly |
 | `$BASE/data/thresholds.csv` | the bar as it stood that day, same keys plus `threshold_op, threshold_value, source` | rewritten nightly |
-| `$BASE/data/funding_slate.json` | `slate`: `team_name`, `app_ref`, `committed_usd`, `functions` | changes when a batch is agreed |
 
 ## Finding the teams
 
@@ -106,9 +105,13 @@ beside a `nightly` one); prefer the row that has a value, and `nightly` over a b
 do. Link the
 [live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view) for current status.
 
-**How much ProPGF funding is attached?** Fetch `$BASE/data/funding_slate.json`, `slate` array:
-`team_name`, `app_ref`, `committed_usd`, `functions`. Award amounts are public. What a
-negotiation was aiming at — target ranges, committee status — is not, and is not in the file.
+**How much ProPGF funding is attached?** This repo cannot tell you, and deliberately does not try.
+Award amounts are not secret, but for several grants the committee slate, the signed Exhibit B and
+the maintainers' facts file each carry a DIFFERENT figure, and one grant is part-denominated in
+FIL — see the note at the top of `$BASE/registry/_grants.yaml`. Those are different claims about
+different questions, and a copy here would be one more number to disagree with. Say that, give the
+`grant_ref` from the manifest, and point at the Karma application
+(`https://app.filpgf.io/applications/<grant_ref>`), which is the public record of the ask.
 
 ## Honesty rules
 

@@ -73,12 +73,15 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
   mark ours `PLACEHOLDER`. Don't invent tight thresholds without probe evidence.
 - Secrets never enter the repo; live smokes read `OSO_API_KEY` from the environment.
 - **The registry is PUBLIC.** Do not put quoted agreement text, DocuSign or other contract
-  identifiers, or characterisations of a recipient's paperwork into `registry/`. A **final award
-  amount** is fine to publish -- ProPGF awards are public, and `data/funding_slate.json` carries
-  `committed_usd` on purpose, which the root `SKILL.md` documents as an answer to "how much funding
-  is attached". What stays out is everything AROUND the number: target ranges, a committee
-  status like Re-scope or Unresolved, and anything that reveals where a negotiation stands. That
-  distinction is what the retired internal dashboard got wrong (see `dashboards/README.md`). Where a
+  identifiers, or characterisations of a recipient's paperwork into `registry/`. A final award amount is
+  **not a secret** -- ProPGF awards are public -- but no money figure belongs in this repo, for a
+  different reason: for several grants the committee slate, the signed Exhibit B and the facts file
+  each carry a DIFFERENT number, and one grant is part-denominated in FIL, so a copy here would be
+  one more figure to disagree with. `registry/_grants.yaml` says this at the top; the reconciled
+  figure lives in gitignored `contracts/`. What IS confidential is everything around the number:
+  target ranges, a committee status like Re-scope or Unresolved, anything revealing where a
+  negotiation stands. That distinction is what the retired internal dashboard got wrong (see
+  `dashboards/README.md`). Where a
   bar is absent, say why with `sla.unscored_reason` (an enum) and keep the reasoning in
   `contracts/<team>.facts.yaml`, which is gitignored. `contracts/` being absent is the normal state
   for a collaborator, so nothing in tests or CI may require it.
