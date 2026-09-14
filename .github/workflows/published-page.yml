@@ -1,0 +1,32 @@
+name: published-page
+
+# Publishing the public dashboard is MANUAL: merging a change to the notebook does not touch the
+# hosted page. That gap is silent -- a stale page is a working page -- and it went unnoticed twice
+# in one afternoon on 2026-09-14. So say so, out loud, on the two occasions it can start being true:
+# right after a change to the notebook lands, and once a day in case someone republished by hand.
+on:
+  push:
+    branches: [main]
+    paths: ["dashboards/propgf-kernel-public.py"]
+  schedule:
+    - cron: "40 6 * * *"      # UTC, after the 05:23 observe run has finished
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: published-page
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Does the hosted page match main, and can a reader still open it?
+        env:
+          OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
+        run: uv run python scripts/check_published_page.py
