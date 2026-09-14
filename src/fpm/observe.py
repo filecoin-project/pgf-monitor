@@ -191,6 +191,10 @@ def apply_age_guard(
             reason=reason,
             reading=reading,
             directory=capture_dir,
+            # The URL OSO was asked to fetch. Recorded so a control fetch can ask GitHub the
+            # SAME question directly, seconds later, from a different network path -- which is
+            # what separates "GitHub served a stale page" from "something on OSO's path did".
+            endpoint=fn.source.endpoint or fn.source.base_url,
         )
     obs.observed_value = None
     obs.note = reason

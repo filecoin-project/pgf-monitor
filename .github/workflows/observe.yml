@@ -96,6 +96,23 @@ jobs:
             ${{ inputs.dry_run && '--dry-run' || '' }} \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
+      # The capture says WHAT came back. It cannot say WHERE it came from: the fetch was made by
+      # OSO's ingestion, on OSO's network path, and all we hold afterwards is the rows it stored.
+      # So ask GitHub the same question directly, from this runner, seconds later. Fresh here +
+      # stale there means the fault is on OSO's path; stale in both means GitHub is serving it,
+      # and the response carries an `x-github-request-id` that makes it reportable to them --
+      # which nothing we hold today does. It also re-runs the `status=success` shape, so the
+      # theory the 2026-09-14 fix rests on gets tested instead of assumed.
+      #
+      # `continue-on-error` on purpose: this is evidence attached to a failure that already
+      # happened, and turning a diagnostic into a second failure is the wrong trade.
+      - name: Ask GitHub directly about any refused reading
+        if: always()
+        continue-on-error: true
+        env:
+          GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
+        run: uv run python scripts/capture_control_fetch.py
+
       # A refused reading is the only moment the evidence behind it exists: the ingestion table is
       # overwritten on the next run (`write_disposition: replace`) and OSO's run logs age out. The
       # capture is deliberately NOT committed -- it is diagnostic material, not a published fact,
