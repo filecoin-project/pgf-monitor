@@ -206,3 +206,25 @@ def test_the_filtered_variant_restores_exactly_the_shape_that_failed():
     assert "status=success" in got and "per_page=30" in got
     # and it must not stack a second copy when one is already there
     assert mod._filtered_variant(got).count("status=success") == 1
+
+
+def test_the_published_page_check_is_quarantined_too():
+    """Live network, like the smokes. Tests stay offline-deterministic."""
+    import pathlib
+
+    assert pathlib.Path("scripts/check_published_page.py").exists()
+    offenders = [
+        p.name
+        for p in pathlib.Path("tests").glob("*.py")
+        if "check_published_page" in p.read_text() and p.name != "test_guards_capture.py"
+    ]
+    assert not offenders, f"live script imported by tests: {offenders}"
+
+
+def test_the_publish_gap_is_documented_where_someone_would_look():
+    """The check can only fail usefully if the reader knows publishing is manual."""
+    import pathlib
+
+    readme = pathlib.Path("dashboards/README.md").read_text()
+    assert "Publishing is manual" in readme
+    assert "sourceHash" in readme

@@ -1,5 +1,5 @@
 {
- "note": "Offline fallback snapshot for propgf-kernel-health.py; the notebook queries OSO live first and only uses this when the warehouse is unreachable. Regenerate from filecoin.funding_model_static.requirements + filecoin.filpgf_sla_verdicts.",
+ "note": "Dated snapshot, NOT a live feed. Built as the offline fallback for the internal dashboard propgf-kernel-health.py, which was retired on 2026-09-14; the surviving notebook (propgf-kernel-public.py) has no fallback by design and queries the public mart live. This file is kept because the repo's read-only agent skill (SKILL.md) reads it over raw URLs for last-known verdicts, the funding slate and observation history. Always state its age -- derive it from max(observations[].observed_at) -- and defer to the live dashboard at https://www.oso.xyz/filecoin/propgf-kernel-health-live/view. Regenerate from filecoin.funding_model_static.requirements + filecoin.filpgf_sla_verdicts.",
  "requirements": [
   {
    "priority": "irreplaceable",
