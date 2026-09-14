@@ -1098,7 +1098,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         ents = lambda f: [E[i] for i in f["e"]]
         teams_of = lambda f: list(dict.fromkeys(e["team"] for e in ents(f)))
         watched = [f for f in KF if f["e"]]
-        n_rows = sum(len(e["s"]["v"]) for e in E)
+        n_rows = sum(sum(e["methods"].values()) for e in E)
         n_read = sum(e["n_real"] for e in E)
         teams = sorted({e["team"] for e in E})
         grants = sorted({e["grant"] for e in E if e["grant"]})
@@ -1652,6 +1652,39 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
         def _iso(v):
             return v if isinstance(v, str) else v.isoformat()
 
+        # An unmeasurable day is carried as a null value rather than dropped, so the line
+        # breaks where the source failed instead of interpolating over it.
+        def _num(v):
+            # polars hands back None, pandas hands back NaN, and `NaN is None` is False --
+            # which silently turned unmeasurable days into plottable garbage. v != v is the
+            # NaN test that needs no numpy import.
+            if v is None or v != v:
+                return None
+            return float(v)
+
+        # The series can carry MORE THAN ONE row for the same (day, team, function, metric) when a
+        # backfill lands beside a nightly reading. Those are different observations of one day, not
+        # duplicates -- docs/public-datasets.md says so to consumers, and the mart keeps both on
+        # purpose. A chart still needs exactly one point per day. Plotting both put a value AND a
+        # gap at the same x, which rendered the two `filecoin-data-portal` days we REPAIRED as
+        # holes: the recovered value was drawn, and the voided nightly beside it still counted as
+        # a missing reading.
+        #
+        # Preference order:
+        #   1. a reading with a value beats a null -- a day we recovered IS a measured day;
+        #   2. among readings with a value, `nightly` wins, because that is what the system
+        #      actually read that day and a backfill is a reconstruction of it;
+        #   3. method name breaks any remaining tie, so the page is deterministic.
+        #
+        # This never invents a reading. Where the only row is null (a source that went quiet, or a
+        # reading the age guard refused) the day stays a gap, which is the honest answer.
+        def _preferred(cands):
+            return sorted(cands, key=lambda r: (
+                _num(r["amount"]) is None,
+                _txt(r.get("method")) != "nightly",
+                _txt(r.get("method")),
+            ))[0]
+
         by_key = {}
         for r in rows:
             key = (r["team"], r["function_id"], r["metric_name"])
@@ -1659,31 +1692,29 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
 
         entries = []
         for (team, fid, metric), rs in sorted(by_key.items()):
-            rs = sorted(rs, key=lambda x: _iso(x["sample_date"]))
-            d0 = _iso(rs[0]["sample_date"])
+            by_day = {}
+            for r in rs:
+                by_day.setdefault(_iso(r["sample_date"]), []).append(r)
+            plotted = [_preferred(c) for _, c in sorted(by_day.items())]
+            d0 = _iso(plotted[0]["sample_date"])
             base = datetime.date.fromisoformat(d0)
 
-            # An unmeasurable day is carried as a null value rather than dropped, so the line
-            # breaks where the source failed instead of interpolating over it.
-            def _num(v):
-                # polars hands back None, pandas hands back NaN, and `NaN is None` is False --
-                # which silently turned unmeasurable days into plottable garbage. v != v is the
-                # NaN test that needs no numpy import.
-                if v is None or v != v:
-                    return None
-                return float(v)
-
-            offs, vals, outs, methods = [], [], [], {}
+            # Counted over EVERY row, not just the plotted ones: this drives the "N rows in the
+            # public table" label, which is a claim about the mart and has to stay true to it.
+            methods = {}
             for r in rs:
+                _m = _txt(r.get("method")) or "unknown"
+                methods[_m] = methods.get(_m, 0) + 1
+
+            offs, vals, outs = [], [], []
+            for r in plotted:
                 offs.append((datetime.date.fromisoformat(_iso(r["sample_date"])) - base).days)
                 _v = _num(r["amount"])
                 vals.append(_v)
                 # "x" -- read as no-reading everywhere, but never counted as a gap.
                 outs.append("u" if _v is not None else
                             ("x" if _iso(r["sample_date"]) in PLATFORM_OUTAGES else "i"))
-                _m = _txt(r.get("method")) or "unknown"
-                methods[_m] = methods.get(_m, 0) + 1
-            last = rs[-1]
+            last = plotted[-1]
             display = next((_txt(r.get("project_display_name")) for r in reversed(rs)
                             if _txt(r.get("project_display_name"))), "")
             entries.append({
@@ -1706,7 +1737,11 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
                 "thr": last.get("threshold_value"),
                 "thr_src": _txt(last.get("threshold_source")),
                 "methods": methods,
-                "n_real": sum(1 for v in vals if v is not None),
+                # Counted over EVERY row, like `methods`: this and `n_rows` back the page's
+                # provenance claim that any API key reproduces what is shown, and the per-kernel
+                # "N readings in the public table" line. Both are statements about the MART, so
+                # they must not shrink when same-day rows collapse to one plotted point.
+                "n_real": sum(1 for r in rs if _num(r["amount"]) is not None),
                 "s": {"d0": d0, "off": offs, "v": vals, "o": outs},
             })
 
