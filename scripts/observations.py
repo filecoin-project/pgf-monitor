@@ -485,11 +485,28 @@ def _pipeline_success_series(cutoff: datetime) -> list[dict]:
 
     A successful run exists on every day of the outage, so the age is exact, not estimated.
     """
+    # Unfiltered listing, and `updated_at`, to MATCH THE MANIFEST (PR #71). Both halves matter.
+    #
+    # `?status=success` is the query that caused this whole mess: GitHub served it a coherent but
+    # months-old page four times, most clearly on 2026-09-14 when the five newest "successful" runs
+    # came back from March 2026. A backfill running the same query inherits the same fault, and a
+    # false value written under `backfill:` does not pass the write-time age guard at all -- that
+    # guard only sits in `fpm observe`.
+    #
+    # `updated_at` is when a run finished; `created_at` is when it was queued, ~30 min earlier. The
+    # nightly measures from the former as of 2026-09-14, so a reconstruction must too, or it
+    # computes a neighbouring quantity under the right name -- the exact trap documented in
+    # docs/metric-history.md. Rows written BEFORE that date stay on the old basis; they are not
+    # rewritten, and `--date` targeting is what keeps this from reaching them.
     runs = _get(
         "https://api.github.com/repos/davidgasquez/filecoin-data-portal/actions/workflows/"
-        "pipeline.yml/runs?status=success&per_page=100"
+        "pipeline.yml/runs?per_page=100"
     )
-    dates = sorted(_parse_dt(r["created_at"]) for r in runs.get("workflow_runs", []))
+    dates = sorted(
+        _parse_dt(r["updated_at"])
+        for r in runs.get("workflow_runs", [])
+        if r.get("status") == "completed" and r.get("conclusion") == "success"
+    )
     if not dates:
         return []
     out = []
