@@ -15,8 +15,6 @@ Two coverage numbers, because both are real and they are not the same claim:
 
 Usage:
   uv run python scripts/kernel_coverage.py [--write]   # docs/kernel-coverage.md
-  uv run python scripts/kernel_coverage.py --embed     # refresh the COVERAGE literal
-                                                       # in dashboards/propgf-kernel-health.py
   uv run python scripts/kernel_coverage.py --badges    # write badges.json (README shields read it)
 """
 
@@ -216,88 +214,6 @@ def render() -> str:
     return "\n".join(lines)
 
 
-DASHBOARD = Path("dashboards/propgf-kernel-health.py")
-EMBED_START = (
-    "    # COVERAGE-EMBED-START (regenerate: uv run python scripts/kernel_coverage.py --embed)"
-)
-EMBED_END = "    # COVERAGE-EMBED-END"
-
-
-def coverage_json() -> dict:
-    """The dashboard's embedded coverage payload: every kernel function x its entries."""
-
-    kernel = load_kernel()
-    entries, _, _ = collect()
-    # lineage per (team, function_id): "oso" | "karma" | "external-pr"
-    origins: dict[tuple[str, str], str] = {}
-    for path in sorted(Path("registry").glob("*.yaml")):
-        if path.name.startswith("_"):
-            continue
-        m = load_manifest(path)
-        for fn in m.functions:
-            origins[(m.team, fn.function_id)] = fn.origin
-    functions = []
-    for e in kernel.entries:
-        payload_entries = []
-        for x in entries.get(e.id, []):
-            item = {
-                "team": x["team"],
-                "function_id": x["function_id"],
-                "metric": x["metric"],
-                "host": x["host"],
-                "state": x["state"],
-                "funded_project": x["funded_project"],
-                "origin": origins.get((x["team"], x["function_id"]), "oso"),
-            }
-            if x["repos"]:
-                item["repos"] = x["repos"]
-            if x.get("pending_draft"):
-                item["pending_draft"] = True
-            payload_entries.append(item)
-        functions.append(
-            {
-                "id": e.id,
-                "tier": e.tier,
-                "category": e.category,
-                "sub_category": e.sub_category,
-                "function": e.function,
-                "entries": payload_entries,
-            }
-        )
-    team_app_refs = {}
-    for path in sorted(Path("registry/drafts").glob("*.yaml")):
-        m, x = split_draft(path)
-        refs = x.get("app_ref")
-        if isinstance(refs, str) and refs.strip():
-            team_app_refs[m.team] = [r.strip() for r in refs.split(",") if r.strip()]
-        slates = x.get("slates")
-        if isinstance(slates, list):
-            team_app_refs.setdefault(m.team, [])
-            for s2 in slates:
-                if s2.get("app_ref"):
-                    team_app_refs[m.team].append(s2["app_ref"])
-    return {"functions": functions, "team_app_refs": team_app_refs}
-
-
-def embed() -> None:
-    import json as _json
-
-    payload = _json.dumps(coverage_json(), indent=None, sort_keys=True)
-    text = DASHBOARD.read_text()
-    start = text.index(EMBED_START)
-    end = text.index(EMBED_END)
-    new = (
-        text[:start]
-        + EMBED_START
-        + "\n    COVERAGE = _json.loads(\n        "
-        + repr(payload)
-        + "\n    )\n"
-        + text[end:]
-    )
-    DASHBOARD.write_text(new)
-    print(f"embedded coverage into {DASHBOARD} ({len(payload)} bytes)")
-
-
 BADGES_JSON = Path("badges.json")
 
 
@@ -337,16 +253,12 @@ def badges() -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help=f"write {OUT} instead of stdout")
-    ap.add_argument("--embed", action="store_true", help="refresh the dashboard COVERAGE literal")
     ap.add_argument(
         "--badges",
         action="store_true",
         help="write badges.json (shields.io reads it for the README count badges)",
     )
     args = ap.parse_args(argv)
-    if args.embed:
-        embed()
-        return 0
     if args.badges:
         badges()
         return 0

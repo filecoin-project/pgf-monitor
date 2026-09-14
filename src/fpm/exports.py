@@ -3,7 +3,7 @@
 `data/observations.csv` says what a metric READ on a day. It cannot say what the metric IS: which
 kernel function it evidences, which team and project it belongs to, which grant pays for it, or
 whether it is adopted or still a draft. All of that lived in `registry/` and, for rendering, in a
-JSON literal embedded in `dashboards/propgf-kernel-health.py` — so nobody outside this repo could
+JSON literal embedded in a dashboard notebook — so nobody outside this repo could
 rebuild the by-kernel-function view. These two exports publish it:
 
   `filpgf_kernel_functions`  the inventory from registry/_kernel.yaml, one row per kernel function,

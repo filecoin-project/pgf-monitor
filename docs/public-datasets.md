@@ -21,7 +21,7 @@ sparse: 875 rows spread over 378 distinct `sample_date`s), so it can never detec
 is a working consumer of exactly these two tables and nothing else — source in this repo at
 `dashboards/propgf-kernel-public.py`. It embeds no data and queries live, so any OSO API key
 reproduces every number on it. Read it as the worked example of this contract. Note that the
-similarly-named `propgf-kernel-health` is the *internal* committee view and reads private models;
+the internal committee view that read private models was retired on 2026-09-14;
 it is not a consumer of this contract.
 
 Every fact about a reading rides on the reading — what it is evidence for, who is paid for it, and

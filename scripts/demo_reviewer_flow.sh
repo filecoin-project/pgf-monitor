@@ -48,4 +48,4 @@ else
     echo "  query:         SELECT ... FROM filecoin.filpgf_sla_verdicts.filpgf_sla_verdicts"
 fi
 
-printf '\n\033[1;36mDone.\033[0m Dashboard: uv sync --extra dashboards && uv run marimo run dashboards/propgf-kernel-health.py\n'
+printf '\n\033[1;36mDone.\033[0m Dashboard: uv sync --extra dashboards && uv run marimo run dashboards/propgf-kernel-public.py\n'
