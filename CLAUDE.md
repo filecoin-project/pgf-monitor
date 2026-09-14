@@ -74,9 +74,9 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 - Secrets never enter the repo; live smokes read `OSO_API_KEY` from the environment.
 - **The registry is PUBLIC.** Do not put quoted agreement text, DocuSign or other contract
   identifiers, or characterisations of a recipient's paperwork into `registry/`. A **final award
-  amount** is fine to publish -- ProPGF awards are public, and `dashboards/data/kernel_fallback.json`
-  carries `committed_usd` on purpose, which the root `SKILL.md` documents as an answer to "how much
-  funding is attached". What stays out is everything AROUND the number: target ranges, a committee
+  amount** is fine to publish -- ProPGF awards are public, and `data/funding_slate.json` carries
+  `committed_usd` on purpose, which the root `SKILL.md` documents as an answer to "how much funding
+  is attached". What stays out is everything AROUND the number: target ranges, a committee
   status like Re-scope or Unresolved, and anything that reveals where a negotiation stands. That
   distinction is what the retired internal dashboard got wrong (see `dashboards/README.md`). Where a
   bar is absent, say why with `sla.unscored_reason` (an enum) and keep the reasoning in

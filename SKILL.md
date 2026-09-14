@@ -33,7 +33,9 @@ BASE=https://raw.githubusercontent.com/filecoin-project/pgf-monitor/main
 | `$BASE/registry/<team>.yaml` | one team's commitments — see "Reading a manifest" below | changes by reviewed PR |
 | `$BASE/docs/kernel-coverage.md` | auto-generated matrix: every kernel function and the metrics monitoring it, naming every team | regenerated from the registry |
 | `$BASE/badges.json` | headline counts: kernel functions, monitored metrics, teams, coverage | regenerated from the registry |
-| `$BASE/dashboards/data/kernel_fallback.json` | last published verdicts, the funding slate with `committed_usd`, and historical observations | **a dated snapshot, not live** |
+| `$BASE/data/observations.csv` | every reading: `observed_at, team, function_id, metric, observed_value, method, note` | rewritten nightly |
+| `$BASE/data/thresholds.csv` | the bar as it stood that day, same keys plus `threshold_op, threshold_value, source` | rewritten nightly |
+| `$BASE/data/funding_slate.json` | `slate`: `team_name`, `app_ref`, `committed_usd`, `functions` | changes when a batch is agreed |
 
 ## Finding the teams
 
@@ -87,23 +89,38 @@ entry report `sla.statement`, `sla.metric`, `sla.threshold`, `sla.cadence`, and 
 **Who covers kernel function Y?** Fetch `$BASE/docs/kernel-coverage.md` and find Y's heading.
 Its table lists every team, metric, source host, and whether the entry is adopted or a draft.
 
-**Is it currently green?** Fetch `$BASE/dashboards/data/kernel_fallback.json` and look in
-`verdicts` for `{team, function_id, metric, sla_outcome, observed_value, threshold_op,
-threshold_value}`. State the snapshot's age — `max(observations[].observed_at)`, since
-`verdicts` entries carry no timestamp of their own — and link the
+**Is it currently green?** Fetch `$BASE/data/observations.csv` for the newest `observed_at`
+and `$BASE/data/thresholds.csv` for the same day, then derive the outcome yourself:
+
+    observed_value empty  -> indeterminate   (no defensible number that day)
+    threshold_op empty    -> unscored        (measured, but no agreed bar)
+    otherwise             -> compare observed_value against threshold_value using threshold_op
+
+**Every `threshold_op` is empty today**, so the honest answer is "measured, not scored" for every
+metric — thresholds were withdrawn on 2026-08-20 pending executed agreements. Do not describe any
+team as passing or failing while that is true.
+
+Outcomes are DERIVED, never stored, so that a corrected bar re-judges history instead of leaving a
+frozen verdict behind. A day can carry more than one row for one commitment (a `backfill:` reading
+beside a `nightly` one); prefer the row that has a value, and `nightly` over a backfill when both
+do. Link the
 [live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view) for current status.
 
-**How much ProPGF funding is attached?** Same file, `slate` array: `team_name`,
-`committed_usd`, `functions`.
+**How much ProPGF funding is attached?** Fetch `$BASE/data/funding_slate.json`, `slate` array:
+`team_name`, `app_ref`, `committed_usd`, `functions`. Award amounts are public. What a
+negotiation was aiming at — target ranges, committee status — is not, and is not in the file.
 
 ## Honesty rules
 
 These exist because the registry is a governance artifact — overstating it misleads a
 funding decision.
 
-- `kernel_fallback.json` is a **snapshot** committed for offline dashboard use, not a live
-  feed. Always give its age — derive it from `max(observations[].observed_at)`; `verdicts`
-  entries carry no timestamp of their own — and defer to the live dashboard.
+- **Never report a pass or a fail from a stored outcome.** Compliance is derived at read time
+  from the two CSVs, deliberately. A frozen verdict outlives the bar it was judged against: this
+  skill used to serve a `verdicts` array that still called four funded teams *failing* against
+  thresholds withdrawn weeks earlier. That file is gone; do not reintroduce one.
+- Give the reading's date. `data/observations.csv` is rewritten nightly, so `max(observed_at)`
+  is the freshness of the answer — and if it is not yesterday or today, say so.
 - A threshold marked `PLACEHOLDER`, **or** any `# THRESHOLD … (placeholder, confirm with
   team)` comment above it, or a `@TODO-github-handle` maintainer, means **the team has not
   confirmed it yet**. Do not report these as commitments.
