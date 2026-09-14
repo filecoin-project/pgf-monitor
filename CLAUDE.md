@@ -175,10 +175,14 @@ encodes its agreed set) · `review-and-land` (run the pipeline, adjudicate readi
 `src/fpm/` pipeline (manifest, provision, adapters, evaluate, observe, observations, thresholds,
 detectors, synthesize, pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
 `tests/` mirrors it · `registry/` the trust anchor · `fixtures/` offline responses ·
-`dashboards/` (marimo, `uv sync --extra dashboards`): `propgf-kernel-public.py` is the PUBLIC
-surface — hosted as notebook `propgf-kernel-health-live`, built ONLY on the two
-`filecoin.filpgf_public.*` mart tables; `propgf-kernel-health.py` is the INTERNAL view (landing
-tables + `funding_model_static.*`, carries applicant identity); `propgf-kernel-mockup_v2.py` is a
-design reference, served to nobody · 
+`dashboards/` (marimo, `uv sync --extra dashboards`): **ONE notebook**,
+`propgf-kernel-public.py` — the PUBLIC surface, hosted as `propgf-kernel-health-live` and built
+ONLY on the two `filecoin.filpgf_public.*` mart tables. Its public URL needs the `/view` suffix
+(`https://www.oso.xyz/filecoin/propgf-kernel-health-live/view`); the bare path 307s to `/login`.
+Publishing is MANUAL — merging here changes nothing live. The internal view
+(`propgf-kernel-health.py`) and the design reference (`propgf-kernel-mockup_v2.py`) were RETIRED on
+2026-09-14, both here and on the platform: the internal one had been published with
+`funding_model_static.*` values rendered into an anonymously-readable page. Anything reading
+private models must not be published · 
 `docs/` guides (`public-datasets.md` is the consumer-facing contract; the grant-commitments
 appendix + per-plan design docs are gitignored, local only).

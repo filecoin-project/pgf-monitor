@@ -2,13 +2,12 @@
 
 These tests hold two things: the identity rule (a metric counts for the ONE kernel function it
 names, not for every function sharing its slot) and the derivation (docs/kernel-coverage.md,
-badges.json and the dashboard's embedded payload are exactly what the generator produces from
+badges.json is exactly what the generator produces from
 the current registry — so they cannot drift).
 """
 
 from __future__ import annotations
 
-import ast
 import json
 from pathlib import Path
 
@@ -19,14 +18,10 @@ from fpm.manifest import FunctionSpec, SlaSpec, SourceSpec
 from fpm.kernel import NON_KERNEL_ID
 from scripts.kernel_coverage import (
     BADGES_JSON,
-    DASHBOARD,
-    EMBED_END,
-    EMBED_START,
     OUT,
     badges_data,
     collect,
     counts,
-    coverage_json,
     render,
     resolve_kernel_id,
 )
@@ -74,15 +69,6 @@ def test_non_kernel_resolves_to_nothing_without_being_an_error():
 def test_every_registry_entry_resolves_to_one_kernel_id():
     _, _, unresolved = collect()
     assert unresolved == []
-
-
-def test_the_payload_is_keyed_by_kernel_id():
-    payload = coverage_json()
-    by_id = {f["id"]: f for f in payload["functions"]}
-    assert len(by_id) == len(payload["functions"])
-    ankr = {e["function_id"] for e in by_id["chain-sync-state"]["entries"] if e["team"] == "ankr"}
-    assert "chain-sync-rpc-mainnet-head-lag" in ankr
-    assert "ankr" not in {e["team"] for e in by_id["forest-full-node"]["entries"]}
 
 
 def _a_shared_slot():
@@ -144,16 +130,6 @@ def test_committed_coverage_doc_matches_the_registry():
 def test_committed_badges_match_the_registry():
     assert json.loads(BADGES_JSON.read_text()) == badges_data(), (
         "badges.json is stale — regenerate: uv run python scripts/kernel_coverage.py --badges"
-    )
-
-
-def test_embedded_dashboard_payload_matches_the_registry():
-    text = DASHBOARD.read_text()
-    body = text[text.index(EMBED_START) + len(EMBED_START) : text.index(EMBED_END)]
-    literal = body[body.index("'") : body.rindex("'") + 1]
-    assert json.loads(ast.literal_eval(literal)) == coverage_json(), (
-        "the dashboard's COVERAGE literal is stale — regenerate: "
-        "uv run python scripts/kernel_coverage.py --embed"
     )
 
 

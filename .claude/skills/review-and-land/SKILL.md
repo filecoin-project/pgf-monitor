@@ -69,8 +69,8 @@ Prerequisites:
 
 5. **Report**: query `filecoin.filpgf_sla_verdicts.filpgf_sla_verdicts` (team,
    function_id, metric, observed_value, sla_outcome, adjudicated_status) and summarize
-   breaches/indeterminates with their evidence. The dashboard
-   (`dashboards/propgf-kernel-health.py`) is the visual companion.
+   breaches/indeterminates with their evidence. The public dashboard
+   (`dashboards/propgf-kernel-public.py`) is the visual companion.
 
 ## Backfilling history
 

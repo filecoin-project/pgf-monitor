@@ -192,16 +192,13 @@ change is not done until you have checked the copies:
   embeds no data, so a registry change reaches it within a day via the mart. Confirm it rather than
   patch it: check that the mart's function count and the day's row count moved as the registry
   change implies.
-- **Do NOT reconcile `dashboards/propgf-kernel-mockup_v2.py`.** It is a design reference, served to
-  nobody, and its gzip+base64 payload is stale on purpose. That payload used to be the public page
-  and was hand-built with no generator — it kept rendering dropped `Reiers/*` drafts and two removed
-  Blockscout metrics, which is exactly why the public page was rebuilt to query live. Editing it
-  now fixes nothing an outside reader can see.
-- **`dashboards/propgf-kernel-health.py`** (the INTERNAL view) still carries an embedded payload
-  alongside its live queries. If a registry change should show there, decode and diff `(team, fid)`
-  against the registry, and remember the project/kernel `e` arrays hold **positions into
-  `entries`** — they must be rebuilt whenever an entry is removed, or every row silently shows the
-  wrong cards.
+- **There is only ONE dashboard now.** The internal view (`propgf-kernel-health.py`) and the
+  design reference (`propgf-kernel-mockup_v2.py`) were retired on 2026-09-14, in this repo and on
+  the platform. Both had carried hand-built embedded payloads that drifted from the registry — the
+  mockup kept rendering dropped `Reiers/*` drafts and two removed Blockscout metrics for weeks,
+  which is why the public page was rebuilt to query live. The internal one was worse: it had been
+  published, so `funding_model_static.*` values rendered into a page anyone could read without an
+  account. **Never publish a notebook that queries private models.**
 
 Counting rule, so the numbers can be defended: the badge counts adopted manifests in
 `registry/*.yaml`; the dashboard counts project rows, which also include draft-only teams and

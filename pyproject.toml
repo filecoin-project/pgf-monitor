@@ -16,7 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Extras for running the marimo dashboards under dashboards/ locally:
-#   uv sync --extra dashboards && uv run marimo run dashboards/propgf-kernel-health.py
+#   uv sync --extra dashboards && uv run marimo run dashboards/propgf-kernel-public.py
 dashboards = ["marimo>=0.9", "plotly>=5", "pandas>=2", "polars>=1"]
 
 [project.scripts]

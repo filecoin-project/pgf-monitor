@@ -413,9 +413,9 @@ def collection_policy():
 
 @app.cell(hide_code=True)
 def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
-    # The formatting, axis, strip and line-chart helpers are lifted VERBATIM from
-    # dashboards/propgf-kernel-mockup_v2.py so the two pages cannot drift apart
-    # visually. What changes is the ROLL-UP: the mockup rolls readings into a
+    # The formatting, axis, strip and line-chart helpers were lifted VERBATIM from the
+    # propgf-kernel-mockup_v2 design reference (retired 2026-09-14) so the two pages could not
+    # drift apart visually. What changed is the ROLL-UP: the mockup rolled readings into a
     # pass/fail SLA percentage, and no bar is in force here, so this page rolls
     # them into reading coverage instead -- the share of the periods a metric's
     # own cadence expects that actually carry a value. Same shape in the layout,
@@ -945,8 +945,8 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
     # PAGE ASSEMBLY
     # ====================================================================
     # --------------------------------------------------------------- copy deck
-    # Tier framework, program copy and the FY cycle are carried from
-    # dashboards/propgf-kernel-mockup_v2.py unchanged, except where a sentence
+    # Tier framework, program copy and the FY cycle are carried from the propgf-kernel-mockup_v2
+    # design reference (retired 2026-09-14) unchanged, except where a sentence
     # claimed something only the private registry can support.
     TIERS = [
         {"id": "irreplaceable", "name": "Irreplaceable", "v": "--k-t1",

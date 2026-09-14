@@ -187,15 +187,18 @@ verdict JSON on its own schedule, replacing the push in step 3.
 scripts/demo_reviewer_flow.sh          # offline end-to-end demo of this whole guide
 ```
 
-The dashboard (`dashboards/propgf-kernel-health.py`) renders the kernel taxonomy with
-live SLA status per function, the Batch-3 funding slate, and per-function source
-history:
+The public dashboard renders the kernel taxonomy with live SLA status per function and
+per-function source history — hosted at
+<https://www.oso.xyz/filecoin/propgf-kernel-health-live/view>, or run it locally:
 
 ```bash
 uv sync --extra dashboards
 export OSO_API_KEY=...
-uv run marimo run dashboards/propgf-kernel-health.py
+uv run marimo run dashboards/propgf-kernel-public.py
 ```
+
+The separate internal view that also showed the Batch-3 funding slate was retired on 2026-09-14.
+It had been published, which rendered private funding values into a page anyone could read.
 
 ## 4c. Adopting an `oso-sql` metric (committee only)
 

@@ -5,7 +5,7 @@ description: Answer questions about the Filecoin kernel and what each ProPGF-fun
 
 # Filecoin Kernel Monitor — read-only agent skill
 
-The [Filecoin kernel](https://www.oso.xyz/filecoin/propgf-kernel-health) is the set of
+The [Filecoin kernel](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view) is the set of
 functions the network cannot operate without. Each ProPGF-funded team declares, in a public
 manifest, which kernel functions it maintains and how to check each one. A pipeline fetches
 each source, evaluates it, and publishes the result.
@@ -91,7 +91,7 @@ Its table lists every team, metric, source host, and whether the entry is adopte
 `verdicts` for `{team, function_id, metric, sla_outcome, observed_value, threshold_op,
 threshold_value}`. State the snapshot's age — `max(observations[].observed_at)`, since
 `verdicts` entries carry no timestamp of their own — and link the
-[live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health) for current status.
+[live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view) for current status.
 
 **How much ProPGF funding is attached?** Same file, `slate` array: `team_name`,
 `committed_usd`, `functions`.

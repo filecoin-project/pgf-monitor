@@ -4,7 +4,7 @@
 
 Machine-verifiable health monitoring for the Filecoin kernel functions, from public sources.
 
-[Live dashboard →](https://www.oso.xyz/filecoin/propgf-kernel-health)
+[Live dashboard →](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view)
 
 <!-- counts read live from badges.json via shields.io; regenerate it with: uv run python scripts/kernel_coverage.py --badges
      ADOPTED = a metric in registry/, so a team is held to it today. MODELLED also counts registry/drafts/,
@@ -46,7 +46,7 @@ FUNCTION → SLA → SOURCE → READING → EVALUATION → RECOMMENDATION → VE
         (the repo: what was promised)   (the pipeline: what was measured)   (a human: the call)
 ```
 
-The [live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health) shows each kernel
+The [live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view) shows each kernel
 function's current status — green (OK), red (a recent interruption), or amber
 (indeterminate) — alongside the ProPGF funding for each team.
 
@@ -131,7 +131,7 @@ src/fpm/             the pipeline: manifest → fetch → evaluate → recommend
 data/                observations.csv + thresholds.csv, the append-only time series
                        (never hand-edited — written only through fpm.observations / fpm.thresholds)
 scripts/             validate_pr (the PR gate), validate_draft / promote_draft, offline demos
-dashboards/          propgf-kernel-health.py (marimo; uv sync --extra dashboards)
+dashboards/          propgf-kernel-public.py (marimo; uv sync --extra dashboards)
 docs/                guides (project · reviewer · governance · coverage · metric history)
 .github/workflows/   static gate on every PR + label-gated live dry-run + tests
 ```

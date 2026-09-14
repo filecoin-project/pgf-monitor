@@ -1,54 +1,51 @@
 # Dashboards
 
-Marimo dashboards over the ProPGF monitoring system. Anyone can run them locally; each
-has a hosted copy on oso.xyz in the `filecoin` org. Two are load-bearing, and they are not
-interchangeable:
+**One notebook.** `propgf-kernel-public.py` is the ProPGF monitoring dashboard, hosted in the
+`filecoin` org on oso.xyz as `propgf-kernel-health-live`:
 
-| File | Hosted notebook | Reads | Audience |
-|---|---|---|---|
-| `propgf-kernel-public.py` | [`propgf-kernel-health-live`](https://www.oso.xyz/filecoin/propgf-kernel-health-live) | the two `filecoin.filpgf_public.*` mart tables, nothing else | **public** — the ProPGF committee and anyone outside |
-| `propgf-kernel-health.py` | `propgf-kernel-health` | landing tables + `funding_model_static.*` | **internal** — carries adjudication state and applicant identity |
+<https://www.oso.xyz/filecoin/propgf-kernel-health-live/view>
 
-`propgf-kernel-public.py` is the one an outside consumer sees. It queries live and embeds
-no data, so any OSO API key reproduces every number on it. Do not point a public reader at
-`propgf-kernel-health`.
+The `/view` suffix matters — that URL is readable without an account, while the bare
+`/filecoin/propgf-kernel-health-live` is the editor path and redirects to `/login`.
 
-`propgf-kernel-mockup_v2.py` is kept as the **design reference** the public page was built
-from — it is not served to anyone and its embedded payload is stale by design. Nothing
-should be reconciled against it.
+It reads the two `filecoin.filpgf_public.*` mart tables and nothing else, queries live and embeds
+no data, so any OSO API key reproduces every number on it.
 
-## `propgf-kernel-health.py`
+**Publishing is manual.** Merging a change here does not update the hosted page; someone has to
+republish it. `publishedNotebookByName{sourceHash}` is exactly `sha256sum` of this file, so that is
+how you check whether the hosted copy matches `main`.
 
-Two views in one notebook:
+## Two notebooks were retired on 2026-09-14
 
-1. **The Kernel** — all 29 kernel functions as a board of cards, grouped in tier bands
-   (irreplaceable → essential). Each function's dot shows one of three signals: green
-   (OK), red (a recent interruption), or amber (indeterminate). Click any function to open
-   a modal with the metrics behind it — every team × metric, its current reading and
-   status, an origin badge (Karma / External PR) where relevant, and a line chart of the
-   metric's observed history (or a "latest value" panel for snapshot-only metrics).
-2. **ProPGF Funding** — the committee's working slate: who's funded, at what number, for
-   which kernel functions. KPI tiles (projects, working total, kernel coverage), a
-   working-allocation bar by committee status (Advance / Re-scope / Unresolved), and a
-   slate table. Each project has a **reporting** health strip; click a project to see all
-   the metrics it owns and which reporting requirements aren't OK.
+`propgf-kernel-health.py` (the internal committee view: landing tables + `funding_model_static.*`,
+adjudication state, the Batch-3 funding slate) and `propgf-kernel-mockup_v2.py` (the design
+reference the public page was built from) are gone, from this repo and from the platform.
+
+The mockup was already inert — its embedded payload was stale by design and kept rendering dropped
+`Reiers/*` drafts and two removed Blockscout metrics, which is why the public page was rebuilt to
+query live in the first place.
+
+The internal one was a problem. It had been published, and a published notebook renders whatever it
+queried into a static page: its `funding_model_static.*` values were reachable at
+`/filecoin/propgf-kernel-health/view` with no account, no cookie and no API key. **A notebook that
+reads private models must never be published.** If the committee needs that view again, run it
+locally with `marimo run` and leave it unpublished.
 
 ## `propgf-kernel-public.py`
 
-The same page as `propgf-kernel-mockup_v2.py` -- section for section, component for
-component, on the same stylesheet -- built entirely from the two public mart tables
+Built entirely from the two public mart tables
 (`filecoin.filpgf_public.kernel_timeseries_metrics_by_project` and `kernel_functions`),
 so any OSO API key reproduces every number on it. Nav, hero tier ladder, objective,
 timeline, tier cards, a two-tab inventory (by project / by function) with expandable rows,
 program coverage tiles, method and glossary.
 
-Three deliberate departures from the mockup, each because the public tables cannot
-support the claim:
+Three deliberate departures from the design reference it was built from, each because the public
+tables cannot support the claim:
 
-- **No money.** The mockup's committed-amount tiles and per-project USD bars are gone; the
+- **No money.** The design reference's committed-amount tiles and per-project USD bars are gone; the
   bar now tracks reading coverage. What a grant is worth belongs on no public page.
 - **Coverage, not SLA.** Every threshold was withdrawn on 2026-08-20, so the slot the
-  mockup fills with "SLA met - 90d" carries reading coverage instead: the share of the
+  reference filled with "SLA met - 90d" carries reading coverage instead: the share of the
   periods a metric's own cadence expects that carry a value. Gaps are drawn amber and
   described as ours, never as a breach.
 - **No source block.** The mart carries how each reading was taken (`method`) but not the
@@ -83,9 +80,9 @@ amber `.pill.gap`.
 ```bash
 # from the repo root
 uv sync --extra dashboards
-uv run marimo run dashboards/propgf-kernel-health.py     # read-only app view
+uv run marimo run dashboards/propgf-kernel-public.py     # read-only app view
 # or, to edit:
-uv run marimo edit dashboards/propgf-kernel-health.py
+uv run marimo edit dashboards/propgf-kernel-public.py
 ```
 
 Set `OSO_API_KEY` in your environment (an [Open Source Observer](https://www.oso.xyz) API key)
@@ -97,23 +94,25 @@ export OSO_API_KEY=...    # or put it in a .env the shell loads
 
 ## Data sources
 
-- **Kernel taxonomy:** `filecoin.funding_model_static.requirements` (OSO warehouse).
-- **Funding slate:** `filecoin.funding_model_static.decisions` (`csnap-` committee
-  snapshot events) + `applicant_identity` + `application_requirements`.
-- **Registry coverage** (which team monitors which function, and each metric's `origin`):
-  embedded in the notebook — regenerate after registry changes with
-  `uv run python scripts/kernel_coverage.py --embed`.
-- **SLA verdicts:** `filecoin.filpgf_sla_verdicts` — produced by `fpm review` + `fpm land`.
-- **Metric history** (the modal line charts): `filecoin.filpgf_sla_observations` — the
-  backfilled + accruing observation time series, maintained by `scripts/observations.py`.
-- **Thresholds** (the bar a reading is judged against, as it stood that day):
-  `filecoin.filpgf_sla_thresholds` — maintained alongside observations by
-  `scripts/observations.py`; the dashboard LEFT JOINs it against observations and derives
-  pass/fail/unscored/indeterminate at render time.
+Two tables, and deliberately no others:
 
-## Offline fallback
+- `filecoin.filpgf_public.kernel_timeseries_metrics_by_project` — every reading, with the bar as
+  it stood that day.
+- `filecoin.filpgf_public.kernel_functions` — the kernel inventory, including the functions
+  nothing measures yet, so coverage has an honest denominator.
 
-Without an `OSO_API_KEY` (or if the warehouse is unreachable), the notebook still renders
-from a bundled snapshot in `data/kernel_fallback.json` (kernel taxonomy + latest SLA
-verdicts + observation history + the funding slate). The published copy on oso.xyz always
-renders against live warehouse data.
+Both are public-read, which is what lets the page claim any OSO API key reproduces every number on
+it. `docs/public-datasets.md` is the contract for those tables. Nothing here reads
+`funding_model_static.*`, and nothing here should: that is how the retired internal view ended up
+publishing private funding values.
+
+## No offline fallback, on purpose
+
+The page has no bundled snapshot. Without a reachable warehouse the query fails and the cell
+errors, which is the intended behaviour — a dashboard that silently falls back to stale embedded
+data is worse than one that visibly cannot answer. Every number is either live or absent.
+
+One row per commitment-day is chosen at render (`_preferred()`): a reading with a value beats a
+null, and among readings with a value the `nightly` one wins over a `backfill:` reconstruction. The
+mart applies the same null-versus-value rule one layer earlier, so this is belt-and-braces for the
+case the mart deliberately leaves alone — two rows that BOTH carry values.
