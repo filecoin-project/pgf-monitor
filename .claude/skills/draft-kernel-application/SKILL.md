@@ -1,6 +1,6 @@
 ---
 name: draft-kernel-application
-description: Use when preparing a ProPGF application for a team ALREADY performing a kernel function without funding — Lily, FilOz's non-Curio work, proving, libp2p, venus and the other unfunded incumbents. Names the kernel function exactly as the schema has it, reuses metrics where a draft exists, and RESEARCHES AND PROPOSES measurable ones where none do. Produces the field-by-field Karma answers plus reviewer notes. Triggers on "draft an application for <team>", "prepare an application for Lily", "propose metrics for <function>", "who is doing kernel work without funding", "scope extension", "unfunded kernel work".
+description: Use when preparing a ProPGF KERNEL application for a team ALREADY performing a kernel function without funding — Lily, FilOz's non-Curio work, proving, libp2p, venus and the other unfunded incumbents. Names the kernel function exactly as the schema has it, reuses metrics where a draft exists, and researches and proposes measurable ones where none do. Kernel track only: non-kernel applications (Coordination, RFP) use `draft-application` instead. Triggers on "draft a kernel application for <team>", "prepare an application for Lily", "propose metrics for <function>", "who is doing kernel work without funding", "scope extension", "unfunded kernel work".
 ---
 
 # Draft an application for work already being done
@@ -13,6 +13,26 @@ repo, so the application is largely a matter of surfacing it.
 The deliverable is **the answers, field by field, in the Karma form's own labels and order** —
 text a team can paste into `app.filpgf.io` — preceded by reviewer notes flagging every judgment
 call. Not a memo, not a pitch.
+
+## Kernel track only — check this first
+
+This skill drafts a **kernel** application: the work maintains a function catalogued in
+`registry/_kernel.yaml`, and the application will carry §3 monitored commitments if it lands.
+
+ProPGF funds other things too. A Coordination or RFP application — tooling, research, events,
+program support — is a **non-kernel** application, and almost everything below does not apply to
+it: no kernel function to name, no §3 monitored commitments, no verification endpoints for a
+pipeline to read. Non-kernel grants get **zero** §3 entries; their asks go in requested additions.
+Use the general `draft-application` skill for those.
+
+**The test is whether a real `_kernel.yaml` slot fits.** If none does, that is the format telling
+you the work is outside the kernel — do not borrow an unrelated slot to force it in. Say the work
+is non-kernel and switch skills. Getting this wrong in the applicant's favour is worse than
+turning them away: a non-kernel team pushed into the kernel track acquires monitored commitments
+it cannot meet and a slot that misattributes someone else's function.
+
+(OSO's own H2 2026 mock is the worked example of the other case: real ProPGF application,
+deliberately Category = Coordination, no kernel claim.)
 
 **No clone required.** Every path is a public raw URL:
 
@@ -68,12 +88,18 @@ Copy its moves:
 - **Two fields it proposes the form should have** — see the next section. Carry them into every
   draft.
 
-## Always include the two proposed fields
+## Always include the two proposed fields — in a KERNEL application
 
-Every application drafted with this skill carries **`1.7 Kernel function(s) this work maintains`**
-and **`3.4 Public verification endpoints`**, each marked `PROPOSED — not in the current form`, with
-a short reviewer note arguing why it should exist. They are not optional and not a flourish; they
-are the program's standing proposal, and each application is the evidence for it.
+Every **kernel** application drafted with this skill carries
+**`1.7 Kernel function(s) this work maintains`** and **`3.4 Public verification endpoints`**, each
+marked `PROPOSED — not in the current form`, with a short reviewer note arguing why it should
+exist. In a kernel application they are not optional and not a flourish: they are the program's
+standing proposal, and each application is the evidence for it.
+
+**Neither belongs in a non-kernel application.** 1.7 names a kernel function, and a Coordination
+or RFP applicant maintains none. 3.4 exists so a monitoring pipeline can read the metrics in §3,
+and non-kernel grants have no §3. Adding either to a non-kernel draft would invent a commitment
+nobody asked for.
 
 **Mark them clearly.** Neither field exists in the live Karma form. An unmarked extra field looks
 like the drafter misread the form; a marked one reads as a deliberate proposal. Set them apart

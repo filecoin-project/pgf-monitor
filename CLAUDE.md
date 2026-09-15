@@ -25,9 +25,10 @@ scripts/demo_project_flow.sh / scripts/demo_reviewer_flow.sh        # offline en
 ```
 
 Skills (if your harness loads `.claude/skills/`), in program order:
-`draft-kernel-application` (an application for a team ALREADY doing a kernel function unpaid —
-finds the unfunded incumbents, then drafts the Karma answers; public raw URLs, no clone) ·
-`draft-application`
+`draft-kernel-application` (a KERNEL application for a team ALREADY doing a kernel function
+unpaid — names the function from `_kernel.yaml`, proposes metrics where none exist, and carries
+the two proposed form fields; kernel track only) · `draft-application` (any track, incl.
+non-kernel Coordination/RFP)
 (Karma form, pre-award) · `reconcile-metrics` (decide what a team is measured on; keep agreement
 §3, registry, facts and dashboard in agreement) · `author-manifest` (a team encodes its agreed
 set) · `review-and-land` (run the pipeline, adjudicate readings, land verdicts).
