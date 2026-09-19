@@ -63,9 +63,10 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"::error::{day} was truncated: {len(skipped)} commitment(s) across {len(teams)} "
             f"team(s) were not attempted before the run hit its deadline ({', '.join(teams)}). "
-            f"{carried} of {recorded} readings carry a value. The readings that DID land are "
-            f"committed and published; this is the alert that the night ran short, not a reason "
-            f"to rerun blindly — check what made the sources slow first",
+            f"{carried} of {recorded} readings carry a value and are on disk. This is the alert "
+            f"that the night ran short, not a reason to rerun blindly — check what made the "
+            f"sources slow first, and check the steps above this one actually committed and "
+            f"republished, since they run on always() and can have failed independently",
             file=sys.stderr,
         )
         return 1

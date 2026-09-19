@@ -256,12 +256,20 @@ def run_observe_cli(
         # Persist THIS manifest before starting the next one. Until 2026-09-18 the whole run was
         # appended once at the end, so a process killed mid-loop lost every reading it had taken
         # -- 20 of them that night. Both stores are merge-on-key read-modify-writes, so appending
-        # 13 times is idempotent and costs one extra file rewrite per manifest. Thresholds land in
-        # the same breath because the dashboard joins the two on (day, team, function, metric);
-        # writing one without the other would leave a reading with no bar to be judged against.
+        # 13 times is idempotent and costs one extra file rewrite per manifest.
+        #
+        # THRESHOLDS FIRST, READINGS LAST, and the order is load-bearing for the same reason it
+        # is on the republish step. These are two separate file writes, so a process killed
+        # between them leaves the pair inconsistent; what we get to choose is which direction.
+        # A threshold with no reading is a state the system already represents -- thresholds_for
+        # emits a row for every function, including ones that produced no value, precisely so an
+        # absence is recorded. A reading with no bar is not: the dashboard joins the two on
+        # (day, team, function, metric) to derive compliance at render, so a reading that arrives
+        # first is a reading nothing can judge. Writing the promise before the measurement makes
+        # the only reachable half-state the harmless one.
         if not dry_run:
-            append_observations(got, Path(csv_path), declared=declared_triples(registry_dir))
             append_thresholds(team_thresholds, Path(thresholds_csv))
+            append_observations(got, Path(csv_path), declared=declared_triples(registry_dir))
 
     totals = Counter(o.outcome for o in observations)
     _say(

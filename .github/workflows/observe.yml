@@ -90,12 +90,21 @@ jobs:
           GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
         run: |
           set -euo pipefail
-          # 45, under the job's own 60-minute cap. The cap is a SIGKILL and lands wherever it
+          # 40, under the job's own 60-minute cap. The cap is a SIGKILL and lands wherever it
           # lands; this stops the loop at a metric boundary with everything so far already on
           # disk, so the commit, both republishes and the collection assert all still run. On
           # 2026-09-18 the cap fired instead and took 20 collected readings with it.
+          #
+          # The arithmetic, because the deadline is a SOFT bound and the margin is the point.
+          # It is checked BEFORE each metric, so the run can overshoot by one whole metric --
+          # ~320s at the OSO poll ceiling (30 attempts x 10s). Worst case measurement therefore
+          # ends at 40m + 5m20s = 45m20s after the timer starts, and the timer starts after
+          # checkout and `uv sync` (~2m). That leaves ~12m under the cap for the commit, both
+          # republishes and the assert. 45 would leave ~7m, which is thinner than it looks for
+          # two full-table uploads. A normal night measures in 25m, so 40 still only truncates
+          # on a night already 1.6x slower than usual.
           uv run fpm observe \
-            --deadline-minutes 45 \
+            --deadline-minutes 40 \
             --live-oso --oso-org "${{ vars.OSO_ORG_ID }}" \
             ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} \
             ${{ inputs.dry_run && '--dry-run' || '' }} \

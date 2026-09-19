@@ -223,3 +223,39 @@ def test_unattempted_metrics_are_kept_out_of_the_broken_source_diagnostic(tmp_pa
     out = _cli(tmp_path, "chainsafe", "--deadline-minutes", "0").stdout
     assert "TRUNCATED" in out
     assert "no value from" not in out
+
+
+def test_thresholds_are_written_before_the_readings_they_judge(tmp_path, monkeypatch):
+    """Order is load-bearing, for the same reason it is on the republish step.
+
+    The two appends are separate file writes, so a process killed between them leaves the pair
+    inconsistent. Which direction that inconsistency points is a choice, and only one is benign:
+    a threshold with no reading is a state the system already represents (thresholds_for emits a
+    row for every function, including ones that produced no value), while a reading with no bar
+    is not -- the dashboard joins the two to derive compliance at render.
+    """
+    import fpm.observations as _obs
+    import fpm.thresholds as _thr
+    from fpm.cli import run_observe_cli
+
+    order = []
+    real_obs, real_thr = _obs.append_observations, _thr.append_thresholds
+    monkeypatch.setattr(
+        _obs, "append_observations", lambda o, p, **k: (order.append("obs"), real_obs(o, p, **k))[1]
+    )
+    monkeypatch.setattr(
+        _thr, "append_thresholds", lambda t, p: (order.append("thr"), real_thr(t, p))[1]
+    )
+    run_observe_cli(
+        teams=["chainsafe"],
+        registry_dir="tests/fixtures",
+        fixtures="fixtures/responses",
+        as_of=datetime(2026, 8, 14, tzinfo=timezone.utc),
+        method="nightly",
+        csv_path=str(tmp_path / "observations.csv"),
+        live_oso=False,
+        oso_org="",
+        dry_run=False,
+        thresholds_csv=str(tmp_path / "thresholds.csv"),
+    )
+    assert order == ["thr", "obs"]
