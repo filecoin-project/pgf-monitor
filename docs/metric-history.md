@@ -242,7 +242,26 @@ stating plainly, because they affect how the published series should be read:
 
 - **A missed day is a permanent gap.** There is nothing to backfill from. This is why the
   2026-08-22/23 outage left permanent nulls for most commitments and recovered only the few whose
-  sources keep their own history.
+  sources keep their own history — and why 2026-09-18 went the same way: an OSO-side stall cost
+  the whole night, and 6 of the 41 adopted commitments were recoverable. The other 35 are gauges.
+
+  The 2026-09-18 recovery is a clean worked example of the rule this document turns on. Six
+  strategies were run against that date and produced nine rows; three were dropped before
+  writing because their `(team, function_id, metric)` belongs to a **draft** entry rather than
+  an adopted one (`filoz/evm-eam-actor-maintenance`,
+  `filoz/lotus-consensus-client-release-cadence`, `libp2p-networking/libp2p-release-cadence`).
+  The mart joins `state = 'adopted'`, the nightly never measured them, so those rows would have
+  recovered nothing and joined nothing — the eleven invisible series described above, growing by
+  three. Two further strategies (`ages`, `statuspage`) produced no row for the date at all.
+  Six written, and each checked both ways before it was: the three rolling averages reproduce the
+  adjacent nightlies to ~1e-5, and the one `derive: age_*` metric was put through
+  `age_growth_violation` against both the day before and the day after, because a backfill writes
+  through `fpm.observations` and never passes the write-time guard.
+
+  **Recovery and outage exclusion are independent, and they compose.** A recovered value outranks
+  the `"x"` outcome in the dashboard's `roll()`, so these six count as read on 2026-09-18 while
+  the other 35 rely on that date's presence in `PLATFORM_OUTAGES`. Neither mechanism substitutes
+  for the other: recovery restores facts, exclusion stops a team being charged for our failure.
 - **A single sample stands for a whole day.** The nightly run takes one reading at roughly
   05:30 UTC. For a gauge, that is a sample, not a summary: an endpoint down for six hours in the
   afternoon reads as healthy, and one down for ninety seconds at 05:30 reads as broken. Read a run

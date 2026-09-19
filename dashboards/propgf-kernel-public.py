@@ -407,7 +407,15 @@ def collection_policy():
     # against a team. Dated explicitly because the public mart carries no error column -- only
     # `method` -- so there is nothing in the data to pattern-match, and a list you have to edit
     # by hand cannot quietly swallow a source that really did go dark.
-    PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23"}
+    #
+    # 2026-09-18 is the second such night and a different fault with the same consequence: an
+    # OSO-side stall drove every ingestion poll to its 30x10s ceiling, the nightly job reached
+    # its 60-minute cap four manifests in and was cancelled, and not one of the 41 commitments
+    # recorded a value. OSO recovered unaided -- the 19th read 41 of 41 in 25 minutes. Eight of
+    # those commitments were recovered from source-side history (see docs/metric-history.md);
+    # a recovered value outranks "x" in roll() below, so those eight count as read and only the
+    # 33 point-in-time ones rely on this exclusion.
+    PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23", "2026-09-18"}
     return COVERAGE_FROM, PLATFORM_OUTAGES
 
 
