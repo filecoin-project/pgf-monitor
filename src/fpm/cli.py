@@ -53,6 +53,32 @@ def manifest_paths(registry_dir: str, teams: list[str]) -> list[Path]:
     return sorted(p for p in Path(registry_dir).glob("*.yaml") if not p.name.startswith("_"))
 
 
+def order_by_cost(paths: list[Path]) -> list[Path]:
+    """Cheapest manifest first, so a night that runs short collects as many commitments as it can.
+
+    Function count is the cost proxy. A stored duration table would be more accurate and would
+    also be one more thing that can go stale; the count tracked the real times closely enough on
+    2026-09-17 (1 function/35s, 2/68s, 5/170s) to decide an ordering. Ties break by name so two
+    nights' logs are comparable line for line.
+
+    The bias this creates is deliberate but worth naming: slow manifests are disproportionately
+    the ones whose ingestion is struggling, so a truncated night preferentially collects the
+    healthy ones. That is why every unattempted function still gets a row (`observe.unattempted`)
+    -- the skew is visible in the record instead of looking like a quiet night.
+    """
+    from fpm.manifest import load_manifest
+
+    def cost(path: Path) -> tuple[int, str]:
+        try:
+            return (len(load_manifest(path).functions), path.name)
+        except Exception:
+            # Unreadable manifests sort first: they fail in milliseconds and the failure is
+            # worth surfacing early rather than after an hour of polling.
+            return (0, path.name)
+
+    return sorted(paths, key=cost)
+
+
 def _host_map(paths: list[Path]) -> dict[tuple[str, str], str]:
     """(team, function_id) -> source host, for grouping failures by where they came from."""
     from urllib.parse import urlparse
@@ -82,6 +108,7 @@ def run_observe_cli(
     dry_run: bool,
     reprovision: bool = False,
     thresholds_csv: str = "data/thresholds.csv",
+    deadline_minutes: float | None = None,
 ) -> int:
     """Measure every function in every named manifest and append the readings to the CSV.
 
@@ -95,7 +122,7 @@ def run_observe_cli(
     from fpm.governance.allowlist import load_allowlist, load_sql_allowlist
     from fpm.guards import capture_dir as guard_capture_dir
     from fpm.observations import append_observations, declared_triples
-    from fpm.observe import observe, thresholds_for
+    from fpm.observe import TRUNCATED_NOTE, observe, thresholds_for
     from fpm.thresholds import append_thresholds
 
     # A live run takes tens of minutes (47 metrics, each an OSO ingestion run polled to terminal).
@@ -120,7 +147,12 @@ def run_observe_cli(
         allowlist = load_allowlist(Path(registry_dir) / "_allowlist.txt")
         sql_allowlist = load_sql_allowlist(Path(registry_dir) / "_sql_allowlist.txt")
 
+    # Cheapest first, so a night that runs short still collects as many commitments as it can.
+    # Only when a deadline is in force: without one the run is going to reach every manifest
+    # anyway, and alphabetical order keeps the log comparable with every night before this one.
     paths = manifest_paths(registry_dir, teams)
+    if deadline_minutes is not None:
+        paths = order_by_cost(paths)
     if reprovision and oso_client is not None:
         # Rotating a credential does NOT change the config shape: `config_shape_fingerprint`
         # strips secret values, and OSO's stored config holds only a marker, so there is nothing
@@ -163,6 +195,17 @@ def run_observe_cli(
     started = time.monotonic()
     _say(f"observing {len(paths)} manifests at {as_of.date().isoformat()}")
 
+    # The wall-clock budget, as a predicate `observe` checks before each metric. A budget rather
+    # than a job timeout because the runner's timeout is a SIGKILL: on 2026-09-18 it landed
+    # mid-loop and took 20 already-collected readings with it. Stopping ourselves means the
+    # remaining steps -- commit, republish, the collection assert -- still run.
+    deadline = None if deadline_minutes is None else started + deadline_minutes * 60
+    if deadline is not None:
+        _say(f"deadline: {deadline_minutes:.0f}m; cheapest manifests first")
+
+    def within_deadline() -> bool:
+        return deadline is None or time.monotonic() < deadline
+
     observations, failed = [], []
     threshold_records: list = []
     for index, path in enumerate(paths, start=1):
@@ -191,6 +234,7 @@ def run_observe_cli(
                 on_observation=progress,
                 sql_allowlist=sql_allowlist,
                 previous=previous,
+                should_continue=within_deadline,
             )
         except Exception as exc:
             failed.append(path.stem)
@@ -206,7 +250,26 @@ def run_observe_cli(
         observations.extend(got)
         # Recorded from the manifest that was just measured, so the two tables always carry the
         # same (day, team, function, metric) keys and the render-time join cannot miss.
-        threshold_records.extend(thresholds_for(path, as_of))
+        team_thresholds = thresholds_for(path, as_of)
+        threshold_records.extend(team_thresholds)
+
+        # Persist THIS manifest before starting the next one. Until 2026-09-18 the whole run was
+        # appended once at the end, so a process killed mid-loop lost every reading it had taken
+        # -- 20 of them that night. Both stores are merge-on-key read-modify-writes, so appending
+        # 13 times is idempotent and costs one extra file rewrite per manifest.
+        #
+        # THRESHOLDS FIRST, READINGS LAST, and the order is load-bearing for the same reason it
+        # is on the republish step. These are two separate file writes, so a process killed
+        # between them leaves the pair inconsistent; what we get to choose is which direction.
+        # A threshold with no reading is a state the system already represents -- thresholds_for
+        # emits a row for every function, including ones that produced no value, precisely so an
+        # absence is recorded. A reading with no bar is not: the dashboard joins the two on
+        # (day, team, function, metric) to derive compliance at render, so a reading that arrives
+        # first is a reading nothing can judge. Writing the promise before the measurement makes
+        # the only reachable half-state the harmless one.
+        if not dry_run:
+            append_thresholds(team_thresholds, Path(thresholds_csv))
+            append_observations(got, Path(csv_path), declared=declared_triples(registry_dir))
 
     totals = Counter(o.outcome for o in observations)
     _say(
@@ -217,7 +280,13 @@ def run_observe_cli(
     )
     # A metric with no value is not a neutral gap: it is a source that has stopped answering, and
     # on 2026-07-15 a third of the registry was already in this state without anyone noticing.
-    blank = [o for o in observations if o.outcome == "indeterminate"]
+    # Unattempted metrics are excluded deliberately. This block groups blanks by host and hints
+    # at a credential, a rate limit or an outage; a metric the run never asked is none of those,
+    # and listing it here would turn a short night into a false report of 41 broken endpoints.
+    # The truncation summary below counts them instead.
+    blank = [
+        o for o in observations if o.outcome == "indeterminate" and TRUNCATED_NOTE not in o.note
+    ]
     if blank:
         # Grouped by host first, because the shape of the failure names its cause. Blanks spread
         # across many hosts are that many broken sources; blanks concentrated on ONE host are one
@@ -249,17 +318,24 @@ def run_observe_cli(
         for o in refused:
             _say(f"  {o.team}/{o.function_id}\t{o.metric}\t{o.note[:90]}")
 
+    # A truncated night is a different event from a quiet one, and on 2026-09-18 nothing said so:
+    # the run was cancelled, the assert step was skipped, and the gap was noticed a day later by
+    # a person. Name it in the log and in the step summary.
+    truncated = [o for o in observations if TRUNCATED_NOTE in o.note]
+    if truncated:
+        teams = sorted({o.team for o in truncated})
+        _say(
+            f"\nTRUNCATED at the {deadline_minutes:.0f}m deadline: "
+            f"{len(truncated)} commitment(s) across {len(teams)} team(s) were not attempted "
+            f"({', '.join(teams)}). They are recorded as such, not left as a hole."
+        )
+
     if dry_run:
         _say("\ndry run: nothing written")
     elif observations:
-        # Validate against the registry this run actually read, not whatever sits under the
-        # working directory -- a fixture run must be judged by its own fixtures.
-        rows = append_observations(
-            observations, Path(csv_path), declared=declared_triples(registry_dir)
-        )
-        _say(f"\n{csv_path}: {len(rows)} rows")
-        trows = append_thresholds(threshold_records, Path(thresholds_csv))
-        _say(f"{thresholds_csv}: {len(trows)} rows")
+        # Each manifest was already persisted as it finished; this reports the totals.
+        _say(f"\n{csv_path}: {len(observations)} rows this run")
+        _say(f"{thresholds_csv}: {len(threshold_records)} rows this run")
 
     if failed:
         print(f"manifests that failed to run: {', '.join(failed)}", file=sys.stderr, flush=True)
@@ -324,6 +400,14 @@ def main(argv: list[str] | None = None) -> int:
         help="drop and rebuild every OSO dataset first — required after rotating a source "
         "credential, since a new secret does not change the config shape",
     )
+    obs.add_argument(
+        "--deadline-minutes",
+        type=float,
+        default=None,
+        help="stop measuring after this many minutes and record the rest as unattempted, "
+        "instead of letting the runner's own timeout kill the process mid-loop and lose "
+        "everything collected so far. Also switches the run to cheapest-manifest-first.",
+    )
 
     report = sub.add_parser("report", help="draft a manifest entry from intent + a source link")
     report.add_argument("team")
@@ -370,6 +454,7 @@ def main(argv: list[str] | None = None) -> int:
             oso_org=args.oso_org,
             dry_run=args.dry_run,
             reprovision=args.reprovision,
+            deadline_minutes=args.deadline_minutes,
         )
 
     if args.command == "report":
