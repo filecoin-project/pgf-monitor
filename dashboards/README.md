@@ -63,13 +63,37 @@ Both rules live in the `collection_policy` cell, are stated on the page, and wer
   denominator on it charged each of them for the month before the instrument existed. It
   is a floor, not an override: a metric first collected later still starts at its own
   first reading.
-- **`PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23"}`** — the two nights OSO's run-group
-  change made `run { id }` a 400 and every fetch for all twelve teams returned nothing.
-  Those periods leave the denominator outright rather than counting as gaps. Dated by hand
-  because the public mart has no error column — only `method` — so there is nothing to
-  pattern-match on, and a list you must edit by hand cannot quietly swallow a source that
+- **`PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23", "2026-09-18"}`** — nights our own
+  platform, not any source, returned nothing. The first two are the run-group change that
+  made `run { id }` a 400 for all twelve teams. **2026-09-18** is a different fault with the
+  same consequence: an OSO-side stall drove every ingestion poll to its 30×10s ceiling, the
+  nightly job hit its 60-minute cap four manifests in and was cancelled, and not one of the
+  41 commitments recorded a value. OSO recovered unaided — the 19th read 41 of 41 in 25
+  minutes. Those periods leave the denominator outright rather than counting as gaps. Dated
+  by hand because the public mart has no error column — only `method` — so there is nothing
+  to pattern-match on, and a list you must edit by hand cannot quietly swallow a source that
   really did go dark. A weekly or monthly bucket only drops if the outage cost the *whole*
   period.
+
+  Adding a date here is **three edits**: this list, the `collection_policy` cell, and the
+  `method` section of `docs/public-datasets.md`, which is the promise outside consumers
+  build their own denominators on. `tests/test_outage_policy.py` fails when they disagree.
+  A day excluded here but absent from the contract protects a team on our page only.
+
+  Exclusion and recovery are independent, but **a recovery does not buy back coverage** —
+  worth stating because the "a reading outranks `x`" rule in `roll()` suggests it might.
+  For a **daily** metric the key filter drops a `PLATFORM_OUTAGES` date unconditionally, so
+  having a value does not put the day back in the denominator. For a **weekly or monthly**
+  one the bucket holds days the outage never touched and was already `"u"` without the
+  recovery. The exclusion is what protects the percentage in both cases. Recovered rows earn
+  their place in the *series*, not the denominator: an outside consumer computing their own
+  number gets a real value for that date instead of a hole. Six of the 41 were recovered for
+  2026-09-18, two for 2026-08-22. See `docs/metric-history.md`.
+
+  And the exclusion has a real limit, since it is a hand-written list of dates: a source that
+  genuinely went dark on an excluded date is invisible to coverage too. Ranking `"x"` below
+  both other outcomes stops that *within* a weekly or monthly bucket, but nothing recovers a
+  daily one. Keep the list to nights our own platform demonstrably failed for everyone.
 
 The stylesheet is character-for-character the mockup's, plus three rules: a blue strip bar
 for "read, unscored", a slate one for a period our own platform lost (`--k-skip`), and an

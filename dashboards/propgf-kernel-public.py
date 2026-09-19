@@ -407,7 +407,23 @@ def collection_policy():
     # against a team. Dated explicitly because the public mart carries no error column -- only
     # `method` -- so there is nothing in the data to pattern-match, and a list you have to edit
     # by hand cannot quietly swallow a source that really did go dark.
-    PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23"}
+    #
+    # 2026-09-18 is the second such night and a different fault with the same consequence: an
+    # OSO-side stall drove every ingestion poll to its 30x10s ceiling, the nightly job reached
+    # its 60-minute cap four manifests in and was cancelled, and not one of the 41 commitments
+    # recorded a value. OSO recovered unaided -- the 19th read 41 of 41 in 25 minutes. Six of
+    # those commitments were recovered from source-side history (see docs/metric-history.md);
+    # the other 35 are point-in-time and rely entirely on this exclusion.
+    #
+    # A recovery does NOT buy back coverage, and it is worth being precise about why, because
+    # the "a reading outranks x" rule in roll() suggests otherwise. For a DAILY metric the key
+    # filter below drops a PLATFORM_OUTAGES date unconditionally -- having a value does not put
+    # the day back in the denominator. For a weekly or monthly one the bucket holds days the
+    # outage never touched and was already "u" without the recovery. Either way the exclusion,
+    # not the recovery, is what protects the percentage. The recovered rows earn their place in
+    # the SERIES, where an outside consumer computing their own number gets a real value for
+    # that date instead of a hole.
+    PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23", "2026-09-18"}
     return COVERAGE_FROM, PLATFORM_OUTAGES
 
 

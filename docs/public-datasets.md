@@ -131,13 +131,28 @@ On every row of `kernel_timeseries_metrics_by_project`:
   replaying the metric's own statement once per past day. A day can carry more than one row for one commitment when a backfill lands beside
   a nightly reading; they are different observations of the same day, not duplicates.
 
-  **2026-08-22 and 2026-08-23 were OUR outage, not any source's.** OSO migrated the payload type
-  of its run-request mutations and every fetch raised a bare 400, so 38 of 38 commitments recorded
-  a null that night and the next. Those two dates should be excluded from any coverage or
-  availability denominator you compute — charging a team for them measures us, not them. Our own
-  public dashboard drops them outright. Two metric-days were later recovered as real readings
-  under `backfill:api.github.com` and `backfill:api.geckoterminal.com`, because those sources keep
-  their own history; the rest are point-in-time and gone for good.
+  **Three dates were OUR outage, not any source's: 2026-08-22, 2026-08-23 and 2026-09-18.**
+  Exclude all three from any coverage or availability denominator you compute — charging a team
+  for them measures us, not them. Our own public dashboard drops them outright.
+
+  - **2026-08-22 / 2026-08-23** — OSO migrated the payload type of its run-request mutations and
+    every fetch raised a bare 400, so 38 of 38 commitments recorded a null on both nights. Two
+    metric-days were later recovered under `backfill:api.github.com` and
+    `backfill:api.geckoterminal.com`.
+  - **2026-09-18** — an OSO-side stall drove every ingestion poll to its ceiling; our nightly job
+    reached its own 60-minute cap four manifests in and was cancelled, so none of the 41
+    commitments recorded a value. OSO recovered unaided (the 19th read 41 of 41 normally). Six
+    metric-days were recovered under `backfill:` methods; the other 35 are point-in-time.
+
+  **A recovered day is still an excluded day.** Where a `backfill:` row exists for one of these
+  dates the value is real and you may use it; what you should not do is count the *absence* of a
+  value on those dates against a team, because the absence is ours. The rest are point-in-time and
+  gone for good — `docs/metric-history.md` says which are which and why.
+
+  This list is maintained by hand and is the whole mechanism: **these tables carry no error
+  column**, so there is nothing in the data itself that distinguishes a night our platform failed
+  from a night a source went dark. If you are computing availability from these tables, hard-code
+  these three dates as exclusions.
 - **`threshold_source`** — `signed-appendix` when the bar was read out of a signed appendix,
   `provisional` otherwise. Every row is `provisional` today, and every `threshold_op` is null.
 - **`time_interval`** — always `daily`, for shape-compatibility with the sibling
