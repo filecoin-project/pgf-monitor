@@ -440,6 +440,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
 
     # ---------------------------------------------------------------- helpers
 
+    def _and_list(items):
+        """'a', 'a and b', 'a, b and c'. Used for the outage dates, which grow one at a time."""
+        items = [str(i) for i in items]
+        if len(items) < 3:
+            return " and ".join(items)
+        return f"{', '.join(items[:-1])} and {items[-1]}"
+
     def esc(s):
         if s is None:
             return ""
@@ -1013,8 +1020,11 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
          "day unattended nightly collection became the record -- or from the metric's first "
          "reading where that is later. Earlier one-off probes are shown but not scored against, "
          "because charging a team for the month before the monitor existed measures us, not "
-         f"them. {' and '.join(sorted(PLATFORM_OUTAGES))} are excluded from every denominator on "
-         "this page: our own platform, not any source, returned nothing for all twelve teams "
+         # A plain ' and '.join read as "a and b and c" once the set reached three. Oxford-free
+         # list: commas between all but the last pair. Derived from the set, never retyped, so
+         # the page cannot claim a different set of dates from the one roll() actually excludes.
+         f"them. {_and_list(sorted(PLATFORM_OUTAGES))} are excluded from every denominator on "
+         "this page: our own platform, not any source, returned nothing for any team "
          "those nights. A gap "
          "means the source produced no defensible number that day — an endpoint down, a schema "
          "moved. That is our failure to measure, not the team's failure to deliver, so it is drawn "
