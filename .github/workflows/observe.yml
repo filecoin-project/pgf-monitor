@@ -90,7 +90,12 @@ jobs:
           GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
         run: |
           set -euo pipefail
+          # 45, under the job's own 60-minute cap. The cap is a SIGKILL and lands wherever it
+          # lands; this stops the loop at a metric boundary with everything so far already on
+          # disk, so the commit, both republishes and the collection assert all still run. On
+          # 2026-09-18 the cap fired instead and took 20 collected readings with it.
           uv run fpm observe \
+            --deadline-minutes 45 \
             --live-oso --oso-org "${{ vars.OSO_ORG_ID }}" \
             ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} \
             ${{ inputs.dry_run && '--dry-run' || '' }} \
@@ -131,11 +136,15 @@ jobs:
       # rather than trusting whoever last touched a manifest to have run it. Cheap, and it means
       # the published mapping cannot lag the registry by longer than a night.
       - name: Regenerate the structural exports
-        if: ${{ !inputs.dry_run }}
+        if: ${{ always() && !inputs.dry_run }}
         run: uv run python -m scripts.exports write
 
+      # `always()` since 2026-09-19: readings are persisted per manifest as the run goes, so
+      # whatever is on disk is a complete record of the manifests that finished, even when the
+      # measurement step was cancelled or died. It belongs in git either way -- the same argument
+      # the assert step below already makes for a broken night being evidence.
       - name: Commit the day's readings
-        if: ${{ !inputs.dry_run }}
+        if: ${{ always() && !inputs.dry_run }}
         run: |
           set -euo pipefail
           git config user.name  "github-actions[bot]"
@@ -167,7 +176,7 @@ jobs:
       #
       # A full-table republish of unchanged CSVs is a no-op, so this is safe on a quiet night.
       - name: Republish the series to OSO
-        if: ${{ !inputs.dry_run }}
+        if: ${{ always() && !inputs.dry_run }}
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
         run: |
@@ -181,7 +190,7 @@ jobs:
       # project, grant or kernel function -- before they existed the mapping was only reachable as
       # a JSON literal embedded in our own notebook.
       - name: Republish the structural exports to OSO
-        if: ${{ !inputs.dry_run }}
+        if: ${{ always() && !inputs.dry_run }}
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
         run: uv run python -m scripts.exports upload --oso-org "${{ vars.OSO_ORG_ID }}"
@@ -198,7 +207,7 @@ jobs:
       # evidence and belongs in git and in the warehouse; folding the check into `fpm observe`'s
       # exit code would abort the job before the commit and throw the evidence away.
       - name: Assert the night actually collected something
-        if: ${{ !inputs.dry_run }}
+        if: ${{ always() && !inputs.dry_run }}
         run: |
           set -euo pipefail
           uv run python -m scripts.check_collection \
