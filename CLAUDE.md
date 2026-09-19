@@ -125,13 +125,18 @@ set) · `review-and-land` (run the pipeline, adjudicate readings, land verdicts)
   release while the registry commits to a rolling average. Nothing failed; the page just showed
   30 days instead of 400. `docs/metric-history.md` records what is recoverable and what is not.
 - **An age metric cannot outrun wall time, and `fpm.guards` enforces it at write time.** A
-  `derive: age_*` reading that grew by more than the elapsed days (plus 0.5d of scheduler jitter)
+  `derive: age_*` reading that grew by more than the elapsed days (plus 1.0d — a reading carries
+  a DATE but is taken at an INSTANT, so two readings one date apart can be two days apart in real
+  time; 0.5 assumed both landed in the same cron slot and refused a correct off-slot reading)
   is nulled, noted and marked `indeterminate` rather than published — a fall is always fine, that
   is the clock resetting. Born from `pipeline_success_age_days`, which four times claimed FDP's
   pipeline was weeks stale while it ran nightly; the cause is upstream of this repo and was never
   root-caused. `tests/test_observations_age_invariant.py` re-checks the invariant over the whole
   committed series on every PR, because `scripts/observations.py backfill` writes via
-  `fpm.observations` directly and never passes through the guard. When the guard fires it first
+  `fpm.observations` directly and never passes through the guard. That re-check keys its series
+  on (team, function_id, metric, METHOD), so it compares backfill against backfill and nightly
+  against nightly and NEVER compares a backfilled row with the nightly rows either side of it --
+  check those two neighbours by hand when inserting an age row between existing days. When the guard fires it first
   writes the rows AND the `oso_run_ref` to `evidence/refused-readings/` (gitignored; uploaded as an
   `observe.yml` workflow artifact, 90d) — that run reference is the only way to ask OSO what its
   ingestion did that night, and the ingestion table is overwritten on the next run. Do NOT put
