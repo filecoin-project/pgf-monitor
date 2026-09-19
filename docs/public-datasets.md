@@ -141,8 +141,8 @@ On every row of `kernel_timeseries_metrics_by_project`:
     `backfill:api.geckoterminal.com`.
   - **2026-09-18** — an OSO-side stall drove every ingestion poll to its ceiling; our nightly job
     reached its own 60-minute cap four manifests in and was cancelled, so none of the 41
-    commitments recorded a value. OSO recovered unaided (the 19th read 41 of 41 normally). Eight
-    metric-days were recovered under `backfill:` methods.
+    commitments recorded a value. OSO recovered unaided (the 19th read 41 of 41 normally). Six
+    metric-days were recovered under `backfill:` methods; the other 35 are point-in-time.
 
   **A recovered day is still an excluded day.** Where a `backfill:` row exists for one of these
   dates the value is real and you may use it; what you should not do is count the *absence* of a

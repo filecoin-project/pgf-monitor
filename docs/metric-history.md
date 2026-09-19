@@ -258,10 +258,23 @@ stating plainly, because they affect how the published series should be read:
   `age_growth_violation` against both the day before and the day after, because a backfill writes
   through `fpm.observations` and never passes the write-time guard.
 
-  **Recovery and outage exclusion are independent, and they compose.** A recovered value outranks
-  the `"x"` outcome in the dashboard's `roll()`, so these six count as read on 2026-09-18 while
-  the other 35 rely on that date's presence in `PLATFORM_OUTAGES`. Neither mechanism substitutes
-  for the other: recovery restores facts, exclusion stops a team being charged for our failure.
+  **Recovery and outage exclusion are independent, and a recovery does not buy back coverage.**
+  It is tempting to read the "a reading outranks `x`" rule in the dashboard's `roll()` as meaning
+  a recovered metric counts as read on an outage day. It does not. For a **daily** metric the key
+  filter drops a `PLATFORM_OUTAGES` date unconditionally, value or no value; for a **weekly or
+  monthly** one the bucket holds days the outage never touched and was already `"u"` anyway. The
+  exclusion is what protects the percentage in both cases.
+
+  So what a recovery is *for* is the series, not the denominator: `data/observations.csv` and the
+  mart carry a real number for that date instead of a hole, and anyone computing their own
+  availability gets the value rather than having to trust our exclusion list. That is worth doing
+  on its own, but do not describe it as restoring coverage.
+
+  One more thing the 2026-09-18 pass established: **`tests/test_observations_age_invariant.py`
+  groups by `method`**, so it checks a `backfill:` series against itself and a `nightly` series
+  against itself, and never compares a backfilled row with the nightly rows on either side of it.
+  A backfilled age row inserted between two nightlies is therefore checked by nobody unless you
+  do it by hand, which is why the check above was run manually against both neighbours.
 - **A single sample stands for a whole day.** The nightly run takes one reading at roughly
   05:30 UTC. For a gauge, that is a sample, not a summary: an endpoint down for six hours in the
   afternoon reads as healthy, and one down for ninety seconds at 05:30 reads as broken. Read a run

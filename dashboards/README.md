@@ -80,10 +80,20 @@ Both rules live in the `collection_policy` cell, are stated on the page, and wer
   build their own denominators on. `tests/test_outage_policy.py` fails when they disagree.
   A day excluded here but absent from the contract protects a team on our page only.
 
-  Exclusion and recovery are independent, and they compose: a recovered reading outranks
-  `"x"` in `roll()`, so a metric whose history was rebuilt counts as read on an outage day
-  while the point-in-time ones rely on the exclusion. Eight of the 41 were recovered for
+  Exclusion and recovery are independent, but **a recovery does not buy back coverage** —
+  worth stating because the "a reading outranks `x`" rule in `roll()` suggests it might.
+  For a **daily** metric the key filter drops a `PLATFORM_OUTAGES` date unconditionally, so
+  having a value does not put the day back in the denominator. For a **weekly or monthly**
+  one the bucket holds days the outage never touched and was already `"u"` without the
+  recovery. The exclusion is what protects the percentage in both cases. Recovered rows earn
+  their place in the *series*, not the denominator: an outside consumer computing their own
+  number gets a real value for that date instead of a hole. Six of the 41 were recovered for
   2026-09-18, two for 2026-08-22. See `docs/metric-history.md`.
+
+  And the exclusion has a real limit, since it is a hand-written list of dates: a source that
+  genuinely went dark on an excluded date is invisible to coverage too. Ranking `"x"` below
+  both other outcomes stops that *within* a weekly or monthly bucket, but nothing recovers a
+  daily one. Keep the list to nights our own platform demonstrably failed for everyone.
 
 The stylesheet is character-for-character the mockup's, plus three rules: a blue strip bar
 for "read, unscored", a slate one for a period our own platform lost (`--k-skip`), and an
