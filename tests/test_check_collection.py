@@ -71,3 +71,39 @@ def test_status_normalizes_the_date():
         1,
         1,
     )
+
+
+# --------------------------------------------------- truncation (2026-09-18)
+
+
+def _truncated(day: str, fid: str) -> dict:
+    from fpm.observe import TRUNCATED_NOTE
+
+    row = _row(day, fid, "")
+    row["note"] = TRUNCATED_NOTE
+    return row
+
+
+def test_a_truncated_night_turns_the_workflow_red(tmp_path, capsys):
+    """A night that ran out of budget is always worth a human look: the run normally finishes in
+    25 minutes against a 45-minute deadline, so truncation means something upstream got slow.
+    On 2026-09-18 the equivalent event was a silent cancellation nobody saw for a day."""
+    rows = [_row("2026-09-18", "f1", "4.0")] + [_truncated("2026-09-18", f"f{i}") for i in (2, 3)]
+    assert main(["--as-of", "2026-09-18", "--csv", str(_csv(tmp_path, rows))]) == 1
+    err = capsys.readouterr().err
+    assert "truncated" in err.lower()
+    assert "2" in err  # how many commitments went unattempted
+
+
+def test_a_healthy_night_is_not_called_truncated(tmp_path, capsys):
+    rows = [_row("2026-09-19", f"f{i}", "4.0") for i in range(3)]
+    assert main(["--as-of", "2026-09-19", "--csv", str(_csv(tmp_path, rows))]) == 0
+    assert "truncated" not in capsys.readouterr().out.lower()
+
+
+def test_a_value_less_night_still_reports_the_blackout_first(tmp_path, capsys):
+    """Truncation and a blackout can coexist. The blackout is the bigger fact -- it means the
+    instrument failed outright -- so it keeps the message."""
+    rows = [_truncated("2026-09-18", f"f{i}") for i in range(5)]
+    assert main(["--as-of", "2026-09-18", "--csv", str(_csv(tmp_path, rows))]) == 1
+    assert "value-less" in capsys.readouterr().err
