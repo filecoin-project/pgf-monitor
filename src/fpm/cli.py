@@ -79,6 +79,45 @@ def order_by_cost(paths: list[Path]) -> list[Path]:
     return sorted(paths, key=cost)
 
 
+def previous_readings(
+    csv_path: Path, as_of: datetime
+) -> dict[tuple[str, str, str], tuple[str, float]]:
+    """The last value each commitment carried on a day STRICTLY BEFORE `as_of`.
+
+    This is the age guard's comparison point, and the `strictly before` is the whole point. It
+    was "the last row per commitment" until 2026-09-19, which silently included a row dated today
+    whenever the day already had readings. A second run on such a day then compared today against
+    today: `age_growth_violation` saw zero days elapsed, allowed only the 0.5d scheduler-jitter
+    budget, and refused any real growth past it -- nulling a correct reading and filing evidence
+    for it.
+
+    Caught by a live rehearsal on 2026-09-19: `zondax/rosetta_release_age_days` read 73.48835 at
+    the 05:23 nightly and 74.0465 at 19:12. That is +0.558d across 13.8h of real elapsed time, the
+    source behaving exactly as it should, and it was thrown away.
+
+    A commitment whose only reading is today's gets NO entry, so the guard does not run for it --
+    the same default as a first-ever run, and the right one: there is nothing to compare against.
+
+    Sorted by date rather than trusting file order, because a backfill row can be appended after a
+    later nightly one and the last LINE is not the last DAY.
+    """
+    out: dict[tuple[str, str, str], tuple[str, float]] = {}
+    if not csv_path.exists():
+        return out
+
+    from fpm import observations as _obs
+
+    today = as_of.date().isoformat()
+    for row in sorted(_obs.load_rows(csv_path), key=lambda r: r["observed_at"]):
+        if row["observed_value"] in (None, ""):
+            continue
+        day = row["observed_at"][:10]
+        if day >= today:
+            continue
+        out[(row["team"], row["function_id"], row["metric"])] = (day, float(row["observed_value"]))
+    return out
+
+
 def _host_map(paths: list[Path]) -> dict[tuple[str, str], str]:
     """(team, function_id) -> source host, for grouping failures by where they came from."""
     from urllib.parse import urlparse
@@ -178,19 +217,9 @@ def run_observe_cli(
 
     # Last recorded value per commitment, for the age guard in `observe`. Read once here rather
     # than inside the loop: it is the series as it stood BEFORE tonight, which is exactly what
-    # today's readings must be checked against.
-    previous: dict[tuple[str, str, str], tuple[str, float]] = {}
-    _csv = Path(csv_path)
-    if _csv.exists():
-        from fpm import observations as _obs
-
-        for _r in sorted(_obs.load_rows(_csv), key=lambda r: r["observed_at"]):
-            if _r["observed_value"] in (None, ""):
-                continue
-            previous[(_r["team"], _r["function_id"], _r["metric"])] = (
-                _r["observed_at"],
-                float(_r["observed_value"]),
-            )
+    # today's readings must be checked against -- see `previous_readings` for why "before"
+    # had to become literal.
+    previous = previous_readings(Path(csv_path), as_of)
 
     started = time.monotonic()
     _say(f"observing {len(paths)} manifests at {as_of.date().isoformat()}")
