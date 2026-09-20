@@ -1,8 +1,9 @@
 """Quarantined live OSO end-to-end. Never imported by unit tests. Requires OSO_API_KEY + org id.
 
 Usage: OSO_API_KEY=... uv run python scripts/live_oso_smoke.py <ORG_ID>
-Creates a throwaway ingestion in the given org, runs it, reads back, reduces to the observed
-value, prints provenance, then deletes the dataset. Persists nothing to the local store.
+Creates a throwaway ingestion in the given org, runs it, reads back, derives the observed
+value exactly as the pipeline does, prints provenance, then deletes the dataset. Persists
+nothing to the local store.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from fpm.domain import window_for
 from fpm.manifest import load_manifest
 from fpm.oso.graphql_client import GraphqlOsoClient
 from fpm.provision import build_ingestion_config, dataset_name
-from fpm.reduce import reduce_rows
+from fpm.reduce import derive_observed
 
 _TERMINAL = {"SUCCESS", "FAILED", "CANCELED"}
 
@@ -51,7 +52,16 @@ def main() -> None:
         if run and run.status == "SUCCESS":
             full = client.table_full_name(dataset_id)
             rows = client.query(f"SELECT * FROM {full}")
-            value = reduce_rows(rows, fn.source.extract)
+            # derive_observed, NOT reduce_rows. reduce_rows implements `derive: value` only;
+            # for the `derive: age_seconds` metric this smoke points at, it returns the latest
+            # ROW and float()s a timestamp string -- so the script always ended in a traceback
+            # AFTER the trigger/poll path it exists to guard had already passed. A guard that
+            # always ends red is a guard nobody runs, which is exactly how this script rotted
+            # the first time (it asked for `filecoin-tvl`, retired months earlier, and raised
+            # StopIteration before reaching trigger_run -- so nobody caught OSO changing the
+            # mutation payload on 2026-08-22 until three nights of readings were gone).
+            # The real pipeline calls derive_observed; so must this, or it is not the same test.
+            value = derive_observed(rows, fn.source.extract, datetime.now(timezone.utc))
             print("table:", full)
             print("observed:", value)
         else:
