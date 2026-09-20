@@ -199,7 +199,12 @@ detectors, synthesize, pipeline, store, land, report/, governance/, transform/, 
 `propgf-kernel-public.py` — the PUBLIC surface, hosted as `propgf-kernel-health-live` and built
 ONLY on the two `filecoin.filpgf_public.*` mart tables. Its public URL needs the `/view` suffix
 (`https://www.oso.xyz/filecoin/propgf-kernel-health-live/view`); the bare path 307s to `/login`.
-Publishing is MANUAL — merging here changes nothing live. The internal view
+Publishing is AUTOMATIC since 2026-09-20 — `published-page.yml` republishes on every push to the
+notebook and daily at 09:10 UTC (after the mart DAG reaches `filpgf_public` at 08:30), from a
+CHECKOUT of main so `hosted == main` holds by construction, then verifies both that the hash
+matches AND that the page's rendered `as of` date and row counts equal the mart's — a hash alone
+is blind to data staleness, which is how the page sat a day behind on 2026-09-20 with a green
+check. By hand: `uv run python scripts/publish_page.py`. The internal view
 (`propgf-kernel-health.py`) and the design reference (`propgf-kernel-mockup_v2.py`) were RETIRED on
 2026-09-14, both here and on the platform: the internal one had been published with
 `funding_model_static.*` values rendered into an anonymously-readable page. Anything reading

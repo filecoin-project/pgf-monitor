@@ -11,9 +11,25 @@ The `/view` suffix matters — that URL is readable without an account, while th
 It reads the two `filecoin.filpgf_public.*` mart tables and nothing else, queries live and embeds
 no data, so any OSO API key reproduces every number on it.
 
-**Publishing is manual.** Merging a change here does not update the hosted page; someone has to
-republish it. `publishedNotebookByName{sourceHash}` is exactly `sha256sum` of this file, so that is
-how you check whether the hosted copy matches `main`.
+**Publishing is automatic, and verified.** `published-page.yml` republishes on every push to
+this notebook and again daily at 09:10 UTC, then proves the result. It was manual until
+2026-09-20, and manual lost every time: twice in one afternoon on 2026-09-14, and again on
+2026-09-20 when the mart rebuilt to a new day and the page kept serving the previous one.
+
+CI publishes from a **checkout of `main`**, which is what makes "hosted == main" true by
+construction rather than by someone remembering. To do it by hand:
+`OSO_API_KEY=... uv run python scripts/publish_page.py`.
+
+**Two independent faults, and a hash only sees one.**
+`publishedNotebookByName{sourceHash}` is exactly `sha256sum` of this file, so it catches SOURCE
+drift — a change merged and never republished. It is blind to DATA staleness: a published
+notebook renders whatever it queried into a *static* page, so when the mart gains a day the
+numbers go old under an unchanged hash. `scripts/check_published_page.py` now reads the page's
+own provenance line ("as of `<date>` … `<b>N</b>` daily rows") and compares it with the mart.
+
+The two need different fixes and they are not interchangeable: `publishNotebook(force:true)`
+re-renders the *platform's* stored source (refreshes data, cannot fix drift), while uploading the
+file replaces that source (fixes both). `fpm.published_page.publish_action` picks.
 
 ## Two notebooks were retired on 2026-09-14
 

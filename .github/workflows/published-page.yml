@@ -1,16 +1,39 @@
 name: published-page
 
-# Publishing the public dashboard is MANUAL: merging a change to the notebook does not touch the
-# hosted page. That gap is silent -- a stale page is a working page -- and it went unnoticed twice
-# in one afternoon on 2026-09-14. So say so, out loud, on the two occasions it can start being true:
-# right after a change to the notebook lands, and once a day in case someone republished by hand.
+# Keep the page people read equal to main, rendering current data.
+#
+# This used to only COMPLAIN. Publishing was manual, and manual lost: twice in one afternoon on
+# 2026-09-14 (a rendering fix and a comment change each sat on main while the live page served the
+# old build) and again on 2026-09-20, when the mart rebuilt to a new day and the page kept serving
+# the previous one. The failure is silent every time -- a stale page is a working page.
+#
+# TWO INDEPENDENT FAULTS, and the old check could only see the first:
+#   - SOURCE drift: a notebook change merged and never republished. Caught by the hash.
+#   - DATA staleness: the mart gained a day while the source stayed put. A published notebook
+#     renders what it queried into a static page, so the hash MATCHES and the numbers are old.
+#     Invisible to a hash check by construction.
+#
+# Publishing from a CHECKOUT is the point: it makes "hosted == main" true by construction, where
+# anything working from the platform's own copy could only ever observe drift. The publish itself
+# is deterministic on purpose -- it is the highest-blast-radius operation here (on 2026-09-14 a
+# published notebook made funding_model_static values anonymously readable), so what decides to
+# put a page on the public internet is a pinned workflow reviewed in git, not a judgement call.
 on:
   push:
     branches: [main]
     paths: ["dashboards/propgf-kernel-public.py"]
   schedule:
-    - cron: "40 6 * * *"      # UTC, after the 05:23 observe run has finished
+    # 09:10 UTC: AFTER the mart DAG reaches filpgf_public at 08:30 (staging 07:00 -> entities
+    # 07:30 -> metrics 08:00 -> filpgf_public 08:30). The old cron was 06:40, tuned to the 05:23
+    # observe run, which is far too early -- it would have republished yesterday's mart and
+    # verified it as current. If the DAG moves, this moves with it.
+    - cron: "10 9 * * *"
   workflow_dispatch:
+    inputs:
+      check_only:
+        description: "Verify without publishing"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -20,13 +43,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv sync
-      - name: Does the hosted page match main, and can a reader still open it?
+      # --extra dashboards because `marimo` lives there, not in the base deps, and the
+      # validate step below needs it. pyoso IS a base dep, so the check itself does not.
+      - run: uv sync --extra dashboards
+
+      # Before anything reaches the public page. A notebook that will not load is a notebook that
+      # must not be published, and this costs a second.
+      - name: Validate the notebook
+        run: uv run marimo check dashboards/propgf-kernel-public.py
+
+      - name: Republish, then verify what the reader actually gets
+        if: ${{ !inputs.check_only }}
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
-        run: uv run python scripts/check_published_page.py
+        run: uv run python scripts/publish_page.py
+
+      # The same guard the publish step ends with, run alone when publishing is skipped. Kept as
+      # its own step so `check_only` is a real mode rather than a comment.
+      - name: Verify only
+        if: ${{ inputs.check_only }}
+        env:
+          OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
+        run: uv run python -m scripts.check_published_page
