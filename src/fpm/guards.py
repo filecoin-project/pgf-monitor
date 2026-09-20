@@ -31,11 +31,23 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
-#: Wall-clock tolerance, in days. The nightly does not fire at a fixed instant — GitHub Actions
-#: has started it up to ~9 minutes late — so two consecutive readings can legitimately sit slightly
-#: more than 24h apart. Half a day is far wider than that jitter and far narrower than any real
-#: instance of this fault, all of which have overshot by 12 days or more.
-AGE_GROWTH_TOLERANCE_DAYS = 0.5
+#: Wall-clock tolerance, in days, added to the DATE difference between two readings.
+#:
+#: Raised from 0.5 to 1.0 on 2026-09-19, and the reason is arithmetic rather than appetite. A
+#: reading is stored with DATE granularity but taken at an INSTANT, so two readings dated D1 and
+#: D2 can be anywhere from (D2-D1)-1 to (D2-D1)+1 days apart in real elapsed time — the extremes
+#: being D1 at 23:59 with D2 at 00:01, and D1 at 00:01 with D2 at 23:59. The honest upper bound on
+#: legitimate growth is therefore elapsed+1.0, and 0.5 was simply too tight: it silently assumed
+#: both readings land in the same cron slot.
+#:
+#: That assumption holds for the nightly and nothing else. It broke the first time a reading was
+#: taken off-slot: on 2026-09-19 a 19:12 run read `zondax/rosetta_release_age_days` 13.8h after
+#: the 05:23 nightly, real growth 0.575d against a 0.5d budget, and a correct reading was refused.
+#: `fpm.cli.previous_readings` fixes the related same-day bug; this fixes the bound itself.
+#:
+#: Still far narrower than any real instance of this fault — every one has overshot by 12 days or
+#: more, and the founding case (`pipeline_success_age_days`) by 17 in a single night.
+AGE_GROWTH_TOLERANCE_DAYS = 1.0
 
 
 def age_growth_violation(

@@ -33,6 +33,11 @@ from fpm.guards import age_growth_violation, capture_refused_reading
 from fpm.manifest import FunctionSpec, Manifest, load_manifest
 
 
+# The note on a reading the run never got to. A substring match is what tests and the CLI both
+# key on, so it stays a constant rather than a literal repeated at three call sites.
+TRUNCATED_NOTE = "not attempted: run truncated at its deadline"
+
+
 class Observation(_Model):
     """One (day, team, function, metric) reading, flattened for the CSV time series.
 
@@ -201,6 +206,27 @@ def apply_age_guard(
     obs.outcome = "indeterminate"
 
 
+def unattempted(fn: FunctionSpec, team: str, as_of: datetime, method: str) -> Observation:
+    """The row for a function this run never got to.
+
+    Deliberately shaped like any other value-less reading so nothing downstream needs to learn a
+    new state, but with a note that distinguishes it from a source that went dark. Omitting the
+    row entirely was the other option and it is the wrong one: `thresholds_for` already argues
+    that an absence must be recorded rather than inferred, and after the 2026-09-18 truncation a
+    silent skip would have been indistinguishable from a night the monitor did not run.
+    """
+    return Observation(
+        observed_at=as_of.date().isoformat(),
+        team=team,
+        function_id=fn.function_id,
+        metric=fn.sla.metric,
+        observed_value=None,
+        method=method,
+        note=TRUNCATED_NOTE,
+        outcome="indeterminate",
+    )
+
+
 def observe(
     manifest_path: str | Path,
     fixtures_dir: Path,
@@ -214,6 +240,7 @@ def observe(
     sql_allowlist: set[str] | None = None,
     previous: dict[tuple[str, str, str], tuple[str, float]] | None = None,
     capture_dir: str | Path | None = None,
+    should_continue: Callable[[], bool] | None = None,
 ) -> list[Observation]:
     """Measure every function in one manifest. One Observation per function, always.
 
@@ -224,6 +251,13 @@ def observe(
     is what lets the age guard compare today against yesterday. Injected rather than read here so
     this stays testable without a CSV; the CLI supplies it from the series. Omitted means no guard,
     which is the right default for a first run with no history to check against.
+
+    `should_continue` is checked BEFORE each function and stops the run when it goes false. It is
+    a predicate rather than a deadline so this stays testable with no clock; the CLI supplies one
+    closed over the wall-clock budget. The check is per function, not per manifest, because one
+    manifest can be five metrics at the 320s poll ceiling -- 27 minutes, enough to overshoot any
+    budget a per-manifest check could honour. Functions after the stop get `unattempted` rows, so
+    the one-per-function promise above holds on a truncated run too.
     """
     manifest: Manifest = load_manifest(manifest_path)
     adapters = build_adapters(
@@ -235,7 +269,15 @@ def observe(
         sql_allowlist=sql_allowlist,
     )
     out = []
+    stopped = False
     for fn in manifest.functions:
+        if not stopped and should_continue is not None and not should_continue():
+            stopped = True
+        if stopped:
+            # No progress callback: the log line reports what a metric DID, and nothing was done.
+            # Reporting it would make a truncated night look like a night of broken sources.
+            out.append(unattempted(fn, manifest.team, as_of, method))
+            continue
         _, reading, sla = measure(fn, manifest.team, adapters, as_of)
         obs = to_observation(fn, manifest.team, reading, sla, as_of, method)
         apply_age_guard(fn, obs, previous or {}, reading=reading, capture_dir=capture_dir)

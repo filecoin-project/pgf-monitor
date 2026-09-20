@@ -125,13 +125,18 @@ set) · `review-and-land` (run the pipeline, adjudicate readings, land verdicts)
   release while the registry commits to a rolling average. Nothing failed; the page just showed
   30 days instead of 400. `docs/metric-history.md` records what is recoverable and what is not.
 - **An age metric cannot outrun wall time, and `fpm.guards` enforces it at write time.** A
-  `derive: age_*` reading that grew by more than the elapsed days (plus 0.5d of scheduler jitter)
+  `derive: age_*` reading that grew by more than the elapsed days (plus 1.0d — a reading carries
+  a DATE but is taken at an INSTANT, so two readings one date apart can be two days apart in real
+  time; 0.5 assumed both landed in the same cron slot and refused a correct off-slot reading)
   is nulled, noted and marked `indeterminate` rather than published — a fall is always fine, that
   is the clock resetting. Born from `pipeline_success_age_days`, which four times claimed FDP's
   pipeline was weeks stale while it ran nightly; the cause is upstream of this repo and was never
   root-caused. `tests/test_observations_age_invariant.py` re-checks the invariant over the whole
   committed series on every PR, because `scripts/observations.py backfill` writes via
-  `fpm.observations` directly and never passes through the guard. When the guard fires it first
+  `fpm.observations` directly and never passes through the guard. That re-check keys its series
+  on (team, function_id, metric, METHOD), so it compares backfill against backfill and nightly
+  against nightly and NEVER compares a backfilled row with the nightly rows either side of it --
+  check those two neighbours by hand when inserting an age row between existing days. When the guard fires it first
   writes the rows AND the `oso_run_ref` to `evidence/refused-readings/` (gitignored; uploaded as an
   `observe.yml` workflow artifact, 90d) — that run reference is the only way to ask OSO what its
   ingestion did that night, and the ingestion table is overwritten on the next run. Do NOT put
@@ -194,7 +199,12 @@ detectors, synthesize, pipeline, store, land, report/, governance/, transform/, 
 `propgf-kernel-public.py` — the PUBLIC surface, hosted as `propgf-kernel-health-live` and built
 ONLY on the two `filecoin.filpgf_public.*` mart tables. Its public URL needs the `/view` suffix
 (`https://www.oso.xyz/filecoin/propgf-kernel-health-live/view`); the bare path 307s to `/login`.
-Publishing is MANUAL — merging here changes nothing live. The internal view
+Publishing is AUTOMATIC since 2026-09-20 — `published-page.yml` republishes on every push to the
+notebook and daily at 09:10 UTC (after the mart DAG reaches `filpgf_public` at 08:30), from a
+CHECKOUT of main so `hosted == main` holds by construction, then verifies both that the hash
+matches AND that the page's rendered `as of` date and row counts equal the mart's — a hash alone
+is blind to data staleness, which is how the page sat a day behind on 2026-09-20 with a green
+check. By hand: `uv run python scripts/publish_page.py`. The internal view
 (`propgf-kernel-health.py`) and the design reference (`propgf-kernel-mockup_v2.py`) were RETIRED on
 2026-09-14, both here and on the platform: the internal one had been published with
 `funding_model_static.*` values rendered into an anonymously-readable page. Anything reading

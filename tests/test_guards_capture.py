@@ -221,10 +221,14 @@ def test_the_published_page_check_is_quarantined_too():
     assert not offenders, f"live script imported by tests: {offenders}"
 
 
-def test_the_publish_gap_is_documented_where_someone_would_look():
-    """The check can only fail usefully if the reader knows publishing is manual."""
+def test_how_publishing_works_is_documented_where_someone_would_look():
+    """Publishing went automatic on 2026-09-20; the README has to say so, and has to keep saying
+    that a hash cannot see data staleness -- that asymmetry is the whole reason the check grew a
+    second half, and it is the thing a reader will otherwise assume away."""
     import pathlib
 
     readme = pathlib.Path("dashboards/README.md").read_text()
-    assert "Publishing is manual" in readme
+    assert "Publishing is automatic" in readme
     assert "sourceHash" in readme
+    assert "publish_page.py" in readme
+    assert "blind to DATA staleness" in readme

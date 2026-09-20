@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fpm.observations import CSV_PATH, collection_status, load_rows
+from fpm.observe import TRUNCATED_NOTE
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -46,6 +47,26 @@ def main(argv: list[str] | None = None) -> int:
             f"instrument, not the sources: check the `note` column in data/observations.csv — a "
             f"single repeated error across every metric means one shared failure (the OSO API, a "
             f"credential, egress), not {recorded} broken endpoints",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Truncation is checked AFTER the blackout above, because a night where nothing carried a
+    # value is the bigger fact and deserves the message. A night that merely ran out of budget
+    # still turns this red: the run finishes in ~25 minutes against a 45-minute deadline, so
+    # reaching the deadline at all means something upstream got slow and a person should look.
+    # The 2026-09-18 equivalent was a silent job cancellation that nobody noticed for a day.
+    rows = [r for r in load_rows(Path(args.csv)) if r["observed_at"].startswith(day)]
+    skipped = [r for r in rows if TRUNCATED_NOTE in (r["note"] or "")]
+    if skipped:
+        teams = sorted({r["team"] for r in skipped})
+        print(
+            f"::error::{day} was truncated: {len(skipped)} commitment(s) across {len(teams)} "
+            f"team(s) were not attempted before the run hit its deadline ({', '.join(teams)}). "
+            f"{carried} of {recorded} readings carry a value and are on disk. This is the alert "
+            f"that the night ran short, not a reason to rerun blindly — check what made the "
+            f"sources slow first, and check the steps above this one actually committed and "
+            f"republished, since they run on always() and can have failed independently",
             file=sys.stderr,
         )
         return 1

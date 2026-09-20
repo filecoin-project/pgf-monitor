@@ -158,3 +158,27 @@ def test_the_whole_registry_is_scanned_not_just_fdp():
     # the one metric that exposed the fault, so a shrinking count is worth noticing.
     assert adopted >= 5, f"only {adopted} adopted age metrics; has the family shrunk?"
     assert adopted + drafts >= 12
+
+
+# ------------------------------------------------- the bound itself (2026-09-19)
+
+
+def test_a_reading_taken_later_in_the_day_is_not_refused():
+    """Readings carry a DATE but are taken at an INSTANT, so two readings dated one day apart can
+    be up to two days apart in real time. The budget has to cover that or it refuses correct
+    numbers: this is the 2026-09-19 case, a 19:12 run 13.8h after the 05:23 nightly."""
+    assert age_growth_violation(71.48943, "2026-09-17", 74.0465, "2026-09-19") is None
+
+
+def test_the_founding_fault_is_still_caught():
+    """Widening the bound must not cost the detection it exists for. FDP's pipeline claimed five
+    weeks of staleness overnight while it ran nightly."""
+    assert age_growth_violation(0.5102, "2026-09-12", 17.6292, "2026-09-13") is not None
+
+
+def test_growth_of_two_days_across_one_day_is_the_edge_and_is_allowed():
+    assert age_growth_violation(10.0, "2026-09-12", 12.0, "2026-09-13") is None
+
+
+def test_growth_past_that_edge_is_still_refused():
+    assert age_growth_violation(10.0, "2026-09-12", 12.01, "2026-09-13") is not None

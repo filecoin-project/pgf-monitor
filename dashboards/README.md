@@ -11,9 +11,25 @@ The `/view` suffix matters — that URL is readable without an account, while th
 It reads the two `filecoin.filpgf_public.*` mart tables and nothing else, queries live and embeds
 no data, so any OSO API key reproduces every number on it.
 
-**Publishing is manual.** Merging a change here does not update the hosted page; someone has to
-republish it. `publishedNotebookByName{sourceHash}` is exactly `sha256sum` of this file, so that is
-how you check whether the hosted copy matches `main`.
+**Publishing is automatic, and verified.** `published-page.yml` republishes on every push to
+this notebook and again daily at 09:10 UTC, then proves the result. It was manual until
+2026-09-20, and manual lost every time: twice in one afternoon on 2026-09-14, and again on
+2026-09-20 when the mart rebuilt to a new day and the page kept serving the previous one.
+
+CI publishes from a **checkout of `main`**, which is what makes "hosted == main" true by
+construction rather than by someone remembering. To do it by hand:
+`OSO_API_KEY=... uv run python scripts/publish_page.py`.
+
+**Two independent faults, and a hash only sees one.**
+`publishedNotebookByName{sourceHash}` is exactly `sha256sum` of this file, so it catches SOURCE
+drift — a change merged and never republished. It is blind to DATA staleness: a published
+notebook renders whatever it queried into a *static* page, so when the mart gains a day the
+numbers go old under an unchanged hash. `scripts/check_published_page.py` now reads the page's
+own provenance line ("as of `<date>` … `<b>N</b>` daily rows") and compares it with the mart.
+
+The two need different fixes and they are not interchangeable: `publishNotebook(force:true)`
+re-renders the *platform's* stored source (refreshes data, cannot fix drift), while uploading the
+file replaces that source (fixes both). `fpm.published_page.publish_action` picks.
 
 ## Two notebooks were retired on 2026-09-14
 
@@ -63,13 +79,37 @@ Both rules live in the `collection_policy` cell, are stated on the page, and wer
   denominator on it charged each of them for the month before the instrument existed. It
   is a floor, not an override: a metric first collected later still starts at its own
   first reading.
-- **`PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23"}`** — the two nights OSO's run-group
-  change made `run { id }` a 400 and every fetch for all twelve teams returned nothing.
-  Those periods leave the denominator outright rather than counting as gaps. Dated by hand
-  because the public mart has no error column — only `method` — so there is nothing to
-  pattern-match on, and a list you must edit by hand cannot quietly swallow a source that
+- **`PLATFORM_OUTAGES = {"2026-08-22", "2026-08-23", "2026-09-18"}`** — nights our own
+  platform, not any source, returned nothing. The first two are the run-group change that
+  made `run { id }` a 400 for all twelve teams. **2026-09-18** is a different fault with the
+  same consequence: an OSO-side stall drove every ingestion poll to its 30×10s ceiling, the
+  nightly job hit its 60-minute cap four manifests in and was cancelled, and not one of the
+  41 commitments recorded a value. OSO recovered unaided — the 19th read 41 of 41 in 25
+  minutes. Those periods leave the denominator outright rather than counting as gaps. Dated
+  by hand because the public mart has no error column — only `method` — so there is nothing
+  to pattern-match on, and a list you must edit by hand cannot quietly swallow a source that
   really did go dark. A weekly or monthly bucket only drops if the outage cost the *whole*
   period.
+
+  Adding a date here is **three edits**: this list, the `collection_policy` cell, and the
+  `method` section of `docs/public-datasets.md`, which is the promise outside consumers
+  build their own denominators on. `tests/test_outage_policy.py` fails when they disagree.
+  A day excluded here but absent from the contract protects a team on our page only.
+
+  Exclusion and recovery are independent, but **a recovery does not buy back coverage** —
+  worth stating because the "a reading outranks `x`" rule in `roll()` suggests it might.
+  For a **daily** metric the key filter drops a `PLATFORM_OUTAGES` date unconditionally, so
+  having a value does not put the day back in the denominator. For a **weekly or monthly**
+  one the bucket holds days the outage never touched and was already `"u"` without the
+  recovery. The exclusion is what protects the percentage in both cases. Recovered rows earn
+  their place in the *series*, not the denominator: an outside consumer computing their own
+  number gets a real value for that date instead of a hole. Six of the 41 were recovered for
+  2026-09-18, two for 2026-08-22. See `docs/metric-history.md`.
+
+  And the exclusion has a real limit, since it is a hand-written list of dates: a source that
+  genuinely went dark on an excluded date is invisible to coverage too. Ranking `"x"` below
+  both other outcomes stops that *within* a weekly or monthly bucket, but nothing recovers a
+  daily one. Keep the list to nights our own platform demonstrably failed for everyone.
 
 The stylesheet is character-for-character the mockup's, plus three rules: a blue strip bar
 for "read, unscored", a slate one for a period our own platform lost (`--k-skip`), and an

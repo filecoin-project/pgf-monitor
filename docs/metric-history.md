@@ -242,7 +242,39 @@ stating plainly, because they affect how the published series should be read:
 
 - **A missed day is a permanent gap.** There is nothing to backfill from. This is why the
   2026-08-22/23 outage left permanent nulls for most commitments and recovered only the few whose
-  sources keep their own history.
+  sources keep their own history — and why 2026-09-18 went the same way: an OSO-side stall cost
+  the whole night, and 6 of the 41 adopted commitments were recoverable. The other 35 are gauges.
+
+  The 2026-09-18 recovery is a clean worked example of the rule this document turns on. Six
+  strategies were run against that date and produced nine rows; three were dropped before
+  writing because their `(team, function_id, metric)` belongs to a **draft** entry rather than
+  an adopted one (`filoz/evm-eam-actor-maintenance`,
+  `filoz/lotus-consensus-client-release-cadence`, `libp2p-networking/libp2p-release-cadence`).
+  The mart joins `state = 'adopted'`, the nightly never measured them, so those rows would have
+  recovered nothing and joined nothing — the eleven invisible series described above, growing by
+  three. Two further strategies (`ages`, `statuspage`) produced no row for the date at all.
+  Six written, and each checked both ways before it was: the three rolling averages reproduce the
+  adjacent nightlies to ~1e-5, and the one `derive: age_*` metric was put through
+  `age_growth_violation` against both the day before and the day after, because a backfill writes
+  through `fpm.observations` and never passes the write-time guard.
+
+  **Recovery and outage exclusion are independent, and a recovery does not buy back coverage.**
+  It is tempting to read the "a reading outranks `x`" rule in the dashboard's `roll()` as meaning
+  a recovered metric counts as read on an outage day. It does not. For a **daily** metric the key
+  filter drops a `PLATFORM_OUTAGES` date unconditionally, value or no value; for a **weekly or
+  monthly** one the bucket holds days the outage never touched and was already `"u"` anyway. The
+  exclusion is what protects the percentage in both cases.
+
+  So what a recovery is *for* is the series, not the denominator: `data/observations.csv` and the
+  mart carry a real number for that date instead of a hole, and anyone computing their own
+  availability gets the value rather than having to trust our exclusion list. That is worth doing
+  on its own, but do not describe it as restoring coverage.
+
+  One more thing the 2026-09-18 pass established: **`tests/test_observations_age_invariant.py`
+  groups by `method`**, so it checks a `backfill:` series against itself and a `nightly` series
+  against itself, and never compares a backfilled row with the nightly rows on either side of it.
+  A backfilled age row inserted between two nightlies is therefore checked by nobody unless you
+  do it by hand, which is why the check above was run manually against both neighbours.
 - **A single sample stands for a whole day.** The nightly run takes one reading at roughly
   05:30 UTC. For a gauge, that is a sample, not a summary: an endpoint down for six hours in the
   afternoon reads as healthy, and one down for ninety seconds at 05:30 reads as broken. Read a run
