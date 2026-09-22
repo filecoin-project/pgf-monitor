@@ -96,7 +96,16 @@ functions:
     tier: essential
     category: 'UX/DX'
     sub_category: 'Explorers and Tooling'
-    funded_project_oso_slug: unfunded   # filfox is a third-party source, not a grantee: both the FilOz and Plumbline Appendix 1 s4 tables record it as 'Filfox (third party), ProPGF funded? N'
+    # Filfox, not Blockscout. This is a SECOND provider of the mainnet-explorer function, not
+    # a Blockscout commitment: they are different operators and Blockscout is not answerable
+    # for a third party's index. It was `unfunded` until 2026-09-22 -- a sentinel that is not a
+    # real OSO project, so the mart had a null project_display_name and the public page fell
+    # back to the team string, rendering a second, lowercase "blockscout" row with no grant
+    # against it. `filfox` IS a real project (oso.projects_v1: display_name "Filfox",
+    # WWW artifact https://filfox.info -- the host below), so the row now names its actual
+    # provider. Funding is carried by grant_ref, which stays EMPTY: both the FilOz and
+    # Plumbline Appendix 1 s4 tables record Filfox as 'Filfox (third party), ProPGF funded? N'.
+    funded_project_oso_slug: filfox
     sla:
       statement: "Explorer pace against the chain: the largest gap between consecutive indexed tipsets, measured daily"
       metric: explorer_max_tipset_gap_seconds

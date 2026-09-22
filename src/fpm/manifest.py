@@ -122,8 +122,10 @@ class FunctionSpec(_Model):
     # `application_ref_id` of the grant in registry/_grants.yaml that PAYS for this metric.
     # funded_project_oso_slug names the payee, which is not enough when one payee holds two
     # grants: both zondax.yaml entries read slug `zondax` yet only one of Core Infra and Beryx
-    # funds each. Empty is legal for an entry no grant pays for (the filfox cross-check, whose
-    # slug is `unfunded`) and for drafts staged before an award.
+    # funds each. Empty is legal for an entry no grant pays for -- today the filfox cross-check,
+    # whose slug is `filfox` because Filfox is a real provider of the mainnet-explorer function
+    # that simply is not paid; see UNFUNDED_PROVIDERS in tests/test_grants.py -- and for drafts
+    # staged before an award.
     grant_ref: str = ""
     # GitHub repositories the funded work covers, as lowercase owner/name -- OSO's GITHUB_REPO
     # artifact identity, so the list joins straight to artifacts_by_project. Empty is honest for
