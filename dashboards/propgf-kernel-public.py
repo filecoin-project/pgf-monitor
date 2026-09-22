@@ -94,8 +94,8 @@ def stylesheet():
 
         /* substitutability ladder */
         .kpage .ladder{margin-top:46px;padding-bottom:8px}
-        .kpage .ladder-h{display:grid;grid-template-columns:8px minmax(0,1.5fr) 118px 128px minmax(0,1.35fr);gap:18px;padding-bottom:9px;border-bottom:1px solid var(--k-ink);font-family:var(--k-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--k-ink-3)}
-        .kpage .rung{display:grid;grid-template-columns:8px minmax(0,1.5fr) 118px 128px minmax(0,1.35fr);gap:18px;padding:17px 0;border-bottom:1px solid var(--k-rule-soft);align-items:center;text-decoration:none}
+        .kpage .ladder-h{display:grid;grid-template-columns:8px minmax(0,2fr) 118px 118px 128px;gap:18px;padding-bottom:9px;border-bottom:1px solid var(--k-ink);font-family:var(--k-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--k-ink-3)}
+        .kpage .rung{display:grid;grid-template-columns:8px minmax(0,2fr) 118px 118px 128px;gap:18px;padding:17px 0;border-bottom:1px solid var(--k-rule-soft);align-items:center;text-decoration:none}
         .kpage .rung:hover{background:var(--k-paper-2)}
         .kpage .rung-bar{width:8px;height:34px;border-radius:2px}
         .kpage .rung-n{display:block;font-family:var(--k-display);font-weight:700;font-size:17px;letter-spacing:-.02em}
@@ -245,7 +245,6 @@ def stylesheet():
         .kpage .flag.solo{color:var(--k-t2)}
         .kpage .flag.bad{color:var(--k-t1)}
         .kpage .fn-rowstrip{min-width:0}
-        .kpage .rowcad{font-family:var(--k-mono);font-size:9px;letter-spacing:.04em;line-height:1.4;color:var(--k-ink-3);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
         /* expanded detail panel */
         .kpage .fn-d{padding:18px}
@@ -436,7 +435,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
     # them into reading coverage instead -- the share of the periods a metric's
     # own cadence expects that actually carry a value. Same shape in the layout,
     # a claim the public tables can actually support.
-    WIN = 90
+    WIN = 30
 
     # ---------------------------------------------------------------- helpers
 
@@ -614,15 +613,6 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         return {"state": "none" if not exp else ("good" if read == exp else "warn"),
                 "pct": (100.0 * read / exp) if exp else None,
                 "gaps": gaps, "read": read, "expected": exp}
-
-
-    def delta(e, today, win=WIN):
-        p = [(i, v) for i, v, _o in pts(e, today, win) if v is not None]
-        if len(p) < 2 or not p[0][1]:
-            return {"cls": "flat", "txt": "—"}
-        pc = ((p[-1][1] - p[0][1]) / abs(p[0][1])) * 100
-        return {"cls": "up" if pc > 1.5 else ("dn" if pc < -1.5 else "flat"),
-                "txt": ("+" if pc > 0 else "") + f"{pc:.1f}%"}
 
 
     # -------------------------------------------------------------- chrome
@@ -951,9 +941,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             f'<div class="d flat num">{r["read"]} of {r["expected"]} {g}s</div></div>'
             f'<div><div class="lab">latest value</div>'
             f'<div class="d flat num">{latest}</div></div>'
-            f'<div><div class="lab">change over {win}d</div>'
-            f'<div class="d {delta(d, today, win)["cls"]}">'
-            f'{esc(delta(d, today, win)["txt"])}</div></div></div>'
+            f'</div>'
             f'{strip_html(e, today, win)}'
             f'<div class="axis"><span>{esc(key_label(sb["keys"][0]))}</span>'
             f'<span>{esc(bar_caption)}</span>'
@@ -1041,7 +1029,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         ("Function", "A capability the network needs, named by <b>what it does</b> rather than by which repo provides it. Functions outlive implementations — the function survives when the code that serves it is replaced."),
         ("Metric", "One number a funded team is measured on: an indicator with an agreed cadence and a public source, fetched by a pipeline the team does not control. It is the unit every card on this page draws."),
         ("Proposed", "A metric drafted against a function but not yet named in a signed agreement. Monitoring follows the agreements, so a proposed metric is not collected yet."),
-        ("Coverage · 90d", "The share of the reading periods the window expects that actually carry a value, counted at each metric's own cadence so a weekly metric is not penalised for being coarse. Low coverage means the metric exists but is not being collected."),
+        ("Coverage · 30d", "The share of the reading periods the window expects that actually carry a value, counted at each metric's own cadence so a weekly metric is not penalised for being coarse. Low coverage means the metric exists but is not being collected."),
         ("Unscored", "Measured, but not judged. A reading is unscored when no threshold is in force — which today is every reading, because SLA thresholds are still being negotiated."),
         ("Gap", "A period the source was asked and gave no defensible number. Not a zero, not a breach, and not the team's failure — it is a hole in the instrument."),
         ("Tier", "How replaceable a function is, from <b>Irreplaceable</b> to <b>Important</b>. Tier sets the funding posture and whether redundancy is required."),
@@ -1102,15 +1090,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             return '<div class="strip sm"></div>'
         worst = min(ents, key=lambda e: (roll(e, today)["pct"]
                                          if roll(e, today)["pct"] is not None else 101))
-        row_bars = 46
+        row_bars = 30
         sbw = strip_bits(worst, today)
         if not sbw["keys"]:
             return '<div class="strip sm"></div>'
-        span = 1 if len(sbw["keys"]) <= row_bars else -(-len(sbw["keys"]) // row_bars)
-        cad = f'{span} {sbw["g"]}s' if span > 1 else f'1 {sbw["g"]}'
-        return (strip_html(worst, today, small=True, max_bars=row_bars)
-                + f'<div class="rowcad">1 bar = {cad}'
-                + (f' · worst of {len(ents)}' if len(ents) > 1 else '') + '</div>')
+        # At WIN=30 a daily metric fills exactly one bar per day, so the caption that used to
+        # explain the compression ("1 bar = 2 days · worst of 3") no longer says anything.
+        return strip_html(worst, today, small=True, max_bars=row_bars)
 
 
     def build_public_page(reg):
@@ -1185,11 +1171,10 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           'agreement carrying one has been executed yet.</p>'
           '<div class="ladder"><div class="ladder-h">'
           '<span></span><span>Tier</span><span>Functions</span>'
-          f'<span>Coverage · {WIN}d</span><span>Funding posture</span></div>')
+          f'<span>Projects</span><span>Coverage · {WIN}d</span></div>')
 
         for t in TIERS:
             fns = [f for f in KF if f["tier"] == t["id"]]
-            seen = [f for f in fns if f["e"]]
             ag = agg([e for f in fns for e in ents(f)], today)
             if not fns:
                 count = ('<div class="rung-c" style="font-size:13px;color:var(--k-ink-3)">'
@@ -1197,15 +1182,15 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             else:
                 count = (f'<div class="rung-c">{len(fns)}</div>'
                          f'<div class="rung-cl">in inventory</div>')
-            note = (f'{len(seen)} of {len(fns)} reporting' if fns else "nothing to report")
+            projects = len({e["team"] for f in fns for e in ents(f)})
             a(f'<a class="rung" href="#k-functions">'
               f'<span class="rung-bar" style="background:var({t["v"]})"></span>'
               f'<span><span class="rung-n">{esc(t["name"])}</span>'
               f'<span class="rung-s">{esc(t["label"])}</span></span>'
               f'<span>{count}</span>'
-              f'<span><span class="rung-c">{pct_label(ag["pct"])}</span>'
-              f'<span class="rung-cl">{esc(note)}</span></span>'
-              f'<span class="rung-p">{esc(t["short"])}</span></a>')
+              f'<span><span class="rung-c">{projects or "—"}</span>'
+              f'<span class="rung-cl">reporting</span></span>'
+              f'<span><span class="rung-c">{pct_label(ag["pct"])}</span></span></a>')
         a('</div></div></header>')
 
         # ------------------------------------------------------- provenance
@@ -1312,24 +1297,19 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           '<input type="radio" name="kview" id="kv-pr" checked>'
           '<div class="wrap"><div class="viewbar" role="tablist">'
           f'<label for="kv-pr">By project <b>{len(PR)}</b></label>'
-          f'<label for="kv-fn">By function <b>{len(KF)}</b></label>'
+          f'<label for="kv-fn">By function <b>{len(watched)}</b></label>'
           '</div></div>'
           '<div class="wrap vpanel v-fn">')
 
         for t in TIERS:
-            fns = [f for f in KF if f["tier"] == t["id"]]
-            seen = [f for f in fns if f["e"]]
-            prop = [f for f in fns if not f["e"] and f["drafts"]]
-            head = ((f'{len(seen)} of {len(fns)} monitored'
-                     + (f' · {len(prop)} proposed' if prop else ""))
-                    if fns else "inventory pending")
+            fns = [f for f in KF if f["tier"] == t["id"] and f["e"]]
+            head = f'{len(fns)} monitored' if fns else "none monitored"
             a(f'<div class="fgroup"><div class="fg-h">'
               f'<span class="fg-n" style="color:var({t["v"]})">{esc(t["name"])}</span>'
               f'<span class="fg-c">{esc(head)}</span></div>')
             if not fns:
-                a(f'<div class="note">Functions in this tier have not been inventoried yet. '
-                  f'Posture is set — {esc(t["short"].lower())} — but nothing is being measured '
-                  f'against it.</div></div>')
+                a(f'<div class="note">Nothing in this tier is being measured yet. '
+                  f'Posture is set — {esc(t["short"].lower())}.</div></div>')
                 continue
             for dom in dict.fromkeys(f["sub"] for f in fns):
                 a(f'<div class="dom">{esc(dom)}</div>')
@@ -1347,17 +1327,16 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         # WAITING, not failing. The three-way split says which: proposed but unsigned, or not
         # yet scoped at all. All 31 stay in the denominator -- coverage against only the covered
         # functions always reads 100%.
-        drafted = [f for f in KF if not f["e"] and f["drafts"]]
-        unscoped = [f for f in KF if not f["e"] and not f["drafts"]]
-        a('<div class="mets two" style="margin-bottom:34px">'
-          f'<div class="met"><div class="met-v">{len(watched)}'
-          f'<span style="color:var(--k-ink-3)">/{len(KF)}</span></div>'
-          f'<div class="met-k">Kernel functions monitored</div>'
-          f'<div class="met-d">{len(drafted)} with metrics proposed, awaiting a signed '
-          f'appendix · {len(unscoped)} not yet scoped</div></div>'
+        a('<div class="mets" style="margin-bottom:34px">'
+          f'<div class="met"><div class="met-v">{len(teams)}</div>'
+          f'<div class="met-k">Teams</div>'
+          f'<div class="met-d">Reporting at least one metric</div></div>'
+          f'<div class="met"><div class="met-v">{len(grants)}</div>'
+          f'<div class="met-k">Grants</div>'
+          f'<div class="met-d">Karma applications with a metric against them</div></div>'
           f'<div class="met"><div class="met-v">{len(E)}</div>'
-          f'<div class="met-k">Metrics collected</div>'
-          f'<div class="met-d">{len(teams)} teams · {len(grants)} grants</div></div>'
+          f'<div class="met-k">Metrics</div>'
+          f'<div class="met-d">Each collected on its own cadence</div></div>'
           '</div>')
         with_grant = [p for p in PR if p["grants"]]
         without = [p for p in PR if not p["grants"]]
@@ -1578,19 +1557,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
 
 
     def program_metrics(KF, E, PR, today, teams_of, overall):
-        listed = len(KF)
-        watched = [f for f in KF if f["e"]]
         top_solo = sum(1 for f in KF
                        if f["tier"] in ("irreplaceable", "essential") and len(teams_of(f)) == 1)
         drafted = sum(1 for f in KF if not f["e"] and f["drafts"])
         unscoped = sum(1 for f in KF if not f["e"] and not f["drafts"])
         drafts = sum(f["drafts"] for f in KF)
         teams = len({e["team"] for e in E})
-        cover = round(len(watched) / listed * 100) if listed else 0
         return [
-            {"v": f"{cover}%", "k": "Kernel functions monitored",
-             "d": f"{len(watched)} of {listed}, each under a signed agreement",
-             "cls": ""},
             {"v": pct_label(overall["pct"]), "k": f"Reading coverage · rolling {WIN} days",
              "d": f'{overall["read"]} of {overall["expected"]} expected reading periods carry a '
                   f'value', "cls": "warn" if overall["state"] == "warn" else ""},
