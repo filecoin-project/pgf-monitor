@@ -240,6 +240,8 @@ _No monitoring entry yet._
 | team | metric | source | state |
 |---|---|---|---|
 | blockscout | `blockscout_calibnet_head_age_seconds` (calibnet-explorer-blockscout) | filecoin-testnet.blockscout.com | adopted |
+| blockscout | `blockscout_calibnet_indexer_block_lag` (calibnet-explorer-indexer-lag) | filecoin-testnet.blockscout.com | adopted |
+| blockscout | `blockscout_calibnet_health_ok` (calibnet-explorer-health-flag) | filecoin-testnet.blockscout.com | adopted |
 
 ### 🟡 Monitoring, archival access and incident response (Grafana, OpsGenie, IR coordination)
 
@@ -288,6 +290,8 @@ _No monitoring entry yet._
 | team | metric | source | state |
 |---|---|---|---|
 | blockscout | `blockscout_mainnet_head_age_seconds` (fevm-mainnet-explorer-blockscout) | filecoin.blockscout.com | adopted |
+| blockscout | `blockscout_mainnet_indexer_block_lag` (mainnet-explorer-indexer-lag) | filecoin.blockscout.com | adopted |
+| blockscout | `blockscout_mainnet_health_ok` (mainnet-explorer-health-flag) | filecoin.blockscout.com | adopted |
 | blockscout | `explorer_max_tipset_gap_seconds` (mainnet-block-explorer) | filfox.info | adopted |
 
 ### 🟢 Network-wide documentation along with source code availability and source control
