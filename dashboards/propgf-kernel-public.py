@@ -903,9 +903,12 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         """
         r = roll(e, today, win)
         d = dense(e)
-        head = f'{e["team"]} · {e["fid"]}' if qualify else e["fid"]
+        # The project, not the team: `team` is our registry filename stem, so the Filfox
+        # cross-check lives in blockscout.yaml and would otherwise read "blockscout".
+        head = f'{e["project"]} · {e["fid"]}' if qualify else e["fid"]
         meta = " · ".join(x for x in [
-            e["team"] if show_team else None, e["metric"], e["cad"],
+            # the PROJECT, for the same reason as `head` above -- `team` is a filename stem
+            e["project"] if show_team else None, e["metric"], e["cad"],
             f'grant {e["grant"]}' if e["grant"] else "no grant pays for this",
         ] if x)
         state = (chip("acc", f'Monitored · {esc(e["cad"])}') if r["last_val"]
@@ -1346,23 +1349,16 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           f'<div class="met-k">Metrics</div>'
           f'<div class="met-d">Each collected on its own cadence</div></div>'
           '</div>')
-        with_grant = [p for p in PR if p["grants"]]
-        without = [p for p in PR if not p["grants"]]
-        for label, group, note in (
-            ("Reporting under a grant", with_grant,
-             "Each row is one Karma application and the metrics it pays for."),
-            ("Reporting with no grant against it", without,
-             "Metrics nobody is paid for — cross-checks we run at our own expense."),
-        ):
-            if not group:
-                continue
-            a(f'<div class="fgroup"><div class="fg-h">'
-              f'<span class="fg-n">{esc(label)}</span>'
-              f'<span class="fg-c">{len(group)} row{"s" if len(group) != 1 else ""}</span></div>'
-              f'<div class="dom">{esc(note)}</div>')
-            for p in group:
-                a(project_row(p, today, E, KF))
-            a('</div>')
+        # Every row here is funded, so there is no longer a second group to split off.
+        a(f'<div class="fgroup"><div class="fg-h">'
+          f'<span class="fg-n">Reporting under a grant</span>'
+          f'<span class="fg-c">{len(PR)} row{"s" if len(PR) != 1 else ""}</span></div>'
+          f'<div class="dom">Each row is one Karma application and the metrics it pays for. '
+          f'Cross-checks nobody is paid for are in the by-function view, beside the funded '
+          f'reading they corroborate.</div>')
+        for p in PR:
+            a(project_row(p, today, E, KF))
+        a('</div>')
         a('</div>')  # /v-pr
         a('</div></section>')  # /kviews /section
 
@@ -1370,9 +1366,10 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         a('<section class="sec" id="k-metrics"><div class="wrap">'
           '<div class="sec-head"><p class="eyebrow">Coverage</p>'
           '<h2>How much of the Kernel is actually observed</h2>'
-          '<p class="lede">Aggregate health matters less than coverage, and with no bar in force '
-          'coverage is the only claim this page can make. A function with no reporter and no metric '
-          'is invisible here, which is exactly what makes it dangerous.</p></div>'
+          '<p class="lede">Aggregate health matters less than coverage: most metrics still carry '
+          'no agreed bar, so a pass rate over the scored minority would describe a different '
+          'program. A function with no reporter and no metric is invisible here, which is exactly '
+          'what makes it dangerous.</p></div>'
           '<div class="mets">')
         for c in program_metrics(KF, E, PR, today, teams_of, overall):
             a(f'<div class="met"><div class="met-v">{esc(c["v"])}</div>'
@@ -1798,17 +1795,25 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
         } for f in functions]
 
         # A row of the "by project" view is one GRANT, not one team: a recipient can hold two
-        # (ChainSafe holds Forest and Community Services), and `team` cannot tell them apart.
-        # The one commitment no grant pays for gets its own row rather than being hidden.
+        # (ChainSafe holds Forest and Infrastructure Services), and `team` cannot tell them apart.
+        #
+        # A metric NO GRANT PAYS FOR gets no row here at all. This view answers "who is funded by
+        # kernel ProPGF, and what are they on the hook for" -- an unfunded provider is not an
+        # answer to that question, whatever else it is. Today that is the Filfox cross-check,
+        # which is a second provider of `mainnet-explorer` and belongs in the BY-FUNCTION view
+        # beside Blockscout's own reading, where it already appears. Listing it here previously
+        # put it among the funded teams under a "no grant against it" heading, which read as a
+        # funded team that had lost its grant.
         groups = {}
         for e in entries:
-            key = e["grant"] or f'team:{e["team"]}'
-            g = groups.setdefault(key, {"name": e["project"], "team": e["team"],
-                                        "slug": e["slug"], "grants": [], "e": []})
+            if not e["grant"]:
+                continue
+            g = groups.setdefault(e["grant"], {"name": e["project"], "team": e["team"],
+                                               "slug": e["slug"], "grants": [], "e": []})
             g["e"].append(e["id"])
-            if e["grant"] and e["grant"] not in g["grants"]:
+            if e["grant"] not in g["grants"]:
                 g["grants"].append(e["grant"])
-        projects = sorted(groups.values(), key=lambda p: (not p["grants"], p["name"].lower()))
+        projects = sorted(groups.values(), key=lambda p: p["name"].lower())
 
         today = ""
         for e in entries:
