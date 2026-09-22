@@ -1594,7 +1594,8 @@ def live_registry(build_registry, mo, pyoso_db_conn, to_rows):
     # of the two public tables, so the page cannot describe a world the warehouse does not.
     _series = mo.sql(
         """
-        SELECT sample_date, team, project_display_name, oso_project_slug, function_id,
+        SELECT sample_date, team, project_display_name, funded_project_name,
+               oso_project_slug, function_id,
                metric_name, grant_ref, kernel_id, kernel_function, tier, category, sub_category,
                amount, threshold_op, threshold_value, threshold_source, method, cadence,
                sla_statement
@@ -1740,7 +1741,16 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
                 outs.append(verdict_of(r, _v) if _v is not None else
                             ("x" if _iso(r["sample_date"]) in PLATFORM_OUTAGES else "i"))
             last = plotted[-1]
-            display = next((_txt(r.get("project_display_name")) for r in reversed(rs)
+            # Label from the GRANT RECIPIENT, falling back to the OSO project, never from
+            # `team` -- the rule docs/public-datasets.md states. The OSO project is a different
+            # identity and sometimes a stale one: Plumbline's is `reiers-filecoin`, so labelling
+            # from it rendered the recipient as "Reiers", and ChainSafe's is
+            # `filecoin-community-services-chainsafe` while the live Karma application is
+            # `filecoin-infrastructure-services`. The fallback still matters -- the Filfox
+            # cross-check has no grant, so no recipient name, and `Filfox` is the right label.
+            display = next((_txt(r.get("funded_project_name")) for r in reversed(rs)
+                            if _txt(r.get("funded_project_name"))), "") or \
+                      next((_txt(r.get("project_display_name")) for r in reversed(rs)
                             if _txt(r.get("project_display_name"))), "")
             entries.append({
                 "id": len(entries),
