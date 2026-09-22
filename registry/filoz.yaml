@@ -41,7 +41,7 @@ functions:
       statement: "Curio release cadence: average days between releases (a sealing-pipeline maintenance signal), measured monthly"
       metric: avg_days_between_releases
       cadence: monthly
-      unscored_reason: no-signed-bar
+      threshold: { op: "<=", value: 45, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json

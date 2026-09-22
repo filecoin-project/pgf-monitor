@@ -62,7 +62,7 @@ functions:
       statement: "Open issue count on filecoin-project/filecoin-docs, measured weekly — the backlog the funded documentation work is drawing down"
       metric: docs_open_issues
       cadence: weekly
-      unscored_reason: no-signed-bar
+      unscored_reason: not-in-appendix
     source:
       adapter: oso
       kind: http-json
