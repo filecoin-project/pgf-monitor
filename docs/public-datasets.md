@@ -119,6 +119,13 @@ On every row of `kernel_timeseries_metrics_by_project`:
   is the applicant's project on Karma (e.g. grant `APP-HDYJESMD-2WLL00` pays OSO slug `filozone`
   but its Karma project is `curio`), so this is the key for reconciling against Karma, not for
   funding attribution.
+- **`funded_project_name`** — the recipient name a reader recognises, resolved from `grant_ref`
+  via `registry/_grants.yaml`. Use this to LABEL a row. Do NOT label from `oso_project_slug`: it is
+  a different identity and sometimes a stale one. Plumbline's OSO project is `reiers-filecoin`, so
+  labelling from the slug rendered the recipient as "Reiers"; ChainSafe's is
+  `filecoin-community-services-chainsafe` while the live Karma application is
+  `filecoin-infrastructure-services` (the community-services slug 404s on Karma). Null on the
+  `unfunded` cross-check, which is the one row with no recipient to name.
 - **`kernel_id`** — the one kernel function this metric evidences. `non-kernel` means the metric is
   real but evidences nothing the inventory names; it is published as itself so it can't be mistaken
   for a missing value.
