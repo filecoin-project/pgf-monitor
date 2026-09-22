@@ -27,9 +27,14 @@ from fpm.manifest import load_manifest
 from fpm.thresholds import CSV_PATH, load_rows, save_rows
 
 
-def registry_bars(registry_dir: str) -> dict[tuple[str, str], tuple[str, str]]:
-    """(team, function_id) -> (op, value) for every commitment the registry now scores."""
-    bars: dict[tuple[str, str], tuple[str, str]] = {}
+def registry_bars(registry_dir: str) -> dict[tuple[str, str], tuple[str, str, str]]:
+    """(team, function_id) -> (op, value, source) for every commitment the registry now scores.
+
+    `source` rides along because the dashboard labels a `provisional` bar as such: reinstating a
+    signed number but leaving the row's source at its withdrawn-era default would publish 13
+    signed commitments as though nobody had agreed them.
+    """
+    bars: dict[tuple[str, str], tuple[str, str, str]] = {}
     for path in sorted(Path(registry_dir).glob("*.yaml")):
         if path.name.startswith("_"):
             continue
@@ -38,7 +43,11 @@ def registry_bars(registry_dir: str) -> dict[tuple[str, str], tuple[str, str]]:
             if fn.sla.threshold_op and fn.sla.threshold_value is not None:
                 value = fn.sla.threshold_value
                 rendered = str(int(value)) if float(value).is_integer() else str(value)
-                bars[(manifest.team, fn.function_id)] = (fn.sla.threshold_op, rendered)
+                bars[(manifest.team, fn.function_id)] = (
+                    fn.sla.threshold_op,
+                    rendered,
+                    fn.sla.threshold_source,
+                )
     return bars
 
 
@@ -56,10 +65,15 @@ def reinstate(rows, bars, executed):
             skipped_no_date.add(row["team"])
             out.append(row)
             continue
-        if row["observed_at"] >= on and not row.get("threshold_op"):
-            op, value = bar
-            row = {**row, "threshold_op": op, "threshold_value": value}
-            changed += 1
+        if row["observed_at"] >= on:
+            op, value, source = bar
+            # Idempotent, and a REPAIR path: a row that already carries the bar but the wrong
+            # source is corrected in place. The first run of this script wrote op and value only,
+            # leaving 323 signed rows labelled `provisional`.
+            want = {"threshold_op": op, "threshold_value": value, "source": source}
+            if any(row.get(k) != v for k, v in want.items()):
+                row = {**row, **want}
+                changed += 1
         out.append(row)
     return out, changed, skipped_no_date
 
@@ -85,11 +99,11 @@ def main(argv: list[str] | None = None) -> int:
 
     per_metric: dict[str, int] = {}
     for before, after in zip(rows, updated):
-        if not before.get("threshold_op") and after.get("threshold_op"):
+        if before != after:
             per_metric[f"{after['team']}/{after['metric']}"] = (
                 per_metric.get(f"{after['team']}/{after['metric']}", 0) + 1
             )
-    print(f"{changed} row(s) across {len(per_metric)} metric(s) would regain a bar:")
+    print(f"{changed} row(s) across {len(per_metric)} metric(s) would change:")
     for name in sorted(per_metric):
         print(f"  {name}: {per_metric[name]} day(s)")
     for team in sorted(missing):
