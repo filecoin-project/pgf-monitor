@@ -90,27 +90,31 @@ On every row of `kernel_timeseries_metrics_by_project`:
   recipient can hold two grants, and `team` cannot tell them apart. **`grant_ref IS NOT NULL` is
   the filter for "funded projects"** — it currently yields 14 grants, one per funded project.
   Empty on the one entry no grant pays for (a cross-check we run at our own expense); see
-  `oso_project_slug = 'unfunded'` below.
+  the Filfox note under `oso_project_slug` below.
 - **`oso_project_slug`** — the OSO project slug of the party receiving payment. Carried as a plain
   column, deliberately **not** as a foreign key into `filpgf_public.projects`: a handful of these
   projects are not in that table, and an inner join would silently drop them rather than showing an
   uncovered project.
 
-  The literal **`unfunded`** is a SENTINEL, not a missing mapping, and it is the honest answer
-  rather than a gap to be filled. It marks a reading nobody is paid for: today one row, the
-  `mainnet-block-explorer` freshness check measured from **Filfox**, an explorer no ProPGF grantee
-  operates. Both the FilOz and Plumbline Appendix 1 §4 tables record Filfox as "third party,
-  ProPGF funded? N". It carries no `grant_ref` and a null `project_display_name`.
+  One row names a provider nobody pays: the `mainnet-block-explorer` freshness check measured from
+  **Filfox**, slug `filfox`. That is a SECOND provider of the `mainnet-explorer` kernel function
+  alongside Blockscout's own — two independent implementations of one Essential function, which is
+  what the tier posture asks for — and not a Blockscout commitment. Both the FilOz and Plumbline
+  Appendix 1 §4 tables record Filfox as "third party, ProPGF funded? N", so it carries **no
+  `grant_ref`**. Funding is `grant_ref`; this column is only who serves the function.
+
+  Until 2026-09-22 this row read `unfunded`, a sentinel that is not a real OSO project. That left a
+  null `project_display_name`, so a consumer labelling from it fell back to the team string and
+  rendered the row as "blockscout" — reading as though Blockscout held no grant. **Label a row from
+  `funded_project_name`, falling back to `project_display_name`; never from `team`.**
 
   It sits in the Blockscout team file because `team` is our registry filename stem — where a
-  commitment is tracked — and NOT a funding attribution; `oso_project_slug` is the attribution.
-  Attributing this reading to Blockscout would assert they are funded to keep a third party's
-  index current. Blockscout's own funded explorer metrics are in the same file under slug
-  `blockscout` with `grant_ref APP-J8CF3XJY-CG03HL`, which is why the slug looks available.
+  commitment is tracked, and the key its 40 readings since 2026-07-15 are stored under — NOT a
+  funding attribution. `oso_project_slug` is the attribution.
 
   So a count of distinct `oso_project_slug` is 15 while the funded-project count is 14. Filter on
-  `grant_ref IS NOT NULL` rather than excluding the string: a future third-party cross-check will
-  also be null but may not reuse this value.
+  **`grant_ref IS NOT NULL`** rather than on any slug value: that is the only reliable funding
+  filter, and a future third-party cross-check will be null too.
 - **`karma_project_id`** / **`karma_project_slug`** — the Karma project the grant is attached to,
   resolved from `grant_ref`. The **id** (`0x…`) is the stable key and the one to join on; the
   **slug** is human-readable but MUTABLE — Karma derives it from the application title, so it
@@ -119,6 +123,13 @@ On every row of `kernel_timeseries_metrics_by_project`:
   is the applicant's project on Karma (e.g. grant `APP-HDYJESMD-2WLL00` pays OSO slug `filozone`
   but its Karma project is `curio`), so this is the key for reconciling against Karma, not for
   funding attribution.
+- **`funded_project_name`** — the recipient name a reader recognises, resolved from `grant_ref`
+  via `registry/_grants.yaml`. Use this to LABEL a row. Do NOT label from `oso_project_slug`: it is
+  a different identity and sometimes a stale one. Plumbline's OSO project is `reiers-filecoin`, so
+  labelling from the slug rendered the recipient as "Reiers"; ChainSafe's is
+  `filecoin-community-services-chainsafe` while the live Karma application is
+  `filecoin-infrastructure-services` (the community-services slug 404s on Karma). Null on the
+  `unfunded` cross-check, which is the one row with no recipient to name.
 - **`kernel_id`** — the one kernel function this metric evidences. `non-kernel` means the metric is
   real but evidences nothing the inventory names; it is published as itself so it can't be mistaken
   for a missing value.

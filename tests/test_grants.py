@@ -190,13 +190,26 @@ def test_grant_ref_agrees_with_the_payee_slug():
     assert problems == []
 
 
-def test_only_an_unfunded_entry_may_omit_its_grant_ref():
-    """Every metric a grant pays for must say which grant. The one exception is the filfox
-    cross-check, whose payee slug is literally `unfunded`."""
+#: OSO project slugs we observe WITHOUT paying them -- a provider serving a kernel function that
+#: no grant covers. A metric attributed to one of these legitimately has no `grant_ref`.
+#:
+#: This is an explicit allowlist rather than a sentinel value precisely so the exception stays
+#: narrow: the check below exists to stop a FORGOTTEN grant_ref looking intentional, and a
+#: free-form "no payee" marker would let any typo pass. Adding a slug here is a deliberate act.
+#:
+#: `filfox` replaced the literal `unfunded` on 2026-09-22. That sentinel was not a real OSO
+#: project, so the mart carried a null project_display_name and the public page labelled the row
+#: from the team string -- rendering a second "blockscout" project that appeared to hold no grant.
+UNFUNDED_PROVIDERS = {"filfox"}
+
+
+def test_only_an_unfunded_provider_may_omit_its_grant_ref():
+    """Every metric a grant pays for must say which grant. The exceptions are the providers in
+    UNFUNDED_PROVIDERS, which serve a kernel function without being paid for it."""
     missing = [
         f"{name}:{fn.function_id}"
         for name, _team, fn in _adopted_entries()
-        if not fn.grant_ref and fn.funded_project_oso_slug != "unfunded"
+        if not fn.grant_ref and fn.funded_project_oso_slug not in UNFUNDED_PROVIDERS
     ]
     assert missing == []
 

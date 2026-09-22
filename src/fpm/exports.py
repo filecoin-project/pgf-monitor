@@ -56,6 +56,9 @@ METRICS_COLUMNS = [
     # registry/_grants.yaml via grant_ref; empty for an entry no grant pays for.
     "karma_project_id",
     "karma_project_slug",
+    # The recipient name a reader recognises, so the mart does not have to label a row from the
+    # OSO project -- a different identity, and sometimes a stale one. See _metric_row.
+    "funded_project_name",
     "source_host",
     "repos",
     "cadence",
@@ -105,6 +108,12 @@ def _metric_row(team: str, fn: FunctionSpec, state: str, grants: dict[str, Grant
         "oso_project_slug": fn.funded_project_oso_slug,
         "karma_project_id": grant.application_karma_project_id if grant else "",
         "karma_project_slug": grant.application_karma_project_slug if grant else "",
+        # The name a reader recognises. The mart otherwise labels a row from the OSO project,
+        # which is a different identity and sometimes a stale one: Plumbline's OSO project is
+        # `reiers-filecoin`, so the public page rendered the recipient as "Reiers", and
+        # ChainSafe's is `filecoin-community-services-chainsafe` while the live Karma
+        # application is `filecoin-infrastructure-services`. Empty for a metric with no grant.
+        "funded_project_name": grant.funded_project_name if grant else "",
         # Three distinct facts, three distinct values: `fixture` is a placeholder awaiting a
         # real feed, `oso-warehouse` is a live source that legitimately has no host, and `?` is
         # a source whose host we could not parse. This column reaches an outside consumer via

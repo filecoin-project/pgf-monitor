@@ -153,7 +153,7 @@ grants:
     application_name: "FVM Stablecoin Settlement Infrastructure Program"
     application_karma_project_slug: secured-finance
     application_karma_project_id: "0x8dde476a5e0b221a1bd168df2ccea030df7b81cc55825da21c9e1ff1f7e116a1"
-    funded_project_name: FVM Stablecoin Settlement
+    funded_project_name: USDFC (Secured Finance)
     funded_project_oso_slug: secured-finance
     metrics_registry: registry/secured-finance.yaml
     facts: contracts/secured-finance.facts.yaml
@@ -257,7 +257,7 @@ grants:
     application_name: "Plumbline : CalibrationNet Stability Project"
     application_karma_project_slug: plumbline--calibrationnet-stability-project
     application_karma_project_id: "0x143bc4d490c05ea98a88247cf25b687450f922ea6c6f2a386aef50bdf651795b"
-    funded_project_name: Plumbline — Calibration Net Stability
+    funded_project_name: Plumbline
     funded_project_oso_slug: reiers-filecoin
     metrics_registry: registry/plumbline.yaml
     facts: contracts/plumbline.facts.yaml
