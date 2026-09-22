@@ -58,7 +58,7 @@ functions:
       statement: "Goldsky-hosted Filecoin FEVM subgraph indexing-error flag (hasIndexingErrors), measured daily"
       metric: fevm_subgraph_indexing_errors
       cadence: daily
-      unscored_reason: contract-not-executed
+      threshold: { op: "==", value: 0, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json

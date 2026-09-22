@@ -28,7 +28,7 @@ functions:
       statement: "Zondax archival RPC depth: the height returned by ChainGetTipSetByHeight(100000), Sep 2020, measured weekly — pruned nodes cannot answer this"
       metric: archival_tipset_height_served
       cadence: weekly
-      unscored_reason: no-agreement
+      threshold: { op: "==", value: 100000, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json
@@ -65,7 +65,7 @@ functions:
       statement: "Rosetta stack currency: age of the latest rosetta-filecoin-proxy release, measured weekly"
       metric: rosetta_release_age_days
       cadence: weekly
-      unscored_reason: no-agreement
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json

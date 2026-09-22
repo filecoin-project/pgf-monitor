@@ -116,7 +116,7 @@ functions:
       statement: "Public calibnet RPC chain-head lag: wall-clock expected epoch minus reported Height, measured daily — calibnet is the upgrade-rehearsal target developers stage against"
       metric: rpc_calibnet_head_lag_epochs
       cadence: daily
-      unscored_reason: no-signed-bar
+      unscored_reason: not-in-appendix
     source:
       adapter: oso
       kind: http-json
@@ -151,7 +151,7 @@ functions:
       statement: "Chain.Love's own uptime monitor for the funded endpoint reports availability over the trailing window, measured daily — the operator-reported view of the service the grant funds"
       metric: rpc_endpoint_uptime_pct
       cadence: daily
-      unscored_reason: no-signed-bar
+      unscored_reason: not-in-appendix
     source:
       adapter: oso
       kind: http-json
@@ -180,7 +180,7 @@ functions:
       statement: "Median public RPC response latency from Chain.Love's own metrics feed, measured daily — a fresh chain head says the node is syncing, but not that the endpoint is usable"
       metric: rpc_p50_latency_seconds
       cadence: daily
-      unscored_reason: no-signed-bar
+      unscored_reason: not-in-appendix
     source:
       adapter: oso
       kind: http-json
