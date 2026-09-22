@@ -22,7 +22,7 @@ functions:
     sla:
       statement: "An independent drand HTTP relay (Cloudflare) stays in sync: expected - current <= 2 rounds, measured daily — randomness must be reachable even if the primary relay fails"
       metric: relay_mirror_round_lag
-      unscored_reason: contract-not-executed
+      threshold: { op: "<=", value: 2, source: signed-appendix }
       cadence: daily
     source:
       adapter: oso
@@ -49,7 +49,7 @@ functions:
     sla:
       statement: "Randamu relay mirror serves fresh quicknet rounds: wall-clock expected round minus served round <= 20 rounds (60s), measured daily"
       metric: relay_quicknet_round_lag
-      unscored_reason: contract-not-executed
+      threshold: { op: "<=", value: 20, source: signed-appendix }
       cadence: daily
     source:
       adapter: oso
@@ -75,7 +75,7 @@ functions:
     sla:
       statement: "drand beacon relay not lagging: expected - current <= 1 round, measured daily"
       metric: beacon_round_lag
-      unscored_reason: contract-not-executed
+      threshold: { op: "<=", value: 1, source: signed-appendix }
       cadence: daily
     source:
       adapter: oso
@@ -101,7 +101,7 @@ functions:
       statement: "drand's own status-page incident indicator, measured daily — the operator-reported health of the HTTP relay network Filecoin SPs consume randomness from"
       metric: statuspage_impact_level
       cadence: daily
-      unscored_reason: doc-conflict
+      threshold: { op: "<=", value: 1, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json
@@ -130,7 +130,7 @@ functions:
     sla:
       statement: "drand ships a software-stack release at least every 45 days on average (active-maintenance signal), measured monthly"
       metric: avg_days_between_releases
-      unscored_reason: contract-not-executed
+      threshold: { op: "<=", value: 45, source: signed-appendix }
       cadence: monthly
     source:
       adapter: oso

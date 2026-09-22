@@ -32,9 +32,9 @@ functions:
     funded_project_oso_slug: ankr-network
     grant_ref: APP-ICVR43KL-H0P3K6
     sla:
-      statement: "Public mainnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 5 epochs (150s), measured daily — a stale head means the endpoint's backing node has stopped syncing"
+      statement: "Public mainnet RPC serves a fresh chain head: wall-clock expected epoch minus reported Height <= 3 epochs (90s), measured daily — a stale head means the endpoint's backing node has stopped syncing"
       metric: rpc_head_lag_epochs
-      unscored_reason: contract-not-executed
+      threshold: { op: "<=", value: 3, source: signed-appendix }
       cadence: daily
     source:
       adapter: oso
@@ -73,7 +73,7 @@ functions:
     sla:
       statement: "FEVM/Eth RPC surface keeps pace: wall-clock expected epoch minus decoded eth_blockNumber <= 4 epochs, measured daily — the eth_* API is what FEVM dApps depend on, runs ~1 epoch below the native head by construction (so 4 = native 3 + 1), and can stall independently of the native API"
       metric: fevm_eth_head_lag_epochs
-      unscored_reason: contract-not-executed
+      threshold: { op: "<=", value: 4, source: signed-appendix }
       cadence: daily
     source:
       adapter: oso

@@ -81,6 +81,126 @@ functions:
       data_selector: "metadata.blocks.latest_block.db"
       extract: { column: timestamp, timestamp_column: timestamp, cast: date, reduce: latest, derive: age_seconds, unit: seconds }
 
+  # The /api/health payload carries SEVEN fields; until now this manifest read exactly one of
+  # them (db.timestamp, for head age). The four entries below add the two that say something
+  # the head age cannot, on both funded networks. No new host, no allowlist change: the same
+  # endpoint the team nominated in signed appendix §3 (2026-07-27).
+  #
+  # PROBED 2026-09-22, both networks, 200 JSON (238B), uncached:
+  #   mainnet   node.number 6392940 == db.number 6392940 (0 delta), healthy=true
+  #   calibnet  node.number 4092273 == db.number 4092273 (0 delta), healthy=true
+  #
+  # WHY node-minus-db, when head age already exists: head age cannot separate "the chain is
+  # quiet" from "the indexer is wedged" -- both read as a rising number. The delta between the
+  # node's height and the indexed height isolates the second, which is the failure the explorer
+  # function actually exists to catch.
+  #
+  # NO THRESHOLD ON ANY OF THESE, deliberately. Blockscout's §3 commits the two endpoints and
+  # states no bar at all, so any number here would be one ProPGF invented. Both deltas have also
+  # only ever been observed at 0 -- a single value is not a distribution, and the Filfox
+  # explorer SLA already taught us what happens when a bar is sized from one probe. Let these
+  # accrue in data/observations.csv, then take the real distribution to the team and ask.
+  #
+  # COLUMN NAMES ARE UNPROVEN OFFLINE: the fixture adapter reads a canned `value` and never runs
+  # transform SQL, so dlt's flattening of these nested objects is only exercised by the live
+  # dry-run. Needs the `dry-run-ok` label before merge.
+  - function_id: mainnet-explorer-indexer-lag
+    kernel_id: mainnet-explorer
+    origin: oso
+    tier: essential
+    category: 'UX/DX'
+    sub_category: 'Explorers and Tooling'
+    funded_project_oso_slug: blockscout
+    grant_ref: APP-J8CF3XJY-CG03HL
+    sla:
+      statement: "Blockscout Filecoin mainnet explorer indexer lag: chain-node block height minus indexed block height, measured daily — isolates a wedged indexer from a quiet chain, which head age alone cannot"
+      metric: blockscout_mainnet_indexer_block_lag
+      cadence: daily
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filecoin.blockscout.com"
+      endpoint: "https://filecoin.blockscout.com/api/health"
+      query: "/api/health"
+      # the PARENT of db, so node and db both flatten onto one row as node__number / db__number
+      data_selector: "metadata.blocks.latest_block"
+    transform:
+      # blocks the indexed database trails the node it reads; 0 when fully caught up
+      sql: "SELECT MAX(CAST(node__number AS DOUBLE) - CAST(db__number AS DOUBLE)) FROM raw"
+
+  - function_id: calibnet-explorer-indexer-lag
+    kernel_id: calibnet-explorer
+    origin: oso
+    tier: essential
+    category: 'Coordination & Hardening'
+    sub_category: 'Testnets - explorer'
+    funded_project_oso_slug: blockscout
+    grant_ref: APP-J8CF3XJY-CG03HL
+    sla:
+      statement: "Blockscout Calibration testnet explorer indexer lag: chain-node block height minus indexed block height, measured daily — upgrade rehearsal needs an explorer that is actually keeping up, not merely reachable"
+      metric: blockscout_calibnet_indexer_block_lag
+      cadence: daily
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filecoin-testnet.blockscout.com"
+      endpoint: "https://filecoin-testnet.blockscout.com/api/health"
+      query: "/api/health"
+      data_selector: "metadata.blocks.latest_block"
+    transform:
+      sql: "SELECT MAX(CAST(node__number AS DOUBLE) - CAST(db__number AS DOUBLE)) FROM raw"
+
+  # The operator's OWN health assertion, which is a different axis from anything derived: the
+  # same shape as randamu's statuspage_impact_level. It is a SELF-REPORTED number -- the adapter
+  # marks claim provenance, so `origin` here stays `oso` (who proposed it). 1.0 healthy, 0.0 not.
+  # No data_selector --
+  # `healthy` sits at the top level of the response.
+  - function_id: mainnet-explorer-health-flag
+    kernel_id: mainnet-explorer
+    origin: oso
+    tier: essential
+    category: 'UX/DX'
+    sub_category: 'Explorers and Tooling'
+    funded_project_oso_slug: blockscout
+    grant_ref: APP-J8CF3XJY-CG03HL
+    sla:
+      statement: "Blockscout Filecoin mainnet explorer self-reported health: the operator's own `healthy` flag on /api/health, measured daily — 1 healthy, 0 not"
+      metric: blockscout_mainnet_health_ok
+      cadence: daily
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filecoin.blockscout.com"
+      endpoint: "https://filecoin.blockscout.com/api/health"
+      query: "/api/health"
+    transform:
+      sql: "SELECT MAX(CASE WHEN healthy THEN 1.0 ELSE 0.0 END) FROM raw"
+
+  - function_id: calibnet-explorer-health-flag
+    kernel_id: calibnet-explorer
+    origin: oso
+    tier: essential
+    category: 'Coordination & Hardening'
+    sub_category: 'Testnets - explorer'
+    funded_project_oso_slug: blockscout
+    grant_ref: APP-J8CF3XJY-CG03HL
+    sla:
+      statement: "Blockscout Calibration testnet explorer self-reported health: the operator's own `healthy` flag on /api/health, measured daily — 1 healthy, 0 not"
+      metric: blockscout_calibnet_health_ok
+      cadence: daily
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso
+      kind: http-json
+      base_url: "https://filecoin-testnet.blockscout.com"
+      endpoint: "https://filecoin-testnet.blockscout.com/api/health"
+      query: "/api/health"
+    transform:
+      sql: "SELECT MAX(CASE WHEN healthy THEN 1.0 ELSE 0.0 END) FROM raw"
+
   # DROPPED 2026-07-29: fevm-verified-contracts (verified_smart_contracts >= 985 weekly,
   # from /api/v2/smart-contracts/counters). It originated in Blockscout's own Karma
   # application (3.2 Verification metrics, "2x increase over the year"), but the team
