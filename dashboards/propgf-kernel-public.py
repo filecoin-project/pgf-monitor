@@ -263,9 +263,6 @@ def stylesheet():
         .kpage .note{font-family:var(--k-mono);font-size:11.5px;color:var(--k-ink-3);margin-top:16px;padding:12px 14px;background:var(--k-paper-3);border-radius:8px}
 
         /* metric cards */
-        .kpage .sla-notice{display:flex;gap:10px;align-items:flex-start;padding:13px 16px;margin-bottom:20px;
-          border:1px solid #E7CE92;background:var(--k-t2-wash);border-radius:8px;font-size:13.5px;color:var(--k-ink-2)}
-        .kpage .sla-notice b{color:var(--k-ink)}
         .kpage .mets.two{grid-template-columns:repeat(2,1fr)}
         @media(max-width:560px){.kpage .mets.two{grid-template-columns:1fr}}
         .kpage .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--k-paper);border:1px solid var(--k-rule);border-width:1px 0 0 1px}
@@ -431,10 +428,10 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
     # The formatting, axis, strip and line-chart helpers were lifted VERBATIM from the
     # propgf-kernel-mockup_v2 design reference (retired 2026-09-14) so the two pages could not
     # drift apart visually. What changed is the ROLL-UP: the mockup rolled readings into a
-    # pass/fail SLA percentage, and no bar is in force here, so this page rolls
-    # them into reading coverage instead -- the share of the periods a metric's
-    # own cadence expects that actually carry a value. Same shape in the layout,
-    # a claim the public tables can actually support.
+    # pass/fail SLA percentage. This page rolls them into reading COVERAGE instead -- the
+    # share of the periods a metric's own cadence expects that carry a value -- and keeps
+    # pass/fail per reading in the strip. Coverage is the honest headline while most metrics
+    # carry no bar: a pass rate over the scored minority would describe a different program.
     WIN = 30
 
     # ---------------------------------------------------------------- helpers
@@ -494,10 +491,15 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
 
     # ------------------------------------------------ series + coverage roll-up
 
+    #: States that mean a reading landed. Coverage counts these, and a gap run ends on one --
+    #: whether the reading passed, failed or was never judged is a different axis from whether
+    #: it exists at all, and conflating them would drop every breach out of the denominator.
+    READ = ("u", "p", "f")
+
     GRAIN = {"daily": 1, "weekly": 7, "monthly": 30}
     # A period is only as good as its worst reading: a day that produced no
     # defensible number outranks one that did.
-    RANK = {"i": 2, "u": 1, "x": 0}
+    RANK = {"i": 4, "f": 3, "u": 2, "p": 1, "x": 0}
 
 
     def pts(e, today, win=WIN):
@@ -556,7 +558,10 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             # Inside one bucket a reading outranks an unmeasurable day, which outranks a
             # day we were the ones who were down.
             if v is not None:
-                by[k], val[k] = "u", v
+                # keep the WORST reading in the bucket, so one breach is not hidden by a pass
+                if by.get(k) not in READ or RANK[o_] > RANK[by[k]]:
+                    by[k] = o_
+                val[k] = v
             elif o_ == "x":
                 by.setdefault(k, "x")
             elif by.get(k) in (None, "x"):
@@ -570,13 +575,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         keys = [k for k in keys_all
                 if k >= start and by.get(k) != "x"
                 and not (e["cad"] == "daily" and k in PLATFORM_OUTAGES)] or keys_all[-1:]
-        read = sum(1 for k in keys if by.get(k) == "u")
+        read = sum(1 for k in keys if by.get(k) in READ)
 
         # A run of consecutive periods with no value. Ours to answer for, not
         # the team's, so it is called a gap and never coloured as a breach.
         runs, cur = [], None
         for k in keys:
-            if by.get(k) == "u":
+            if by.get(k) in READ:
                 cur = None
             elif cur:
                 cur["n"] += 1
@@ -654,7 +659,8 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         return out
 
 
-    STATE_TXT = {"u": "read", "i": "no defensible number",
+    STATE_TXT = {"u": "read \u00b7 not scored", "p": "met", "f": "MISSED",
+                 "i": "no defensible number",
                  "x": "OSO platform outage \u00b7 not counted"}
     MIN_BARS = 8
 
@@ -677,8 +683,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             return {"keys": keys_all, "by": r["by"],
                     "g": grain_word(e["cad"]), "dense": False}
         p = pts(e, today, win)
+        # Carry the OUTCOME through, do not re-derive it: this branch used to collapse every
+        # reading to "u"/"i", which silently dropped both the verdict and the platform-outage
+        # distinction. Harmless while nothing was scored and while only monthly metrics landed
+        # here -- WIN=30 brings every WEEKLY metric in too (5 periods < MIN_BARS), so Plumbline's
+        # 22 breach-days rendered as plain readings.
         return {"keys": [iso for iso, _v, _o in p],
-                "by": {iso: ("u" if v is not None else "i") for iso, v, _o in p},
+                "by": {iso: o_ for iso, _v, o_ in p},
                 "g": "reading", "dense": True}
 
 
@@ -947,7 +958,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             f'<span>{esc(bar_caption)}</span>'
             f'<span>{esc(key_label(sb["keys"][-1]))}</span></div>'
             f'{inc}'
-            f'{line_svg(d, today, win, show_thr=False)}'
+            f'{line_svg(d, today, win)}'
             f'<details class="dtoggle"><summary>show the numbers</summary>'
             f'{dtable(e, today, win)}</details></article>')
 
@@ -997,11 +1008,15 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
          "<span class='mono'>filecoin.filpgf_public.kernel_functions</span> holds the catalogue, "
          "including the functions nothing measures. Both refresh daily, and any OSO API key "
          "reproduces every number on this page."),
-        ("Why nothing is scored",
-         "Every threshold was withdrawn on <b>2026-08-20</b>. The numbers are stated in signed "
-         "appendices, but the agreements carrying them are not executed, and a number nobody has "
-         "countersigned is not a commitment. When contracts are signed the bars return unchanged "
-         "and history re-judges itself, because the bar is recorded per day."),
+        ("What is scored, and what is not",
+         "A reading is judged only on a day its metric carried a threshold, and a threshold is "
+         "only in force once it is written in an <b>executed</b> Appendix 1 &sect;3 without a "
+         "&ldquo;(to confirm)&rdquo; beside it. Each bar applies from the day its agreement was "
+         "signed and not before, so a team is never judged against a number it had not yet "
+         "agreed. Everything else is measured and shown unjudged &mdash; most often because the "
+         "signed document states the metric but leaves its number to confirm. The bar is "
+         "recorded per day, so correcting one re-judges history rather than leaving readings "
+         "measured against a superseded number."),
         ("Coverage is about us, not them",
          "The percentage on every row is <b>reading coverage</b>: the share of the periods a "
          f"metric's own cadence expects that carry a value, counted from {COVERAGE_FROM} -- the "
@@ -1030,20 +1045,12 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         ("Metric", "One number a funded team is measured on: an indicator with an agreed cadence and a public source, fetched by a pipeline the team does not control. It is the unit every card on this page draws."),
         ("Proposed", "A metric drafted against a function but not yet named in a signed agreement. Monitoring follows the agreements, so a proposed metric is not collected yet."),
         ("Coverage · 30d", "The share of the reading periods the window expects that actually carry a value, counted at each metric's own cadence so a weekly metric is not penalised for being coarse. Low coverage means the metric exists but is not being collected."),
-        ("Unscored", "Measured, but not judged. A reading is unscored when no threshold is in force — which today is every reading, because SLA thresholds are still being negotiated."),
+        ("Unscored", "Measured, but not judged — no threshold was in force for that metric on that day. Usually because the signed appendix names the metric but leaves its number &ldquo;(to confirm)&rdquo;, which only the recipient can settle."),
+        ("Met / missed", "A reading judged against the threshold in force <b>that day</b>, taken from an executed agreement. A miss is a breach of a written commitment, not an outage: the source answered, and the number was outside the agreed bar."),
         ("Gap", "A period the source was asked and gave no defensible number. Not a zero, not a breach, and not the team's failure — it is a hole in the instrument."),
         ("Tier", "How replaceable a function is, from <b>Irreplaceable</b> to <b>Important</b>. Tier sets the funding posture and whether redundancy is required."),
         ("Single maintainer", "A function measured through exactly one team. Tolerable at lower tiers, a named risk at the top two, where the posture calls for two or more independent implementations."),
     ]
-
-    # Every threshold was withdrawn on 2026-08-20 pending executed agreements. Without this
-    # said plainly and above the fold, a viewer reads the coverage percentage as an SLA pass
-    # rate, which is the exact misreading the withdrawal was meant to prevent.
-    SLA_NOTICE = ('<div class="sla-notice"><span>&#9432;</span><span>'
-                  '<b>SLA thresholds are still being negotiated.</b> This page reports what is '
-                  'being measured, not whether a target was met. Monitoring follows the signed '
-                  'agreements: a function is measured once an agreement names a metric for it.'
-                  '</span></div>')
 
     # The manifests are public, so the page can show anyone exactly what is being observed
     # without the mart having to carry a source column.
@@ -1222,9 +1229,9 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           '<p>Funding follows an annual term with audits rather than milestones, because keeping '
           'something working is a continuous obligation and not a deliverable. This page is the '
           'audit trail: every metric on it names a reading cadence and a public source anyone '
-          'can call. The thresholds those readings will be judged against are written down, and '
-          'withdrawn until the agreements carrying them are executed — so what you are looking at '
-          'is the instrument, working, before it is allowed to score anyone.</p>'
+          'can call. Where an executed agreement states a threshold, the reading is judged '
+          'against it from the day that agreement was signed; where it does not, the reading is '
+          'shown and left unjudged.</p>'
           '<a class="btn" href="#k-functions">See the inventory</a></div>'
           '<div class="panel"><div class="panel-t">Kernel funds</div><ul class="yn">'
           f'<li class="y"><i>{YES}</i><span>Maintenance of functions the network cannot operate without</span></li>'
@@ -1283,7 +1290,9 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           'and whether anyone is watching it. Open any row for the metrics behind it — what '
           'is collected, when, and every reading taken.</p>'
           '<div class="legend">'
-          '<span><i style="background:var(--k-fil)"></i>reading collected</span>'
+          '<span><i style="background:var(--k-good)"></i>threshold met</span>'
+          '<span><i style="background:var(--k-bad)"></i>threshold missed</span>'
+          '<span><i style="background:var(--k-fil)"></i>measured, no threshold in force</span>'
           '<span><i style="background:var(--k-warn)"></i>no defensible number</span>'
           '<span><i style="background:var(--k-skip)"></i>our platform was down</span>'
           '<span><i style="background:var(--k-none)"></i>no reading taken</span></div>'
@@ -1291,8 +1300,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
 
         # Radio + :checked rather than a script: the page is exported statically, so a
         # JS tab bar would come out dead. The panels must stay siblings of the inputs.
-        a(f'<div class="wrap">{SLA_NOTICE}</div>'
-          '<div class="kviews">'
+        a('<div class="kviews">'
           '<input type="radio" name="kview" id="kv-fn">'
           '<input type="radio" name="kview" id="kv-pr" checked>'
           '<div class="wrap"><div class="viewbar" role="tablist">'
@@ -1661,6 +1669,24 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
                 return None
             return float(v)
 
+        def verdict_of(row, value):
+            """"p"/"f" when that DAY carried a bar, else "u" (measured, not scored).
+
+            Derived per DAY, not from the entry's latest threshold: every scored metric had its
+            bar absent and then reinstated mid-series, so the entry-level number would back-date
+            today's commitment across days nobody had agreed one. The comparison is the one
+            docs/public-datasets.md publishes, so a reader deriving compliance from the mart
+            themselves gets the same answer this page draws.
+            """
+            op = _txt(row.get("threshold_op"))
+            thr = _num(row.get("threshold_value"))
+            if not op or thr is None:
+                return "u"
+            ok = {"<=": value <= thr, ">=": value >= thr, "<": value < thr,
+                  ">": value > thr, "==": value == thr}.get(op)
+            return "u" if ok is None else ("p" if ok else "f")
+
+
         # The series can carry MORE THAN ONE row for the same (day, team, function, metric) when a
         # backfill lands beside a nightly reading. Those are different observations of one day, not
         # duplicates -- docs/public-datasets.md says so to consumers, and the mart keeps both on
@@ -1711,7 +1737,7 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
                 _v = _num(r["amount"])
                 vals.append(_v)
                 # "x" -- read as no-reading everywhere, but never counted as a gap.
-                outs.append("u" if _v is not None else
+                outs.append(verdict_of(r, _v) if _v is not None else
                             ("x" if _iso(r["sample_date"]) in PLATFORM_OUTAGES else "i"))
             last = plotted[-1]
             display = next((_txt(r.get("project_display_name")) for r in reversed(rs)
@@ -1731,7 +1757,8 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
                 "sub": _txt(last.get("sub_category")),
                 "cad": _txt(last.get("cadence")) or "daily",
                 "stmt": _txt(last.get("sla_statement")),
-                # No bar is in force, so the card draws no threshold line and claims no verdict.
+                # The bar as it stood on the LAST day of the series: what the card's threshold
+                # line is drawn at. Per-day verdicts come from each row's own threshold.
                 "op": last.get("threshold_op"),
                 "thr": last.get("threshold_value"),
                 "thr_src": _txt(last.get("threshold_source")),
