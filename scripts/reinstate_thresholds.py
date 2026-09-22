@@ -44,7 +44,9 @@ def registry_bars(registry_dir: str) -> dict[tuple[str, str], tuple[str, str, st
                 value = fn.sla.threshold_value
                 rendered = str(int(value)) if float(value).is_integer() else str(value)
                 bars[(manifest.team, fn.function_id)] = (
-                    fn.sla.threshold_op, rendered, fn.sla.threshold_source
+                    fn.sla.threshold_op,
+                    rendered,
+                    fn.sla.threshold_source,
                 )
     return bars
 
