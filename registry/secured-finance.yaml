@@ -115,7 +115,7 @@ functions:
       statement: "USDFC peg deviation: USDFC–axlUSDC pool price minus 1.00 USD, signed, read at measurement time and measured daily. Positive is a premium over peg, negative a discount"
       metric: usdfc_peg_deviation
       cadence: daily
-      unscored_reason: contract-not-executed
+      unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json
