@@ -1264,9 +1264,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         a('</div></div></section>')
 
         # ------------------------------------------------------- tier cards
+        # Counted from TIERS, never written out: the heading said "Four" while the copy deck
+        # defined three, and the kernel inventory uses exactly those three.
+        _n_tiers = {1: "One tier", 2: "Two tiers", 3: "Three tiers", 4: "Four tiers",
+                    5: "Five tiers"}.get(len(TIERS), f"{len(TIERS)} tiers")
         a('<section class="sec" id="k-categories"><div class="wrap">'
           '<div class="sec-head"><p class="eyebrow">Categories</p>'
-          '<h2>Four tiers, set by what happens without it</h2>'
+          f'<h2>{esc(_n_tiers)}, set by what happens without it</h2>'
           '<p class="lede">A function\'s tier is decided by substitutability, not by how much anyone '
           'likes it. That single judgement then drives how much scrutiny it gets, whether redundancy '
           'is required, and how negotiable the budget is.</p></div><div class="tiers">')
