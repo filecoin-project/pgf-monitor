@@ -193,9 +193,6 @@ def stylesheet():
         .kpage #kv-pr:checked ~ .vpanel.v-pr{display:block}
 
         /* project view */
-        .kpage .ftrack{height:4px;max-width:250px;background:var(--k-paper-3);border-radius:2px;
-          overflow:hidden;margin-top:10px}
-        .kpage .fbar{display:block;height:100%;background:var(--k-fil);border-radius:2px}
         .kpage .pmoney{font-family:var(--k-mono);font-weight:600;color:var(--k-ink)}
         .kpage .pfns{margin-top:18px;padding-top:16px;border-top:1px solid var(--k-rule-soft)}
         .kpage .pfns .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
@@ -1091,15 +1088,32 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
 
 
     def row_strip(ents, today):
-        """The row's own strip: the commitment collected least completely.
+        """The row's own strip: the commitment with the strongest claim to the reader's eye.
 
-        A row is only as well measured as its worst commitment, so that is the one drawn --
-        the same rule the mockup uses for its worst-SLA metric.
+        Ranked by VERDICT first and coverage second. A row used to draw whichever commitment was
+        collected least completely, which was the only axis that existed when nothing was scored.
+        It is the wrong rule now: Zondax's two metrics both sit at 100% coverage, so the tie fell
+        to list order and the summary drew the UNSCORED one, discarding a fully green series. A
+        project with one breaching metric and one unscored metric at equal coverage would have
+        shown blue -- hiding the breach at the level people scan first.
+
+        So: a scored commitment outranks an unscored one, a breaching commitment outranks a
+        passing one, and coverage breaks the remaining ties, worst first.
         """
         if not ents:
             return '<div class="strip sm"></div>'
-        worst = min(ents, key=lambda e: (roll(e, today)["pct"]
-                                         if roll(e, today)["pct"] is not None else 101))
+
+        def rank(e):
+            r = roll(e, today)
+            states = set(r["by"].values())
+            scored = "p" in states or "f" in states
+            return (
+                0 if scored else 1,          # anything judged beats anything unjudged
+                0 if "f" in states else 1,   # a miss beats a clean run
+                r["pct"] if r["pct"] is not None else 101,
+            )
+
+        worst = min(ents, key=rank)
         row_bars = 30
         sbw = strip_bits(worst, today)
         if not sbw["keys"]:
@@ -1516,15 +1530,10 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
                     else '<span class="quiet">no grant against it</span>')
         meta = f'<div class="fn-m">{" · ".join(bits)}</div>'
 
-        bar = ""
-        if ag["pct"] is not None:
-            bar = (f'<div class="ftrack"><span class="fbar" '
-                   f'style="width:{max(2, round(ag["pct"]))}%"></span></div>')
-
         summary = (
             f'<summary>'
             f'<div><div class="fn-cat" style="color:var({colour})">{esc(eyebrow)}</div>'
-            f'<div class="fn-t">{esc(p["name"])}</div>{meta}{bar}</div>'
+            f'<div class="fn-t">{esc(p["name"])}</div>{meta}</div>'
             f'<div class="fn-rowstrip">{row_strip(es, today)}</div>'
             f'<div class="fn-s"><div class="fn-p">{pct_label(ag["pct"])}</div>'
             f'<div class="fn-l">{"COVERAGE · %dD" % WIN if ag["pct"] is not None else "NO DATA"}'
