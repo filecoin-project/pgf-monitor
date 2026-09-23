@@ -41,9 +41,12 @@ FIELDS = [
 
 def parse_source(html: str) -> list[dict]:
     """The chart's `dataset.source` rows. Raises if the page no longer carries them."""
+    count = html.count(SOURCE_KEY)
+    if count != 1:
+        # One chart, one array. Two would mean the fragment changed shape, and picking the first
+        # could silently land some other chart's rows.
+        raise RuntimeError(f"miner-power chart carries {count} dataset.source arrays, expected 1")
     at = html.find(SOURCE_KEY)
-    if at < 0:
-        raise RuntimeError("miner-power chart has no dataset.source array; page layout changed?")
     rows, _ = json.JSONDecoder().raw_decode(html, at + len(SOURCE_KEY))
     if not isinstance(rows, list) or not rows:
         raise RuntimeError("miner-power dataset.source is empty")

@@ -88,7 +88,8 @@ def test_timestamps_are_microsecond(udm):
     ("status", "body", "match"),
     [
         (503, "", "HTTP 503"),
-        (200, "<div>no chart here</div>", "no dataset.source"),
+        (200, "<div>no chart here</div>", "0 dataset.source"),
+        (200, '"source":[{"a":1}] "source":[{"b":2}]', "2 dataset.source"),
         (200, '"source":[]', "empty"),
         (200, '"source":[{"timestamp":1,"group_0":"curio"}]', "missing"),
     ],

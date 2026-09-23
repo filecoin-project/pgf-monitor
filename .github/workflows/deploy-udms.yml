@@ -27,6 +27,9 @@ concurrency:
 
 jobs:
   deploy:
+    # Only ever deploy main. A dispatch on a branch would otherwise ship unreviewed UDM code with
+    # the org-scoped OSO_API_KEY, which can read private tables, ahead of CODEOWNERS review.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

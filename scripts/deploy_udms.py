@@ -5,8 +5,13 @@
 Every `udms/<dataset>/<model>.py` becomes model `<model>` in USER_MODEL dataset `<dataset>` of the
 org. The dataset is created if missing, given the cron in DATASET_CRONS, and made public-read (the
 upstream is a public page, so the landed table should be as readable as the page is). A new
-revision + release is pushed ONLY when the code differs from the model's latest revision, so a
+revision + release is pushed ONLY when the code differs from the model's RELEASED revision, so a
 no-op deploy leaves the platform untouched.
+
+An EXISTING dataset is adopted only if its id is pinned in DATASET_IDS. The deploy grants
+dataset-wide public READ, so adopting by name alone would publish every table in any private
+dataset that happened to share the folder's name. A dataset this script creates is fresh and
+safe to publish; pin its printed id in the same PR series or the next deploy refuses it.
 
 This is the deploy half of the one exception to "no Python UDMs" (see CLAUDE.md): the code lives
 here, under CODEOWNERS, and `.github/workflows/deploy-udms.yml` runs this on merge to main. Do not
@@ -29,6 +34,8 @@ UDM_ROOT = Path("udms")
 
 # Before observe.yml (05:23 UTC) so the nightly reads today's landing, and off the hour.
 DATASET_CRONS = {"probelab": "41 3 * * *"}
+# The only existing datasets this script may adopt (and therefore make public). See docstring.
+DATASET_IDS = {"probelab": "fa60a4d7-c558-4e05-a4ad-bfdb84f61778"}
 
 _COLUMN = re.compile(r'oso\.Column\(name="([^"]+)",\s*type="([^"]+)"\)')
 _TERMINAL = {"SUCCESS", "FAILED", "CANCELED"}
@@ -64,14 +71,28 @@ def schema_of(code: str) -> list[dict]:
     return cols
 
 
+def _ok(payload: dict, what: str) -> None:
+    # _gql only raises on HTTP or GraphQL errors; a mutation can still answer success=false.
+    if not payload.get("success"):
+        raise SystemExit(f"{what} failed: {payload.get('message')!r}")
+
+
 def ensure_dataset(org_id: str, name: str, dry_run: bool) -> str | None:
     d = _gql(
-        "query($w:JSON){ datasets(first:10, where:$w){ edges{ node{ id name orgId cron isPublic } } } }",
+        "query($w:JSON){ datasets(first:10, where:$w){ edges{ node{ "
+        "id name orgId type cron cronTimezone isPublic } } } }",
         {"w": {"name": {"eq": name}, "org_id": {"eq": org_id}}},
     )
     nodes = [e["node"] for e in d["datasets"]["edges"] if e["node"]["orgId"] == org_id]
     if nodes:
         ds = nodes[0]
+        if DATASET_IDS.get(name) != ds["id"] or ds.get("type") != "USER_MODEL":
+            raise SystemExit(
+                f"dataset {name!r} ({ds['id']}, {ds.get('type')}) exists but is not pinned in "
+                "DATASET_IDS; refusing to adopt it and grant it public READ"
+            )
+    elif DATASET_IDS.get(name):
+        raise SystemExit(f"pinned dataset {name!r} {DATASET_IDS[name]} no longer exists")
     elif dry_run:
         print(f"[dry-run] would create USER_MODEL dataset {name}")
         return None
@@ -88,19 +109,23 @@ def ensure_dataset(org_id: str, name: str, dry_run: bool) -> str | None:
                 }
             },
         )["createDataset"]["dataset"]
-        print(f"created dataset {name} {ds['id']}")
+        print(f"created dataset {name} {ds['id']} -- pin this id in DATASET_IDS")
     cron = DATASET_CRONS.get(name)
-    if cron and ds.get("cron") != cron and not dry_run:
-        _gql(
-            "mutation($i:UpdateDatasetInput!){ updateDataset(input:$i){ success } }",
+    stale = ds.get("cron") != cron or ds.get("cronTimezone") != "UTC"
+    if cron and stale and not dry_run:
+        payload = _gql(
+            "mutation($i:UpdateDatasetInput!){ updateDataset(input:$i){ success message } }",
             {"i": {"id": ds["id"], "cron": cron, "cronTimezone": "UTC"}},
-        )
-        print(f"dataset {name}: cron -> {cron}")
+        )["updateDataset"]
+        _ok(payload, f"dataset {name}: set cron")
+        print(f"dataset {name}: cron -> {cron} UTC")
     if not ds.get("isPublic") and not dry_run:
-        _gql(
-            "mutation($i:GrantResourcePermissionInput!){ grantResourcePermission(input:$i){ success } }",
+        payload = _gql(
+            "mutation($i:GrantResourcePermissionInput!){ grantResourcePermission(input:$i){ "
+            "success message } }",
             {"i": {"id": ds["id"], "resourceType": "DATASET", "permissionLevel": "READ"}},
-        )
+        )["grantResourcePermission"]
+        _ok(payload, f"dataset {name}: grant public READ")
         print(f"dataset {name}: granted public READ")
     return ds["id"]
 
@@ -208,8 +233,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[dry-run] {dataset}.{name}: {len(schema_of(code))} columns")
             continue
         model = ensure_model(args.oso_org, dataset_id, name)
-        changed = release(model, name, code)
-        if args.run and changed:
+        release(model, name, code)
+        # Run whenever asked, not only when something was released: a retry after a failed or
+        # timed-out run finds the code unchanged, and must still prove the table populates.
+        if args.run:
             run_and_wait(dataset_id, model["id"], name)
     return 0
 
