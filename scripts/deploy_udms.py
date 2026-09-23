@@ -78,18 +78,29 @@ def ensure_dataset(org_id: str, name: str, dry_run: bool) -> str | None:
     else:
         ds = _gql(
             "mutation($i:CreateDatasetInput!){ createDataset(input:$i){ dataset{ id cron isPublic } } }",
-            {"i": {"orgId": org_id, "name": name, "displayName": name, "type": "USER_MODEL",
-                   "description": "Python UDMs deployed from filecoin-project/pgf-monitor udms/"}},
+            {
+                "i": {
+                    "orgId": org_id,
+                    "name": name,
+                    "displayName": name,
+                    "type": "USER_MODEL",
+                    "description": "Python UDMs deployed from filecoin-project/pgf-monitor udms/",
+                }
+            },
         )["createDataset"]["dataset"]
         print(f"created dataset {name} {ds['id']}")
     cron = DATASET_CRONS.get(name)
     if cron and ds.get("cron") != cron and not dry_run:
-        _gql("mutation($i:UpdateDatasetInput!){ updateDataset(input:$i){ success } }",
-             {"i": {"id": ds["id"], "cron": cron, "cronTimezone": "UTC"}})
+        _gql(
+            "mutation($i:UpdateDatasetInput!){ updateDataset(input:$i){ success } }",
+            {"i": {"id": ds["id"], "cron": cron, "cronTimezone": "UTC"}},
+        )
         print(f"dataset {name}: cron -> {cron}")
     if not ds.get("isPublic") and not dry_run:
-        _gql("mutation($i:GrantResourcePermissionInput!){ grantResourcePermission(input:$i){ success } }",
-             {"i": {"id": ds["id"], "resourceType": "DATASET", "permissionLevel": "READ"}})
+        _gql(
+            "mutation($i:GrantResourcePermissionInput!){ grantResourcePermission(input:$i){ success } }",
+            {"i": {"id": ds["id"], "resourceType": "DATASET", "permissionLevel": "READ"}},
+        )
         print(f"dataset {name}: granted public READ")
     return ds["id"]
 
@@ -120,15 +131,29 @@ def release(model: dict, name: str, code: str) -> bool:
     rev = _gql(
         "mutation($i:CreateDataModelRevisionInput!){ createDataModelRevision(input:$i){ "
         "success message dataModelRevision{ id revisionNumber } } }",
-        {"i": {"dataModelId": model["id"], "name": name, "language": "python", "code": code,
-               "schema": schema_of(code), "kind": "FULL", "description": desc}},
+        {
+            "i": {
+                "dataModelId": model["id"],
+                "name": name,
+                "language": "python",
+                "code": code,
+                "schema": schema_of(code),
+                "kind": "FULL",
+                "description": desc,
+            }
+        },
     )["createDataModelRevision"]
     if not rev["success"]:
         raise SystemExit(f"{name}: revision rejected: {rev['message']}")
     rel = _gql(
         "mutation($i:CreateDataModelReleaseInput!){ createDataModelRelease(input:$i){ success message } }",
-        {"i": {"dataModelId": model["id"], "dataModelRevisionId": rev["dataModelRevision"]["id"],
-               "description": desc}},
+        {
+            "i": {
+                "dataModelId": model["id"],
+                "dataModelRevisionId": rev["dataModelRevision"]["id"],
+                "description": desc,
+            }
+        },
     )["createDataModelRelease"]
     if not rel["success"]:
         raise SystemExit(f"{name}: release rejected: {rel['message']}")
@@ -149,8 +174,10 @@ def run_and_wait(dataset_id: str, model_id: str, name: str, attempts: int = 60) 
     run_id = edges[0]["node"]["id"]
     for _ in range(attempts):
         time.sleep(10)
-        run = _gql("query($w:JSON){ runs(first:1, where:$w){ edges{ node{ id status logsUrl } } } }",
-                   {"w": {"id": {"eq": run_id}}})["runs"]["edges"]
+        run = _gql(
+            "query($w:JSON){ runs(first:1, where:$w){ edges{ node{ id status logsUrl } } } }",
+            {"w": {"id": {"eq": run_id}}},
+        )["runs"]["edges"]
         status = run[0]["node"]["status"] if run else None
         if status in _TERMINAL:
             print(f"{name}: run {run_id} {status}")

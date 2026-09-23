@@ -41,7 +41,7 @@ class _Context:
 @pytest.fixture(scope="module")
 def udm(tmp_path_factory):
     stub = types.ModuleType("oso")
-    stub.model = lambda **_: (lambda fn: fn)
+    stub.model = lambda **_: lambda fn: fn
     stub.Capabilities = lambda **kw: kw
     stub.Column = lambda **kw: kw
     stub.Context = object
@@ -62,7 +62,12 @@ def test_lands_every_agent_row_unchanged(udm):
 
     assert ctx.fetched == [udm.CHART_URL]
     assert set(df["agent_group"]) == {
-        "boost", "boost-curio", "booster-http", "curio", "droplet", "unknown",
+        "boost",
+        "boost-curio",
+        "booster-http",
+        "curio",
+        "droplet",
+        "unknown",
     }
     curio = df[df["agent_group"] == "curio"].iloc[0]
     assert curio["unique_miners"] == 37
