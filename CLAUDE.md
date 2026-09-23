@@ -182,6 +182,14 @@ set) · `review-and-land` (run the pipeline, adjudicate readings, land verdicts)
   community-PR sources safe, and UDM code deploys over the API, outside CODEOWNERS and the
   static gate. If it is ever adopted, the UDM source must live in this repo and deploy from CI,
   or `registry/<team>.yaml` stops being the complete answer to how a metric is computed.
+  **Adopted ONCE, on those terms (2026-09-23), for ProbeLab's miner-power chart**, which exists
+  only as JSON embedded in an htmx HTML fragment (`api.probelab.io` wants an X-API-Key). The UDM
+  (`udms/probelab/miner_power_by_agent.py`) only PARSES: it lands the chart's rows unchanged in
+  the public table `filecoin.probelab.miner_power_by_agent`, and the metric itself is allowlisted
+  `oso-sql` over that table, so the arithmetic still lives in `registry/`.
+  `.github/workflows/deploy-udms.yml` deploys `udms/**` on merge to main via
+  `scripts/deploy_udms.py`; never edit the model on the platform, the next deploy overwrites it.
+  A second UDM needs the same shape (parse-only, public upstream, public table) or a new decision.
 - `fpm review` team name = `registry/<name>.yaml` filename stem.
 - Trino timestamp literals: `'YYYY-MM-DD HH:MM:SS'` (space, no T, no offset).
 - A manifest may omit `sla.threshold` entirely — that is "measured, not scored", and it is the
@@ -194,7 +202,7 @@ set) · `review-and-land` (run the pipeline, adjudicate readings, land verdicts)
 
 `src/fpm/` pipeline (manifest, provision, adapters, evaluate, observe, observations, thresholds,
 detectors, synthesize, pipeline, store, land, report/, governance/, transform/, kernel, drafts) ·
-`tests/` mirrors it · `registry/` the trust anchor · `fixtures/` offline responses ·
+`tests/` mirrors it · `registry/` the trust anchor · `udms/` the Python UDMs CI deploys (see above) · `fixtures/` offline responses ·
 `dashboards/` (marimo, `uv sync --extra dashboards`): **ONE notebook**,
 `propgf-kernel-public.py` — the PUBLIC surface, hosted as `propgf-kernel-health-live` and built
 ONLY on the two `filecoin.filpgf_public.*` mart tables. Its public URL needs the `/view` suffix

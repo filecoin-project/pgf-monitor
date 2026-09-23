@@ -9,6 +9,8 @@
 # it is what stands between an `oso-sql` metric and a private table this org's key can read.
 /registry/_sql_allowlist.txt   @ccerv1
 /adapters/            @ccerv1
+# Python UDMs run arbitrary code on OSO; they deploy from CI on merge, so review is the gate.
+/udms/                @ccerv1
 /src/fpm/governance/  @ccerv1
 /scripts/             @ccerv1
 /.github/             @ccerv1
