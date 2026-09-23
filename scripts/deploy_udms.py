@@ -108,7 +108,7 @@ def ensure_dataset(org_id: str, name: str, dry_run: bool) -> str | None:
 def ensure_model(org_id: str, dataset_id: str, name: str) -> dict:
     d = _gql(
         "query($w:JSON){ dataModels(first:10, where:$w){ edges{ node{ id name dataset{ id } "
-        "latestRevision{ id code } } } } }",
+        "latestRelease{ revision{ id code } } } } } }",
         {"w": {"name": {"eq": name}, "dataset_id": {"eq": dataset_id}}},
     )
     for e in d["dataModels"]["edges"]:
@@ -119,12 +119,16 @@ def ensure_model(org_id: str, dataset_id: str, name: str) -> dict:
         {"i": {"orgId": org_id, "datasetId": dataset_id, "name": name, "isEnabled": True}},
     )["createDataModel"]["dataModel"]
     print(f"created model {name} {m['id']}")
-    return {"id": m["id"], "latestRevision": None}
+    return {"id": m["id"], "latestRelease": None}
 
 
 def release(model: dict, name: str, code: str) -> bool:
     """Push a revision + release if the code changed. True when something was released."""
-    if (model.get("latestRevision") or {}).get("code") == code:
+    # Compare against what is RELEASED, not the latest revision: a revision whose release failed
+    # would otherwise read as "unchanged" on every later deploy and the platform would keep
+    # running the old code with a green workflow.
+    released = ((model.get("latestRelease") or {}).get("revision") or {}).get("code")
+    if released == code:
         print(f"{name}: unchanged, nothing to release")
         return False
     desc = (code.split('"""')[1].strip().splitlines() or [name])[0] if '"""' in code else name
