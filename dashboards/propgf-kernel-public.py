@@ -749,7 +749,11 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         pw, ph = W - ml - mr, h - mt - mb
         vs = [x[1] for x in p]
         lo, hi = min(vs), max(vs)
-        thr = float(e["thr"]) if (e.get("thr") is not None and show_thr) else None
+        # `x != x` is the NaN test build_registry uses: a threshold that arrived as NaN is a
+        # metric with no bar, not a bar drawn at NaN.
+        _thr = e.get("thr")
+        thr = (float(_thr) if (_thr is not None and _thr == _thr and show_thr)
+               else None)
         all_pos = lo >= 0 and (thr is None or thr >= 0)
         if thr is not None:
             lo, hi = min(lo, thr), max(hi, thr)
@@ -795,7 +799,9 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         if thr is not None:
             y = Y(thr)
             ly2 = y + 14 if y < mt + ph / 2 else y - 7
-            lab = thr_label or (e["op"] + " " + fmt(float(e["thr"])))
+            # Interpolated rather than concatenated: an operator that did not survive the
+            # round-trip labels the rule with the bare number instead of raising.
+            lab = thr_label or f'{e["op"] or ""} {fmt(thr)}'.strip()
             t = (f'<line x1="{ml}" y1="{y:.1f}" x2="{W-mr}" y2="{y:.1f}" '
                  f'stroke="var(--k-{thr_tone})" stroke-width="1.4" stroke-dasharray="5 4" opacity=".85"/>'
                  f'<text x="{ml+4}" y="{ly2:.1f}" font-size="9.5" fill="var(--k-{thr_tone})" '
@@ -1770,8 +1776,15 @@ def registry_shape(PLATFORM_OUTAGES, datetime):
                 "stmt": _txt(last.get("sla_statement")),
                 # The bar as it stood on the LAST day of the series: what the card's threshold
                 # line is drawn at. Per-day verdicts come from each row's own threshold.
-                "op": last.get("threshold_op"),
-                "thr": last.get("threshold_value"),
+                #
+                # Through _txt/_num like every other field, and for the reason _num exists: an
+                # UNSCORED metric has no bar, and pandas returns that missing threshold as NaN
+                # on the numeric column while leaving the operator None on the object one.
+                # Raw, `thr is not None` then read NaN as a real threshold and line_svg went on
+                # to draw a rule at it and label it `None + " "` -- a TypeError that took the
+                # whole page down. verdict_of already normalises the same two columns per row.
+                "op": _txt(last.get("threshold_op")),
+                "thr": _num(last.get("threshold_value")),
                 "thr_src": _txt(last.get("threshold_source")),
                 "methods": methods,
                 # Counted over EVERY row, like `methods`: this and `n_rows` back the page's
