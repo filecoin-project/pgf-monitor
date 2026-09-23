@@ -2,18 +2,18 @@
 # cadence, its WindowPoSt/WinningPoSt scheduler, PDP proof sets on mainnet, and Filecoin Pay
 # settled volume.
 #
-# Appendix reconciliation, updated 2026-09-11. The Curio agreement's s3 names FIVE metrics and
-# four of them are here. NONE is scored, for two different reasons that should not be conflated:
+# Appendix reconciliation, updated 2026-09-23. The Curio agreement's s3 names FIVE metrics and
+# all five are here. ONE is scored: release cadence, whose bar (<= 45 days) is read off the
+# executed s3 (#89). The other four carry no signed bar, for reasons that should not be conflated:
 #
-#   - release cadence, blocks per tipset, PDP proof sets -- the s3 states a bar for the first and
-#     marks the other two "(to confirm)", but the agreement carrying them is a DRAFT with both
-#     signature dates blank, so nobody has promised any of them yet. (An earlier version of this
-#     note said all three were "(to confirm)"; that was not accurate for release cadence.)
+#   - blocks per tipset, PDP proof sets -- the s3 marks their bars "(to confirm)".
 #   - Filecoin Pay volume -- the s3 proposes no bar at all, only "Cadence: daily or monthly".
+#   - miner power share -- landed unscored; its s3 bar has NOT yet been read against the executed
+#     agreement (a reconcile-metrics job), so `no-signed-bar` is the safe default, not a finding.
 #
-# The fifth s3 metric, curio_porep_miner_power_share, is NOT here: ProbeLab publishes the data
-# only as JSON embedded in an HTML page and exposes no JSON URL, so it cannot be fetched. The host
-# is already allowlisted so it can land the day that changes.
+# The fifth s3 metric, curio_porep_miner_power_share, landed 2026-09-23. ProbeLab publishes it only
+# as JSON embedded in an HTML page, so it is read through the one Python UDM this repo deploys
+# (udms/probelab/, see CLAUDE.md) rather than an http-json fetch.
 #
 # Money, contract terms and the reasoning behind each absent bar stay in contracts/filoz.facts.yaml.
 team: filoz
@@ -202,3 +202,42 @@ functions:
       # `decimals` arrives as the STRING "18" from GraphQL, so cast it rather than trust dlt's
       # type inference; and CAST the base to DOUBLE because Trino integer division truncates.
       sql: "SELECT SUM(CAST(total_settled_amount AS DOUBLE) / POWER(CAST(10 AS DOUBLE), CAST(decimals AS DOUBLE))) FROM raw WHERE symbol IN ('USDFC', 'axlUSDC')"
+
+  # Curio's footprint in the network it seals for: the share of mainnet quality-adjusted power
+  # held by miners whose libp2p agent identifies as Curio. This is the agreement's
+  # curio_porep_miner_power_share.
+  #
+  # ProbeLab publishes it only as JSON inside an HTML chart fragment, so
+  # udms/probelab/miner_power_by_agent.py lands the chart's rows unchanged and this statement does
+  # the arithmetic. Probed 2026-09-23 (snapshot 2026-09-20): curio 37 miners + boost-curio 2 =
+  # 814,175,040 of 13,141,359,344 GiB QAP = 0.0620.
+  #
+  # Two groups count as Curio: `curio` and `boost-curio` (Boost markets fronting Curio). ProbeLab
+  # cannot resolve an agent for 55% of QAP (`unknown`), so this is a LOWER BOUND on Curio's real
+  # share, and it moves when ProbeLab resolves more peers as well as when SPs switch software.
+  #
+  # The staleness floor (8 days) exists because ProbeLab refreshes the chart on its own
+  # schedule, which is not yet confirmed. A dead UDM or a frozen chart reads as indeterminate,
+  # never as last week's number. Tighten it once the refresh cadence is known.
+  - function_id: curio-porep-miner-power-share
+    kernel_id: sealing-pipeline
+    origin: oso
+    tier: essential
+    category: 'Blockchain Core & Physical Storage'
+    sub_category: 'Block Production (mining)'
+    funded_project_oso_slug: filozone
+    grant_ref: APP-HDYJESMD-2WLL00
+    sla:
+      statement: "Curio's share of mainnet quality-adjusted power: miners whose libp2p agent is Curio (incl. Boost-on-Curio) as a fraction of network QAP, per ProbeLab, measured daily — a lower bound, since ProbeLab cannot resolve an agent for about half of network power"
+      metric: curio_porep_miner_power_share
+      cadence: daily
+      unscored_reason: no-signed-bar
+    source:
+      adapter: oso-sql
+      kind: oso-sql
+      sql: |
+        SELECT SUM(quality_adj_power_gib) / MAX(quality_adj_power_gib_total)
+        FROM filecoin.probelab.miner_power_by_agent
+        WHERE agent_group IN ('curio', 'boost-curio')
+          AND snapshot_at <= :now
+          AND snapshot_at > :now - INTERVAL '8' DAY

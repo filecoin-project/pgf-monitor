@@ -121,6 +121,7 @@ _No monitoring entry yet._
 | team | metric | source | state |
 |---|---|---|---|
 | filoz | `avg_days_between_releases` (curio-sealing-release-cadence) | api.github.com | adopted |
+| filoz | `curio_porep_miner_power_share` (curio-porep-miner-power-share) | oso-warehouse | adopted |
 | fil-ponto | `cuzk_upstream_prs` (cuzk-upstream-prs) | api.github.com | draft |
 
 ### 🟢 Proving scheduler - WindowPoSt deadlines + WinningPoSt eligibility
