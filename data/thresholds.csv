@@ -68,6 +68,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4,signed-appendix
 2026-09-16,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4,signed-appendix
 2026-09-17,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4,signed-appendix
+2026-09-18,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4,signed-appendix
 2026-09-19,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4,signed-appendix
 2026-09-20,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4,signed-appendix
 2026-09-21,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4,signed-appendix
@@ -108,6 +109,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3,signed-appendix
 2026-09-16,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3,signed-appendix
 2026-09-17,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3,signed-appendix
+2026-09-18,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3,signed-appendix
 2026-09-19,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3,signed-appendix
 2026-09-20,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3,signed-appendix
 2026-09-21,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3,signed-appendix
@@ -1321,6 +1323,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-16,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-17,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45,signed-appendix
+2026-09-18,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-19,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-20,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-21,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45,signed-appendix
@@ -1655,6 +1658,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,filoz,curio-sealing-release-cadence,avg_days_between_releases,,,provisional
 2026-09-16,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-17,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45,signed-appendix
+2026-09-18,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-19,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-20,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-21,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45,signed-appendix
@@ -1751,6 +1755,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0,signed-appendix
 2026-09-16,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0,signed-appendix
 2026-09-17,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0,signed-appendix
+2026-09-18,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0,signed-appendix
 2026-09-19,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0,signed-appendix
 2026-09-20,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0,signed-appendix
 2026-09-21,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0,signed-appendix
@@ -1831,6 +1836,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
 2026-09-16,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
 2026-09-17,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
+2026-09-18,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
 2026-09-19,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
 2026-09-20,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
 2026-09-21,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
@@ -1984,6 +1990,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
 2026-09-16,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
 2026-09-17,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
+2026-09-18,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
 2026-09-19,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
 2026-09-20,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
 2026-09-21,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
@@ -2024,6 +2031,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2,signed-appendix
 2026-09-16,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2,signed-appendix
 2026-09-17,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2,signed-appendix
+2026-09-18,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2,signed-appendix
 2026-09-19,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2,signed-appendix
 2026-09-20,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2,signed-appendix
 2026-09-21,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2,signed-appendix
@@ -2064,6 +2072,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20,signed-appendix
 2026-09-16,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20,signed-appendix
 2026-09-17,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20,signed-appendix
+2026-09-18,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20,signed-appendix
 2026-09-19,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20,signed-appendix
 2026-09-20,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20,signed-appendix
 2026-09-21,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20,signed-appendix
@@ -2469,6 +2478,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1,signed-appendix
 2026-09-16,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1,signed-appendix
 2026-09-17,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1,signed-appendix
+2026-09-18,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1,signed-appendix
 2026-09-19,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1,signed-appendix
 2026-09-20,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1,signed-appendix
 2026-09-21,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1,signed-appendix
@@ -2508,6 +2518,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,randamu,drand-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-16,randamu,drand-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-17,randamu,drand-release-cadence,avg_days_between_releases,<=,45,signed-appendix
+2026-09-18,randamu,drand-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-19,randamu,drand-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-20,randamu,drand-release-cadence,avg_days_between_releases,<=,45,signed-appendix
 2026-09-21,randamu,drand-release-cadence,avg_days_between_releases,<=,45,signed-appendix
@@ -2548,6 +2559,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,randamu,randomness-beacon,beacon_round_lag,<=,1,signed-appendix
 2026-09-16,randamu,randomness-beacon,beacon_round_lag,<=,1,signed-appendix
 2026-09-17,randamu,randomness-beacon,beacon_round_lag,<=,1,signed-appendix
+2026-09-18,randamu,randomness-beacon,beacon_round_lag,<=,1,signed-appendix
 2026-09-19,randamu,randomness-beacon,beacon_round_lag,<=,1,signed-appendix
 2026-09-20,randamu,randomness-beacon,beacon_round_lag,<=,1,signed-appendix
 2026-09-21,randamu,randomness-beacon,beacon_round_lag,<=,1,signed-appendix
@@ -2762,6 +2774,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-09-15,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix
 2026-09-16,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix
 2026-09-17,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix
+2026-09-18,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix
 2026-09-19,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix
 2026-09-20,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix
 2026-09-21,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix

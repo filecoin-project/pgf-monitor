@@ -305,11 +305,11 @@ def stylesheet():
         .kpage .strip.sm{height:15px;gap:1px}
         .kpage .strip i{flex:1 1 0;min-width:0;border-radius:1.5px;background:var(--k-none)}
         .kpage .strip i[data-o="p"]{background:var(--k-good)}
-        .kpage .strip i[data-o="f"]{background:var(--k-bad)}
-        .kpage .strip i[data-o="i"]{background:var(--k-warn)}
+        .kpage .strip i[data-o="f"]{background:var(--k-warn)}
+        .kpage .strip i[data-o="i"]{background:var(--k-none)}
         /* Public-page additions to the shared sheet: nothing here is scored, so a bar is either a reading that landed (blue), a day the source gave no defensible number (amber), or a day OUR OWN platform was down (slate, and outside every denominator). Grey stays "no reading expected yet". */
         .kpage .strip i[data-o="u"]{background:var(--k-fil)}
-        .kpage .strip i[data-o="x"]{background:var(--k-skip)}
+        .kpage .strip i[data-o="x"]{background:var(--k-none)}
         .kpage .axis{display:flex;justify-content:space-between;gap:12px;font-family:var(--k-mono);font-size:9.5px;letter-spacing:.06em;color:var(--k-ink-3);margin-top:7px}
 
         .kpage .metrics-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:26px 0 14px;padding-bottom:9px;border-bottom:1px solid var(--k-rule)}
@@ -499,7 +499,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
     GRAIN = {"daily": 1, "weekly": 7, "monthly": 30}
     # A period is only as good as its worst reading: a day that produced no
     # defensible number outranks one that did.
-    RANK = {"i": 4, "f": 3, "u": 2, "p": 1, "x": 0}
+    RANK = {"f": 4, "i": 3, "p": 2, "u": 1, "x": 0}
 
 
     def pts(e, today, win=WIN):
@@ -1082,14 +1082,6 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         return "—" if v is None else f"{v:.1f}%"
 
 
-    def cov_pill(ag):
-        if ag["pct"] is None:
-            return '<span class="pill nm">not measured</span>'
-        if ag["state"] == "good":
-            return f'<span class="pill ok">{ICON["good"]} collecting</span>'
-        return f'<span class="pill gap">{ICON["warn"]} gaps in collection</span>'
-
-
     def row_strip(ents, today):
         """The row's own strip: the commitment collected least completely.
 
@@ -1298,11 +1290,9 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           'is collected, when, and every reading taken.</p>'
           '<div class="legend">'
           '<span><i style="background:var(--k-good)"></i>threshold met</span>'
-          '<span><i style="background:var(--k-bad)"></i>threshold missed</span>'
+          '<span><i style="background:var(--k-warn)"></i>threshold missed</span>'
           '<span><i style="background:var(--k-fil)"></i>measured, no threshold in force</span>'
-          '<span><i style="background:var(--k-warn)"></i>no defensible number</span>'
-          '<span><i style="background:var(--k-skip)"></i>our platform was down</span>'
-          '<span><i style="background:var(--k-none)"></i>no reading taken</span></div>'
+          '<span><i style="background:var(--k-none)"></i>no reading that day</span></div>'
           '</div></div>')
 
         # Radio + :checked rather than a script: the page is exported statically, so a
@@ -1453,7 +1443,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             f'<div class="fn-rowstrip">{row_strip(es, today)}</div>'
             f'<div class="fn-s"><div class="fn-p">{pct_label(ag["pct"])}</div>'
             f'<div class="fn-l">{"COVERAGE · %dD" % WIN if ag["pct"] is not None else "NO DATA"}'
-            f'</div>{cov_pill(ag)}</div>'
+            f'</div></div>'
             f'<span class="car">{CARET}</span></summary>')
 
         team_names = (", ".join(esc(x) for x in teams) if teams
@@ -1529,7 +1519,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             f'<div class="fn-rowstrip">{row_strip(es, today)}</div>'
             f'<div class="fn-s"><div class="fn-p">{pct_label(ag["pct"])}</div>'
             f'<div class="fn-l">{"COVERAGE · %dD" % WIN if ag["pct"] is not None else "NO DATA"}'
-            f'</div>{cov_pill(ag)}</div>'
+            f'</div></div>'
             f'<span class="car">{CARET}</span></summary>')
 
         cells = [
