@@ -280,6 +280,17 @@ def stylesheet():
         .kpage .term dd b{font-weight:600;color:var(--k-ink)}
         @media(max-width:820px){.kpage .terms{grid-template-columns:1fr}}
 
+        /* Method reuses .terms, but its four caveats differ in length by a factor of
+           three, and a two-up grid stretches every cell to its row's tallest -- which
+           padded "What is missing here" out with half a cell of white. Stacked rows
+           with the title in a fixed rail instead: nothing is sized by a neighbour, and
+           the prose caps at 640px rather than running the full column width. */
+        .kpage #k-method .terms{grid-template-columns:1fr}
+        .kpage #k-method .term{display:grid;grid-template-columns:minmax(0,232px) minmax(0,1fr);gap:0 32px;padding:24px 22px;align-items:start}
+        .kpage #k-method .term dt{padding-top:1px}
+        .kpage #k-method .term dd{margin:0;max-width:640px}
+        @media(max-width:820px){.kpage #k-method .term{grid-template-columns:1fr}.kpage #k-method .term dd{margin-top:8px}}
+
         .kpage #k-terms{border-bottom:0}
         .kpage .foot{padding:42px 0;font-size:13.5px;color:var(--k-ink-3)}
         .kpage .foot-in{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
