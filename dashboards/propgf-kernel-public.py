@@ -1058,6 +1058,8 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         ("Met / missed", "A reading judged against the threshold in force <b>that day</b>, taken from an executed agreement. A miss is a breach of a written commitment, not an outage: the source answered, and the number was outside the agreed bar."),
         ("Gap", "A period the source was asked and gave no defensible number. Not a zero, not a breach, and not the team's failure — it is a hole in the instrument."),
         ("Tier", "How replaceable a function is, from <b>Irreplaceable</b> to <b>Important</b>. Tier sets the funding posture and whether redundancy is required."),
+        ("Dependency", "A library, service, or system a function relies on to work. A dependency with one maintainer and no substitute is a risk to every function above it."),
+        ("Domain", "The area of the stack a function sits in \u2014 blockchain core and physical storage, coordination and hardening, storage market middleware, UX/DX."),
         ("Single maintainer", "A function measured through exactly one team. Tolerable at lower tiers, a named risk at the top two, where the posture calls for two or more independent implementations."),
     ]
 
@@ -1172,11 +1174,12 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         # ------------------------------------------------------------- hero
         a('<header class="hero" id="k-top"><div class="wrap">'
           '<p class="eyebrow">Kernel · Independent monitoring</p>'
-          '<h1>What is being watched.</h1>'
+          '<h1>What keeps the network running.</h1>'
           '<p class="lede">Every night, each metric below is fetched from the team\'s own '
           'infrastructure by a pipeline they do not control, and the reading is appended to a '
-          'public record. Nothing here is scored: the numbers exist, the bars do not, because no '
-          'agreement carrying one has been executed yet.</p>'
+          'public record. Where an executed agreement sets a threshold, the reading is judged '
+          'against it from the day that agreement was signed; everything else is measured and '
+          'shown unjudged.</p>'
           '<div class="ladder"><div class="ladder-h">'
           '<span></span><span>Tier</span><span>Functions</span>'
           f'<span>Projects</span><span>Coverage · {WIN}d</span></div>')
@@ -1290,8 +1293,8 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         # -------------------------------------------------------- inventory
         a('<section class="sec sec-alt" id="k-functions"><div class="wrap">'
           '<div class="sec-head"><p class="eyebrow">Inventory</p><h2>The inventory</h2>'
-          '<p class="lede">The same metrics, read two ways. <b>By project</b> asks what each '
-          'reporting team is on the hook for; <b>by function</b> asks what the network needs '
+          '<p class="lede">The same commitments, read two ways. <b>By project</b> asks what each '
+          'funded team is on the hook for; <b>by function</b> asks what the network needs '
           'and whether anyone is watching it. Open any row for the metrics behind it — what '
           'is collected, when, and every reading taken.</p>'
           '<div class="legend">'
@@ -1351,7 +1354,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           '</div>')
         # Every row here is funded, so there is no longer a second group to split off.
         a(f'<div class="fgroup"><div class="fg-h">'
-          f'<span class="fg-n">Reporting under a grant</span>'
+          f'<span class="fg-n">Funded this batch</span>'
           f'<span class="fg-c">{len(PR)} row{"s" if len(PR) != 1 else ""}</span></div>'
           f'<div class="dom">Each row is one Karma application and the metrics it pays for. '
           f'Cross-checks nobody is paid for are in the by-function view, beside the funded '
@@ -1365,7 +1368,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         # --------------------------------------------------- program metrics
         a('<section class="sec" id="k-metrics"><div class="wrap">'
           '<div class="sec-head"><p class="eyebrow">Coverage</p>'
-          '<h2>How much of the Kernel is actually observed</h2>'
+          '<h2>How the program is doing</h2>'
           '<p class="lede">Aggregate health matters less than coverage: most metrics still carry '
           'no agreed bar, so a pass rate over the scored minority would describe a different '
           'program. A function with no reporter and no metric is invisible here, which is exactly '
