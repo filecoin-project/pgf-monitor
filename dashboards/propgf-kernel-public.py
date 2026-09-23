@@ -1196,7 +1196,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
           'shown unjudged.</p>'
           '<div class="ladder"><div class="ladder-h">'
           '<span></span><span>Tier</span><span>Functions</span>'
-          f'<span>Projects</span><span>Coverage · {WIN}d</span></div>')
+          f'<span>Projects funded</span><span>Coverage · {WIN}d</span></div>')
 
         for t in TIERS:
             fns = [f for f in KF if f["tier"] == t["id"]]
@@ -1207,14 +1207,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
             else:
                 count = (f'<div class="rung-c">{len(fns)}</div>'
                          f'<div class="rung-cl">in inventory</div>')
-            projects = len({e["team"] for f in fns for e in ents(f)})
+            projects = len({e["grant"] for f in fns for e in ents(f) if e["grant"]})
             a(f'<a class="rung" href="#k-functions">'
               f'<span class="rung-bar" style="background:var({t["v"]})"></span>'
               f'<span><span class="rung-n">{esc(t["name"])}</span>'
               f'<span class="rung-s">{esc(t["label"])}</span></span>'
               f'<span>{count}</span>'
-              f'<span><span class="rung-c">{projects or "—"}</span>'
-              f'<span class="rung-cl">reporting</span></span>'
+              f'<span><span class="rung-c">{projects or "—"}</span></span>'
               f'<span><span class="rung-c">{pct_label(ag["pct"])}</span></span></a>')
         a('</div></div></header>')
 
@@ -1382,7 +1381,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         # --------------------------------------------------- program metrics
         a('<section class="sec" id="k-metrics"><div class="wrap">'
           '<div class="sec-head"><p class="eyebrow">Coverage</p>'
-          '<h2>How the program is doing</h2>'
+          '<h2>How much of the Kernel is actually observed</h2>'
           '<p class="lede">Aggregate health matters less than coverage: most metrics still carry '
           'no agreed bar, so a pass rate over the scored minority would describe a different '
           'program. A function with no reporter and no metric is invisible here, which is exactly '
