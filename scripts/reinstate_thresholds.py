@@ -21,6 +21,7 @@ corrected, only a commitment can. Writes go through `fpm.thresholds.save_rows`.
 from __future__ import annotations
 
 import argparse
+import datetime
 from pathlib import Path
 
 from fpm.manifest import load_manifest
@@ -75,7 +76,49 @@ def reinstate(rows, bars, executed):
                 row = {**row, **want}
                 changed += 1
         out.append(row)
-    return out, changed, skipped_no_date
+
+    # A bar in force on a day we failed to take a reading is STILL in force. The threshold series
+    # is written alongside observations, so a lost night loses the bar with it: 2026-09-18 was
+    # cancelled at the job cap and wrote nothing, leaving 13 scored commitments with no threshold
+    # row at all. The mart then synthesises an imputed reading for that day and LEFT JOINs it to
+    # nothing, so a reading we DO have renders unjudged.
+    #
+    # So fill every (day, commitment) gap from the execution date to the last day the series
+    # already covers. Bounded by that last day on purpose -- inventing rows for dates the series
+    # has not reached would assert a bar for days nobody has measured yet.
+    last_day = max((r["observed_at"] for r in rows), default="")
+    have = {(r["observed_at"], r["team"], r["function_id"], r["metric"]) for r in out}
+    by_commitment = {}
+    for r in rows:
+        by_commitment.setdefault((r["team"], r["function_id"]), r)
+    added = 0
+    for (team, fid), template in sorted(by_commitment.items()):
+        bar = bars.get((team, fid))
+        on = executed.get(team)
+        if not bar or not on or not last_day:
+            continue
+        op, value, source = bar
+        day = datetime.date.fromisoformat(on)
+        stop = datetime.date.fromisoformat(last_day)
+        while day <= stop:
+            iso = day.isoformat()
+            if (iso, team, fid, template["metric"]) not in have:
+                out.append(
+                    {
+                        "observed_at": iso,
+                        "team": team,
+                        "function_id": fid,
+                        "metric": template["metric"],
+                        "threshold_op": op,
+                        "threshold_value": value,
+                        "source": source,
+                    }
+                )
+                added += 1
+            day += datetime.timedelta(days=1)
+    if added:
+        out.sort(key=lambda r: (r["team"], r["function_id"], r["metric"], r["observed_at"]))
+    return out, changed, added, skipped_no_date
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -95,15 +138,24 @@ def main(argv: list[str] | None = None) -> int:
     executed = dict(pair.split("=", 1) for pair in args.executed)
     bars = registry_bars(args.registry)
     rows = load_rows(CSV_PATH)
-    updated, changed, missing = reinstate(rows, bars, executed)
+    updated, changed, added, missing = reinstate(rows, bars, executed)
 
+    # Keyed, not positional: filling gaps re-sorts `updated`, so zip() would compare
+    # unrelated rows and report every commitment as touched.
+    def _key(r):
+        return (r["observed_at"], r["team"], r["function_id"], r["metric"])
+
+    was = {_key(r): r for r in rows}
     per_metric: dict[str, int] = {}
-    for before, after in zip(rows, updated):
+    for after in updated:
+        before = was.get(_key(after))
         if before != after:
-            per_metric[f"{after['team']}/{after['metric']}"] = (
-                per_metric.get(f"{after['team']}/{after['metric']}", 0) + 1
-            )
-    print(f"{changed} row(s) across {len(per_metric)} metric(s) would change:")
+            name = f"{after['team']}/{after['metric']}"
+            per_metric[name] = per_metric.get(name, 0) + 1
+    print(
+        f"{changed} bar(s) corrected, {added} missing day(s) filled, "
+        f"across {len(per_metric)} metric(s):"
+    )
     for name in sorted(per_metric):
         print(f"  {name}: {per_metric[name]} day(s)")
     for team in sorted(missing):
