@@ -1,0 +1,51 @@
+name: deploy-udms
+
+# Deploys udms/<dataset>/<model>.py to OSO whenever one changes on main, so the Python UDMs that
+# run on the platform are exactly the ones in git. This is the condition CLAUDE.md set for ever
+# adopting the Python-UDM escape hatch: the source lives here under CODEOWNERS and ships from CI,
+# never from a laptop or the platform editor. A deploy with no code change releases nothing.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "udms/**"
+      - "scripts/deploy_udms.py"
+  workflow_dispatch:
+    inputs:
+      run:
+        description: "Run each released model and wait for it"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-udms
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Only ever deploy main. A dispatch on a branch would otherwise ship unreviewed UDM code with
+    # the org-scoped OSO_API_KEY, which can read private tables, ahead of CODEOWNERS review.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync
+      - name: Offline UDM tests
+        run: uv run pytest -q tests/test_udm_probelab_miner_power.py
+      - name: Deploy
+        env:
+          OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
+          OSO_ORG_ID: ${{ vars.OSO_ORG_ID }}
+        run: |
+          set -euo pipefail
+          [ -n "$OSO_API_KEY" ] || { echo "::error::OSO_API_KEY secret is not set"; exit 1; }
+          [ -n "$OSO_ORG_ID" ] || { echo "::error::OSO_ORG_ID variable is not set"; exit 1; }
+          uv run python scripts/deploy_udms.py --oso-org "$OSO_ORG_ID" \
+            ${{ (github.event_name == 'push' || inputs.run) && '--run' || '' }} \
+            | tee -a "$GITHUB_STEP_SUMMARY"

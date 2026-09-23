@@ -15,6 +15,9 @@
 #      any outside reader from a public endpoint; a warehouse read breaks that unless the source
 #      data is public too. Both tables below come from Filecoin Data Portal's public parquet at
 #      https://data.filecoindataportal.xyz/, so the numbers stay independently checkable.
+#      The ProbeLab table is landed by udms/probelab/miner_power_by_agent.py, row for row, from
+#      the public chart at https://probelab.io/filecoin/mainnet/charts/miner-power/.
 
 filecoin.data_portal.daily_filecoin_pay_operators_metrics
 filecoin.data_portal.filecoin_pay_rails
+filecoin.probelab.miner_power_by_agent

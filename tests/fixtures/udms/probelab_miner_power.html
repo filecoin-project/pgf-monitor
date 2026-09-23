@@ -1,0 +1,230 @@
+
+
+
+
+
+<div id="chart-miner-power-card-body" class="flex-auto flex flex-col gap-2 font-[DM_Mono]">
+    <div id="chart-miner-power-card-header"
+         class="bg-base-200 p-2 sm:p-4 md:p-6 ">
+        <div class="flex justify-between gap-4">
+            <div>
+                <h3 class="text-base mb-1">Power By Agent Type
+                    
+                        <button class="btn btn-ghost btn-xs btn-square text-xl align-bottom"
+                                onclick="document.getElementById('chart-miner-power-modal').showModal()">
+                            <svg width="1em" height="1em" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 10H7.33333V6H6V10ZM6.66667 4.66667C6.85556 4.66667 7.014 4.60267 7.142 4.47467C7.27 4.34667 7.33378 4.18844 7.33333 4C7.33289 3.81156 7.26889 3.65333 7.14133 3.52533C7.01378 3.39733 6.85556 3.33333 6.66667 3.33333C6.47778 3.33333 6.31956 3.39733 6.192 3.52533C6.06445 3.65333 6.00045 3.81156 6 4C5.99956 4.18844 6.06356 4.34689 6.192 4.47533C6.32045 4.60378 6.47867 4.66756 6.66667 4.66667ZM6.66667 13.3333C5.74445 13.3333 4.87778 13.1582 4.06667 12.808C3.25556 12.4578 2.55 11.9829 1.95 11.3833C1.35 10.7838 0.875112 10.0782 0.525334 9.26667C0.175556 8.45511 0.000445288 7.58844 8.43882e-07 6.66667C-0.000443601 5.74489 0.174668 4.87822 0.525334 4.06667C0.876001 3.25511 1.35089 2.54956 1.95 1.95C2.54911 1.35044 3.25467 0.875556 4.06667 0.525333C4.87867 0.175111 5.74533 0 6.66667 0C7.588 0 8.45467 0.175111 9.26667 0.525333C10.0787 0.875556 10.7842 1.35044 11.3833 1.95C11.9824 2.54956 12.4576 3.25511 12.8087 4.06667C13.1598 4.87822 13.3347 5.74489 13.3333 6.66667C13.332 7.58844 13.1569 8.45511 12.808 9.26667C12.4591 10.0782 11.9842 10.7838 11.3833 11.3833C10.7824 11.9829 10.0769 12.458 9.26667 12.8087C8.45644 13.1593 7.58978 13.3342 6.66667 13.3333ZM6.66667 12C8.15556 12 9.41667 11.4833 10.45 10.45C11.4833 9.41667 12 8.15555 12 6.66667C12 5.17778 11.4833 3.91667 10.45 2.88333C9.41667 1.85 8.15556 1.33333 6.66667 1.33333C5.17778 1.33333 3.91667 1.85 2.88333 2.88333C1.85 3.91667 1.33333 5.17778 1.33333 6.66667C1.33333 8.15555 1.85 9.41667 2.88333 10.45C3.91667 11.4833 5.17778 12 6.66667 12Z"
+          fill="#858585"/>
+</svg>
+
+                        </button>
+                        <dialog id="chart-miner-power-modal" class="modal">
+                            <div class="modal-box lg:p-8 font-[DM_Sans] bg-base-50 max-w-200 flex flex-col sm:flex-row sm:flex-row-reverse gap-4">
+                                <form method="dialog" class="flex justify-end">
+                                    <button class="btn btn-soft btn-square text-sm ">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                                <div class="markdown max-h-[80vh] overflow-y-auto grow">
+                                    <h2 id="power-by-agent-type">Power By Agent Type</h2>
+<p>This plot shows the distribution of agent versions by quality adjust power (QAP) and raw bytes power (RBP).</p>
+<p>The data is powered by <a href="https://dashboard.starboard.ventures/" rel="noopener noreferrer" target="_blank">Starboard</a>, <a href="/tools/nebula">Nebula</a>, and <a href="https://lilium.sh/" rel="noopener noreferrer" target="_blank">lily</a>
+and sourced as follows:</p>
+<p>First, we get all storage provider infos from <code>lily</code> which give us a mapping of <code>miner_id</code> to <code>peer_id</code> and a list of Multiaddresses.
+Then we go ahead and try to connect to all these peers and perform an identify exchange to learn the agent versions.
+After that's done, we fill the missing peers with our DHT and GossipSub crawl information so that we can resolve additional
+peer IDs to their agent versions. Then, we query Starboard to get a mapping from <code>miner_id</code> to the actual power values
+which we then also join together with the previous data. Finally, we group everything by agent version and sum up all
+the power values to arrive at the final graph.</p>
+                                </div>
+                            </div>
+                            <form method="dialog" class="modal-backdrop">
+                                <button></button>
+                            </form>
+                        </dialog>
+                    
+                </h3>
+                <p class="font-thin text-xs text-base-content-tertiary">Last updated 2 days, 20 hours ago</p>
+            </div>
+
+            <div class="join gap-2">
+                
+                
+
+                
+<button class="btn btn-xs btn-neutral btn-square disable-while-loading"
+        popovertarget="chart-miner-power-menu"
+        style="anchor-name:--anchor-chart-miner-power">
+    <i class="bi bi-three-dots-vertical"></i>
+</button>
+<ul class="dropdown dropdown-end menu w-56 rounded-box bg-base-100 shadow-sm p-0"
+    popover
+    id="chart-miner-power-menu"
+    style="position-anchor:--anchor-chart-miner-power">
+    
+        <li>
+            <a id="chart-miner-power-fullscreen-btn"
+               class="btn btn-ghost flex justify-between pr-3 "
+               href="/filecoin/charts/miner-power/?">
+                Full screen
+                <span class="flex items-center gap-2">
+                    <kbd class="kbd kbd-sm">V</kbd>
+                    <span class="flex w-6 justify-center text-md"><i class="bi bi-arrows-fullscreen"></i></span>
+                </span>
+            </a>
+        </li>
+    
+    <li>
+        <button id="chart-miner-power-download-btn"
+                
+                class="btn btn-ghost flex justify-between pr-3">
+            Download
+            <span class="flex items-center gap-2">
+                <kbd class="kbd kbd-sm">D</kbd>
+                <span class="flex w-6 justify-center text-xl"><svg width="1em" height="1em" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9.99992 13.3333L5.83325 9.16665L6.99992 7.95831L9.16659 10.125V3.33331H10.8333V10.125L12.9999 7.95831L14.1666 9.16665L9.99992 13.3333ZM3.33325 16.6666V12.5H4.99992V15H14.9999V12.5H16.6666V16.6666H3.33325Z"/>
+</svg>
+</span>
+            </span>
+        </button>
+    </li>
+    <li>
+        <button id="chart-miner-power-share-btn"
+                
+                class="btn btn-ghost flex justify-between pr-3">
+            Copy Link
+            <span class="flex items-center gap-2">
+                <kbd class="kbd kbd-sm">C</kbd>
+                <span class="flex w-6 justify-center text-sm"><svg width="1em" height="1em" viewBox="0 0 12 11" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0.499979 9.66667L8.49998 1.66667L1.33331 1.66667V0L11.3333 0V10H9.66665V2.83333L1.66665 10.8333L0.499979 9.66667Z"/>
+</svg>
+</span>
+            </span>
+        </button>
+    </li>
+</ul>
+
+            </div>
+        </div>
+
+        
+
+        
+
+    </div>
+
+
+    <div id="chart-miner-power-card-content" class="relative flex grow p-2 sm:p-4 md:p-6">
+
+        
+            <div id="chart-miner-power-container" class="w-full h-full"></div>
+            <script>
+                (async function () {
+                    
+
+                    const container = document.getElementById('chart-miner-power-container');
+                    const cardBody = document.getElementById("chart-miner-power-card-body");
+                    const downloadBtn = document.getElementById("chart-miner-power-download-btn");
+                    const shareBtn = document.getElementById("chart-miner-power-share-btn");
+                    const fullscreenLink = document.getElementById("chart-miner-power-fullscreen-btn");
+                    const menu = document.getElementById('chart-miner-power-menu');
+
+                    // The current drag-zoom window (ms epochs) on a time-series
+                    // chart; carried into the shared / full-screen link so the
+                    // link reproduces the zoomed view.
+                    let zoomRange = null;
+                    const zoomParam = (ms) => new Date(ms).toISOString().slice(0, 16);
+
+                    const shareUrl = () => {
+                        
+                            const params = new URLSearchParams('');
+                            if (zoomRange) {
+                                params.set('start', zoomParam(zoomRange.start));
+                                params.set('end', zoomParam(zoomRange.end));
+                            }
+                            const query = params.toString();
+                            return new URL('/filecoin/charts/miner-power/' + (query ? `?${query}` : ''), window.location.origin).toString();
+                        
+                    };
+
+                    const syncFullscreenLink = () => {
+                        if (fullscreenLink) {
+                            fullscreenLink.href = shareUrl();
+                        }
+                    };
+
+                    // Wait for the container to have proper dimensions before initializing
+                    const observer = new ResizeObserver(entries => {
+                        const rect = entries[0].contentRect;
+                        if (rect.width <= 0 || rect.height <= 0) {
+                            return;
+                        }
+
+                        const chart = echarts.init(container, 'probelab-dark');
+                        chart.setOption({"tooltip":{"formatter":(params) => {                const formatter = new Intl.NumberFormat(undefined, {                  minimumFractionDigits: 2,                  maximumFractionDigits: 2                });                const value = params.value[params.dimensionNames[params.encode.y[0]]];                const totalKey = params.dimensionNames[params.encode.y[0]]+'_total';                const total = params.value[totalKey];                const minerCount = params.value['unique_miners'];                let tooltip = '';                tooltip += `<div class=\"mb-1\">${params.marker} <b>${params.name}</b></div>`;                tooltip += `<div class=\"grid grid-cols-[auto_auto_auto] gap-y-1 gap-x-2\">`;                tooltip += `<span>Count:</span><b class=\"text-right\">${formatter.format(value / 1073741824)} EiB</b><span>(${(100*value/total).toFixed(1)}%)</span>`;                tooltip += `<span>Miners:</span><b class=\"text-right\">${minerCount}</b><span></span>`;                tooltip += `<span>Total:</span><b class=\"text-right\">${formatter.format(total / 1073741824)} EiB</b><span></span>`;                tooltip += '</div>';                return tooltip;            }},"xAxis":{"type":"category","data":["boost","boost-curio","booster-http","curio","droplet","unknown"],"axisLabel":{"interval":0,"rotate":25}},"yAxis":{"name":"EiB","type":"value","nameLocation":"middle","nameRotate":90,"axisLabel":{"formatter":val => Intl.NumberFormat(undefined, { notation: 'compact' }).format(val / 1073741824)}},"grid":{"top":"50px","left":"0px","bottom":"0px","right":"0px"},"dataset":[{"dimensions":["timestamp","group_0","quality_adj_power_gib","raw_byte_power_gib","unique_miners","quality_adj_power_gib_total","raw_byte_power_gib_total"],"source":[{"timestamp":1789862400000,"group_0":"boost","quality_adj_power_gib":4864882176.0,"raw_byte_power_gib":489951264.0,"unique_miners":125.0,"quality_adj_power_gib_total":13141359344.0,"raw_byte_power_gib_total":1460210048.0},{"timestamp":1789862400000,"group_0":"boost-curio","quality_adj_power_gib":80011008.0,"raw_byte_power_gib":8013600.0,"unique_miners":2.0,"quality_adj_power_gib_total":13141359344.0,"raw_byte_power_gib_total":1460210048.0},{"timestamp":1789862400000,"group_0":"booster-http","quality_adj_power_gib":183846528.0,"raw_byte_power_gib":18483840.0,"unique_miners":5.0,"quality_adj_power_gib_total":13141359344.0,"raw_byte_power_gib_total":1460210048.0},{"timestamp":1789862400000,"group_0":"curio","quality_adj_power_gib":734164032.0,"raw_byte_power_gib":79088320.0,"unique_miners":37.0,"quality_adj_power_gib_total":13141359344.0,"raw_byte_power_gib_total":1460210048.0},{"timestamp":1789862400000,"group_0":"droplet","quality_adj_power_gib":55505200.0,"raw_byte_power_gib":5592064.0,"unique_miners":2.0,"quality_adj_power_gib_total":13141359344.0,"raw_byte_power_gib_total":1460210048.0},{"timestamp":1789862400000,"group_0":"unknown","quality_adj_power_gib":7222950400.0,"raw_byte_power_gib":859080960.0,"unique_miners":341.0,"quality_adj_power_gib_total":13141359344.0,"raw_byte_power_gib_total":1460210048.0}]}],"legend":{"icon":"rect","top":"0px"},"series":[{"type":"bar","name":"Quality Adj Power","label":{"show":true,"position":"top","formatter":(params) => { return (100 * params.value.quality_adj_power_gib / 13141359344.0).toFixed(1) + '%';},"color":"#bebebe"},"color":"#CC886A","encode":{"x":"group_0","y":"quality_adj_power_gib"}},{"type":"bar","name":"Raw Bytes Power","label":{"show":true,"position":"top","formatter":(params) => { return (100 * params.value.raw_byte_power_gib / 1460210048.0).toFixed(1) + '%';},"color":"#bebebe"},"color":"#755547","encode":{"x":"group_0","y":"raw_byte_power_gib"}},{"type":"custom","coordinateSystem":"cartesian2d","renderItem":(params, api) => {                    const padding = 10;                    const width = 160;                    const height = 48;                    let x, y;                    const gridRect = params.coordSys;                    if (gridRect && gridRect.type === 'cartesian2d') {                        if ('center' === 'left') {                            x = gridRect.x + padding;                        } else if ('center' === 'right') {                            x = gridRect.x + gridRect.width - width - padding;                        } else {                            x = gridRect.x + (gridRect.width - width) / 2;                        }                        if ('center' === 'top') {                            y = gridRect.y + padding;                        } else if ('center' === 'bottom') {                            y = gridRect.y + gridRect.height - height - padding;                        } else {                            y = gridRect.y + (gridRect.height - height) / 2;                        }                    } else {                        const viewW = api.getWidth();                        const viewH = api.getHeight();                        if ('center' === 'left') {                            x = padding;                        } else if ('center' === 'right') {                            x = viewW - width - padding;                        } else {                            x = (viewW - width) / 2;                        }                        if ('center' === 'top') {                            y = padding;                        } else if ('center' === 'bottom') {                            y = viewH - height - padding;                        } else {                            y = (viewH - height) / 2;                        }                    }                    return {                        type: 'image',                        style: {                            image: 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgd2lkdGg9IjMyOS45OTk2IgogICBoZWlnaHQ9IjkzLjAwMDE5OCIKICAgdmlld0JveD0iMCAwIDMyOS45OTk2IDkzLjAwMDE5OCIKICAgZmlsbD0ibm9uZSIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnMTQ0IgogICB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxkZWZzCiAgICAgaWQ9ImRlZnMxNDgiIC8+CiAgPHBhdGgKICAgICBkPSJNIDIxLjk3MDEsMCBIIDAgdiA5My4wMDAyIGggMjEuOTcwMSB6IgogICAgIGZpbGw9IiNmZmZmZmYiCiAgICAgaWQ9InBhdGgxMTYiIC8+CiAgPHBhdGgKICAgICBkPSJNIDM4LjU0MTUsMy43OTAzIEggMjcuNjE3NyB2IDc3Ljk5ODkgaCAxMC45MjM4IHoiCiAgICAgZmlsbD0iI2ZmZmZmZiIKICAgICBpZD0icGF0aDExOCIgLz4KICA8cGF0aAogICAgIGQ9Im0gNTIuMTcwNywxMC40NjA3IGggLTkuMTEyIHYgNjQuNjUwNSBoIDkuMTEyIHoiCiAgICAgZmlsbD0iI2ZmZmZmZiIKICAgICBpZD0icGF0aDEyMCIgLz4KICA8cGF0aAogICAgIGQ9Im0gNjIuMjg2NywxNC43MzcxIGggLTYuMzk0NCB2IDU2LjA5NzQgaCA2LjM5NDQgeiIKICAgICBmaWxsPSIjZmZmZmZmIgogICAgIGlkPSJwYXRoMTIyIiAvPgogIDxwYXRoCiAgICAgZD0iTSA2OS4zNDIsMTkuMDI2MSBIIDY1LjE1MTIgViA2Ni41NDU4IEggNjkuMzQyIFoiCiAgICAgZmlsbD0iI2ZmZmZmZiIKICAgICBpZD0icGF0aDEyNCIgLz4KICA8cGF0aAogICAgIGQ9Im0gNzMuOTI0NiwyMi44NjU3IGggLTIuMTM4IHYgMzkuODQwMSBoIDIuMTM4IHoiCiAgICAgZmlsbD0iI2ZmZmZmZiIKICAgICBpZD0icGF0aDEyNiIgLz4KICA8cGF0aAogICAgIGQ9Ik0gMTAyLjEwOTYsNjEuODYxMyBWIDI0LjU2NzQgaCAxNS40MTYgYyA3LjczNywwIDEyLjczNiw0Ljc1NDQgMTIuNzM2LDExLjY4MDEgMCw2LjkyNTYgLTQuOTk5LDExLjcwNDggLTEyLjczNiwxMS43MDQ4IGggLTkuNjE0IHYgMTMuOTA5IHogbSA1LjgwMiwtMTkuMTc4NCBoIDkuMzY1IGMgNC41NTksMCA2LjkzMywtMi44NTUyIDYuOTMzLC02LjQyNzIgMCwtMy41NzIgLTIuMzc0LC02LjQyNzEgLTYuOTMzLC02LjQyNzEgaCAtOS4zNjUgdiAxMi44NjI1IHoiCiAgICAgZmlsbD0iI2ZmZmZmZiIKICAgICBpZD0icGF0aDEyOCIgLz4KICA8cGF0aAogICAgIGQ9Ik0gMTMzLjYyNzYsNjEuODYxMSBWIDM1LjQ3MjcgaCA1LjQ5NyB2IDMuNTk2OCBjIDEuNDk0LC0yLjg4NCA0LjAwNywtNC4xNDg5IDYuOTA0LC00LjE0ODkgMi4wNjksMCAzLjY0OSwwLjY2MzQgMy42NDksMC42NjM0IGwgLTAuNTgsNC45OTc1IGMgLTAuMzA2LC0wLjExMTMgLTEuNDkzLC0wLjYwNTcgLTMuMjMyLC0wLjYwNTcgLTIuOTMsMCAtNi43NDEsMS41MzY4IC02Ljc0MSw3LjUwNjYgViA2MS44NTcgaCAtNS40OTcgeiIKICAgICBmaWxsPSIjZmZmZmZmIgogICAgIGlkPSJwYXRoMTMwIiAvPgogIDxwYXRoCiAgICAgZD0ibSAxNTAuNjgwNiw0OC42NjkgYyAwLC03LjcyMDggNi4wMjMsLTEzLjc0MDEgMTQuMDk1LC0xMy43NDAxIDguMDcxLDAgMTQuMDk0LDYuMDE5MyAxNC4wOTQsMTMuNzQwMSAwLDcuNzIwOSAtNi4wMjMsMTMuNzQwMSAtMTQuMDk0LDEzLjc0MDEgLTguMDcyLDAgLTE0LjA5NSwtNi4wMTkyIC0xNC4wOTUsLTEzLjc0MDEgeiBtIDE0LjA5NSw4LjYyNzIgYyA0Ljk5OSwwIDguNjIyLC0zLjc2NTYgOC42MjIsLTguNjI3MiAwLC00Ljg2MTUgLTMuNjE1LC04LjYyNzIgLTguNjIyLC04LjYyNzIgLTUuMDA3LDAgLTguNjIyLDMuNzY1NyAtOC42MjIsOC42MjcyIDAsNC44NjE2IDMuNjE1LDguNjI3MiA4LjYyMiw4LjYyNzIgeiIKICAgICBmaWxsPSIjZmZmZmZmIgogICAgIGlkPSJwYXRoMTMyIiAvPgogIDxwYXRoCiAgICAgZD0ibSAxODIuOTM4NiwyMy4xNjIzIGggNS40NjggdiAxNS45MTU1IGMgMS45NjMsLTIuNTAwOCA0Ljk1LC00LjE0ODggOS40NTEsLTQuMTQ4OCA3LjU0NSwwIDEzLjMxNSw1LjUwMDEgMTMuMzE1LDEzLjYwNDEgMCw4LjEwNCAtNS43NzksMTMuODgwMiAtMTMuMzE1LDEzLjg4MDIgLTQuNTA1LDAgLTcuNDg4LC0xLjY0OCAtOS40NTEsLTQuMTQ4OCB2IDMuNTk2NyBoIC01LjQ2OCB6IG0gMTQuMjU3LDM0LjM1MjMgYyA1LjEwOSwwIDguNTEzLC00LjEyNDEgOC41MTMsLTguOTg1NiAwLC00Ljg2MTYgLTMuNCwtOC43MTM4IC04LjUxMywtOC43MTM4IC01LjExMywwIC04Ljc2MSwzLjg1MjIgLTguNzYxLDguNzEzOCAwLDQuODYxNSAzLjY0OCw4Ljk4NTYgOC43NjEsOC45ODU2IHoiCiAgICAgZmlsbD0iI2ZmZmZmZiIKICAgICBpZD0icGF0aDEzNCIgLz4KICA8cGF0aAogICAgIGQ9Im0gMjI4LjI1NzYsMzQuOTI4OSBjIDcuNzMzLDAgMTIuNzY4LDUuNzE0NCAxMi43NjgsMTIuNzc2MSAwLDAuODI0IC0wLjA1MywxLjY3NjggLTAuMjI0LDIuNTI1NSBoIC0yMC41ODMgYyAwLjI0OSwzLjk1OTMgMy42NDgsNy4wNjU3IDguMjMxLDcuMDY1NyAzLjMxNywwIDUuOTY2LC0xLjQwMDcgNy45NTcsLTQuNTA3MiBsIDQuMDM2LDIuOTE2OSBjIC0yLjQ2MSw0LjM5NiAtNy4yOTIsNi43MDczIC0xMS45OTMsNi43MDczIC04LjAxNCwwIC0xMy44OTksLTUuODgzMyAtMTMuODk5LC0xMy43MTEyIDAsLTcuODI3OSA1LjY2NCwtMTMuNzczMSAxMy43MDcsLTEzLjc3MzEgeiBtIDcuMjE1LDExLjIzOTMgYyAtMC4zMzUsLTMuNzA4IC0zLjQ1MywtNi4zMjQxIC03LjI2OCwtNi4zMjQxIC00LjA2LDAgLTcuMTUzLDIuNjEyIC03Ljg0Nyw2LjMyNDEgaCAxNS4xMTEgeiIKICAgICBmaWxsPSIjZmZmZmZmIgogICAgIGlkPSJwYXRoMTM2IiAvPgogIDxwYXRoCiAgICAgZD0ibSAyNzAuMDQ3Niw2MS44NjExIGggLTI0LjgzMSBWIDI0LjUzODMgaCA1LjgyNyB2IDMyLjA3NCBoIDE5LjAwNCB2IDUuMjQ0NyB6IgogICAgIGZpbGw9IiNmZmZmZmYiCiAgICAgaWQ9InBhdGgxMzgiIC8+CiAgPHBhdGgKICAgICBkPSJtIDI4NS4xMDA2LDQ1Ljk5OTIgYyAzLjE3OSwwIDUuNDcyLDAuNjYzNCA2LjY4NCwxLjIzMTkgdiAtMS40Mjk2IGMgMCwtMy4zMDAxIC0yLjY4MSwtNS43NzIxIC02Ljc5NCwtNS43NzIxIC0zLjI4OSwwIC02LjAyMywxLjg3MDUgLTcuNTk4LDMuNjU0NCBsIC0zLjQ1MiwtMy40MDcyIGMgMi4wNDQsLTIuNTgzMiA2LjMsLTUuMzU2IDExLjEzNiwtNS4zNTYgNy40NjMsMCAxMi4xODksNC4wMTI5IDEyLjE4OSwxMC40MTUzIHYgMTYuNTE3IGggLTUuMzU4IHYgLTMuNDA3MiBjIC0xLjYzMywyLjQ3MTkgLTQuNzAxLDMuOTU5MiAtOC4yNjQsMy45NTkyIC01Ljc0NSwwIC0xMC4yNDYsLTIuODgzOSAtMTAuMjQ2LC04LjA1MDQgMCwtNS4xNjY0IDQuNzU0LC04LjM1NTMgMTEuNzE1LC04LjM1NTMgaCAtMC4wMDggeiBtIC0wLjY2NSwxMS45NTIxIGMgNC4zMDksMCA3LjM0OSwtMi45NDE3IDcuMzQ5LC02LjUzODQgLTEuMTM0LC0wLjU3NjggLTMuNjc2LC0xLjI2NDkgLTYuNTQ1LC0xLjI2NDkgLTMuNDUyLDAgLTYuMzI1LDEuMTU3OCAtNi4zMjUsNC4wMTI5IDAsMi4zODk2IDIuNDAzLDMuNzkwNCA1LjUyOSwzLjc5MDQgeiIKICAgICBmaWxsPSIjZmZmZmZmIgogICAgIGlkPSJwYXRoMTQwIiAvPgogIDxwYXRoCiAgICAgZD0ibSAzMDEuNzYxNiwyMy4xNjIzIGggNS40NzMgdiAxNS45MTU1IGMgMS45NjIsLTIuNTAwOCA0Ljk0NSwtNC4xNDg4IDkuNDUsLTQuMTQ4OCA3LjU0NSwwIDEzLjMxNSw1LjUwMDEgMTMuMzE1LDEzLjYwNDEgMCw4LjEwNCAtNS43NzgsMTMuODgwMiAtMTMuMzE1LDEzLjg4MDIgLTQuNTA1LDAgLTcuNDg4LC0xLjY0OCAtOS40NSwtNC4xNDg4IHYgMy41OTY3IGggLTUuNDczIHogbSAxNC4yNTgsMzQuMzUyMyBjIDUuMTEzLDAgOC41MTIsLTQuMTI0MSA4LjUxMiwtOC45ODU2IDAsLTQuODYxNiAtMy4zOTksLTguNzEzOCAtOC41MTIsLTguNzEzOCAtNS4xMTMsMCAtOC43NjEsMy44NTIyIC04Ljc2MSw4LjcxMzggMCw0Ljg2MTUgMy42NDgsOC45ODU2IDguNzYxLDguOTg1NiB6IgogICAgIGZpbGw9IiNmZmZmZmYiCiAgICAgaWQ9InBhdGgxNDIiIC8+Cjwvc3ZnPgo=',                            x: x,                            y: y,                            width: width,                            height: height,                            opacity: 0.08                        },                        z: -100                    };                },"data":[{"value":[]}],"silent":true,"animation":false}]});
+
+                        // Enable drag zoom if enabled by the chart
+                        chart.dispatchAction({
+                            type: 'takeGlobalCursor',
+                            key: 'dataZoomSelect',
+                            dataZoomSelectActive: true,
+                        });
+
+                        // Reset zoom on double click / double tap. Detected via
+                        // two quick zrender clicks because zrender synthesizes
+                        // 'click' from touch input but not 'dblclick'.
+                        let lastClickAt = 0;
+                        chart.getZr().on('click', function () {
+                            if (Date.now() - lastClickAt < 350) {
+                                lastClickAt = 0;
+                                chart.dispatchAction({
+                                    type: 'dataZoom',
+                                    start: 0,
+                                    end: 100
+                                });
+                                return;
+                            }
+                            lastClickAt = Date.now();
+                        });
+
+                        
+
+                        // Handle chart lifecycle
+                        window.addEventListener('resize', chart.resize);
+                        observer.disconnect();
+
+                        cardBody.addEventListener("htmx:beforeSwap", () => {
+                            window.removeEventListener('resize', chart.resize);
+                            chart.dispose();
+                        });
+
+                        downloadBtn.addEventListener("click", () => {
+                            const a = document.createElement('a');
+                            a.href = chart.getDataURL({
+                                pixelRatio: 3,
+                            });
+                            a.download = 'chart-miner-power.png';
+                            a.click();
+                            menu.hidePopover();
+                        });
+                    });
+
+                    observer.observe(container);
+                    cardBody.addEventListener("htmx:beforeSwap", () => observer.disconnect());
+
+                    shareBtn.addEventListener("click", () => {
+                        navigator.clipboard.writeText(shareUrl());
+                        menu.hidePopover();
+                        plToast('Link copied to clipboard!');
+                    });
+                })()
+            </script>
+        
+
+        <div class="absolute w-full h-full top-0 left-0 pointer-events-none">
+            <div class="flex justify-center items-center h-full">
+                <span class="htmx-indicator loading loading-bars loading-xl"></span>
+            </div>
+        </div>
+    </div>
+</div>
