@@ -5,6 +5,10 @@
 through, granted public read and queryable through the OSO API with any API key. Its SQL lives in
 `insights-private/projects/filecoin/models/`; this repo publishes the raw tables it is built from.
 
+The same schema also publishes the pods' sales pipeline as stage totals,
+`filecoin.filpgf_public.gtm_pipeline_by_stage`. It is not part of this repo's kernel contract;
+`.claude/skills/query-gtm-pipeline/SKILL.md` explains how to read it.
+
 **Two tables, on purpose.**
 
 | table | one row per | size |
