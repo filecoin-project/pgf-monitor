@@ -25,7 +25,7 @@ functions:
       statement: "Breadth of the IPNI provider set: providers listed on cid.contact, measured daily"
       metric: ipni_provider_count
       cadence: daily
-      unscored_reason: no-signed-bar
+      threshold: { op: ">=", value: 100, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json
@@ -54,7 +54,7 @@ functions:
       statement: "Ad-chain ingestion liveness: providers showing a LastAdvertisementTime within the past 24h, measured daily"
       metric: ipni_providers_advertised_24h
       cadence: daily
-      unscored_reason: no-signed-bar
+      threshold: { op: ">=", value: 15, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json

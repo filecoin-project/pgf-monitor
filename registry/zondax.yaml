@@ -65,7 +65,7 @@ functions:
       statement: "Rosetta stack currency: age of the latest rosetta-filecoin-proxy release, measured weekly"
       metric: rosetta_release_age_days
       cadence: weekly
-      unscored_reason: no-signed-bar
+      threshold: { op: "<=", value: 60, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json

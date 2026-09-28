@@ -36,8 +36,9 @@ Your job: make the manifest *yours*.
 - Set thresholds you are willing to be held to. The SLA `statement` should read as a
   plain-English promise. Omitting `sla.threshold` entirely is legitimate — it means the
   function is monitored but not scored, which is honest when there is no agreement to
-  point to yet or your signed §3 still reads "(to confirm)". Don't invent a number just
-  to fill the slot.
+  point to yet or your signed §3 names the metric without a number. Don't invent a number
+  just to fill the slot. Note that a number marked "(to confirm)" in an agreement you have
+  signed is treated as agreed — raise it before signing if it is wrong.
 - Anything genuinely unmeasurable (coordination work, quality judgments) belongs in
   `x_draft.unmeasured` with a reason — honesty beats theater.
 

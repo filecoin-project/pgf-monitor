@@ -26,7 +26,7 @@ functions:
       statement: "Goldsky-hosted Filecoin FEVM subgraph indexing lag: wall clock minus indexed block timestamp, measured daily — stale chain ETL breaks every downstream consumer at once"
       metric: fevm_subgraph_indexing_lag_seconds
       cadence: daily
-      unscored_reason: no-signed-bar
+      threshold: { op: "<=", value: 600, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json

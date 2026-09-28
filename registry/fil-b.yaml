@@ -24,7 +24,7 @@ functions:
       statement: "Docs repo activity: age of the most recent commit on filecoin-project/filecoin-docs, measured weekly"
       metric: docs_last_commit_age_days
       cadence: weekly
-      unscored_reason: no-signed-bar
+      threshold: { op: "<=", value: 60, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json

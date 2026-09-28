@@ -34,7 +34,7 @@ functions:
       statement: "Public mainnet RPC chain-head lag: wall-clock expected epoch minus reported Height, measured daily — a stale head means the endpoint's backing node has stopped syncing"
       metric: rpc_head_lag_epochs
       cadence: daily
-      unscored_reason: no-signed-bar
+      threshold: { op: "<=", value: 5, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json
@@ -72,7 +72,7 @@ functions:
       statement: "FEVM/Eth RPC chain-head lag: wall-clock expected epoch minus decoded eth_blockNumber, measured daily — the eth_* API is what FEVM dApps depend on and can stall independently of the native API"
       metric: fevm_eth_head_lag_epochs
       cadence: daily
-      unscored_reason: no-signed-bar
+      threshold: { op: "<=", value: 10, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json

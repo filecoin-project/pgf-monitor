@@ -1027,11 +1027,13 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
          "reproduces every number on this page."),
         ("What is scored, and what is not",
          "A reading is judged only on a day its metric carried a threshold, and a threshold is "
-         "only in force once it is written in an <b>executed</b> Appendix 1 &sect;3 without a "
-         "&ldquo;(to confirm)&rdquo; beside it. Each bar applies from the day its agreement was "
+         "only in force once it is written in an <b>executed</b> Appendix 1 &sect;3. A number "
+         "marked &ldquo;(to confirm)&rdquo; there counts as agreed, because the recipient signed "
+         "the document carrying it. Each bar applies from the day its agreement was "
          "signed and not before, so a team is never judged against a number it had not yet "
          "agreed. Everything else is measured and shown unjudged &mdash; most often because the "
-         "signed document states the metric but leaves its number to confirm. The bar is "
+         "metric is not in the recipient's &sect;3, or the &sect;3 states no number this pipeline "
+         "can evaluate. The bar is "
          "recorded per day, so correcting one re-judges history rather than leaving readings "
          "measured against a superseded number."),
         ("Coverage is about us, not them",
@@ -1062,7 +1064,7 @@ def public_engine(COVERAGE_FROM, PLATFORM_OUTAGES, datetime, math):
         ("Metric", "One number a funded team is measured on: an indicator with an agreed cadence and a public source, fetched by a pipeline the team does not control. It is the unit every card on this page draws."),
         ("Proposed", "A metric drafted against a function but not yet named in a signed agreement. Monitoring follows the agreements, so a proposed metric is not collected yet."),
         ("Coverage · 30d", "The share of the reading periods the window expects that actually carry a value, counted at each metric's own cadence so a weekly metric is not penalised for being coarse. Low coverage means the metric exists but is not being collected."),
-        ("Unscored", "Measured, but not judged — no threshold was in force for that metric on that day. Usually because the signed appendix names the metric but leaves its number &ldquo;(to confirm)&rdquo;, which only the recipient can settle."),
+        ("Unscored", "Measured, but not judged — no threshold was in force for that metric on that day. Usually because the metric is not in the signed appendix, or the appendix states no number this pipeline can evaluate."),
         ("Met / missed", "A reading judged against the threshold in force <b>that day</b>, taken from an executed agreement. A miss is a breach of a written commitment, not an outage: the source answered, and the number was outside the agreed bar."),
         ("Gap", "A period the source was asked and gave no defensible number. Not a zero, not a breach, and not the team's failure — it is a hole in the instrument."),
         ("Tier", "How replaceable a function is, from <b>Irreplaceable</b> to <b>Important</b>. Tier sets the funding posture and whether redundancy is required."),
