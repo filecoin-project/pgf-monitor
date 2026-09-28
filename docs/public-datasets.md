@@ -77,8 +77,19 @@ plus `state = 'adopted'`, so every one of these rows is dropped before it reache
 what the contract promises.
 
 They are left in place rather than deleted — git history is the audit trail here, and voiding a
-measurement because its name was wrong would be the one edit this table does not allow. Their
-per-class disposition is tracked in OSO-5005.
+measurement because its name was wrong would be the one edit this table does not allow. **None of
+them is declared either.** Declaring a metric puts it in `kernel_metrics`, the public inventory of
+commitments, and none of these is a commitment. The decision, class by class:
+
+| Class | Triples | Rows | What they are | Disposition |
+|---|---|---|---|---|
+| Superseded statistic | 5 (`days_between_releases`, `days_between_stable_releases`) | 65 | per-interval gaps where the SLA states a trailing average | **superseded.** The declared `avg_days_between_*` series now carries a backfilled value on almost every one of these days; read that instead |
+| Different statistic | 2 (`*_daily_max_gap`) | 45 | the largest snapshot age ChainSafe's archive reached each day, beside the committed point-in-time age | **kept as history.** Only 6 of their days overlap the declared series, so they hold history nothing else does |
+| Proxy measurement | 3 (`daily_indexed_transactions` ×2, `incidents_in_month`) | 768 | evidence a service ran that day, not the committed metric recovered | **kept as history, never declared.** Useful context about Blockscout and the status page before nightly collection began, but not a reading of any commitment |
+| Retired commitment | 1 (`secured-finance/usdfc-collateral-tvl-floor`) | 378 | a year of DefiLlama TVL for a commitment Secured Finance no longer carries | **kept as history** for a commitment that no longer exists |
+| Exploratory residue | 13 | 13 | single `live-review` readings from 2026-07-15, for functions since renamed or dropped | **kept as history** |
+
+The set is closed: 24 triples, 1,269 rows, the last dated 2026-08-24.
 
 **Nothing new can join them.** `fpm.observations.append_observations` refuses a triple the
 registry does not declare, and `tests/test_observations_declared.py` fails on any undeclared
