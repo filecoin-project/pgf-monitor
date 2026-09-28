@@ -1046,6 +1046,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-25,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,0.0,nightly,
 2026-09-26,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,0.0,nightly,
 2026-09-27,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,1.0,nightly,
+2026-09-28,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,0.0,backfill:filecoin.blockscout.com,"the nightly's own /api/health capture (block ts 05:59 UTC, dlt load 1790575211), re-read from OSO after its transform poll hit a transient 401; same transform SQL"
 2026-09-28,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,,nightly,transform_error: transform failed: 401 Client Error: Unauthorized for url: https://api.oso.xyz/v1/async-sql?id=aae7cee1-5e92-4a01-adc6-0035ca702ec7 - Authentication required
 2026-08-20,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
 2026-08-21,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,0.0,nightly,
