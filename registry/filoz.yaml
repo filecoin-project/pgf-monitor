@@ -72,7 +72,7 @@ functions:
       statement: "Win-count health: network average blocks per tipset, of 5 expected, measured daily — a network-wide reading rather than a Curio-specific one"
       metric: avg_blocks_per_tipset
       cadence: daily
-      unscored_reason: no-signed-bar
+      threshold: { op: ">=", value: 4.5, source: signed-appendix }
     source:
       adapter: oso
       # CAVEAT: filfox 403s the default python-requests User-Agent on /overview (any other
@@ -101,7 +101,7 @@ functions:
       statement: "PDP on mainnet: count of active proof sets, measured daily"
       metric: pdp_active_proof_sets
       cadence: daily
-      unscored_reason: no-signed-bar
+      threshold: { op: ">=", value: 500, source: signed-appendix }
     source:
       adapter: oso
       kind: http-json

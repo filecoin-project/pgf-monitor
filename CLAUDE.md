@@ -193,8 +193,9 @@ set) · `review-and-land` (run the pipeline, adjudicate readings, land verdicts)
 - `fpm review` team name = `registry/<name>.yaml` filename stem.
 - Trino timestamp literals: `'YYYY-MM-DD HH:MM:SS'` (space, no T, no offset).
 - A manifest may omit `sla.threshold` entirely — that is "measured, not scored", and it is the
-  honest state for a team whose agreement is missing or whose signed §3 still says "(to confirm)".
-  Do NOT invent a number to fill the slot. Set `sla.threshold.source` to `signed-appendix` only
+  honest state for a team whose agreement is missing or whose §3 states no number. Do NOT invent a
+  number to fill the slot. A number marked "(to confirm)" in an EXECUTED §3 does count as agreed
+  (decided 2026-09-28, OSO-5398): the recipient signed the document carrying it. Set `sla.threshold.source` to `signed-appendix` only
   when you have read it in the signed appendix; it defaults to `provisional` and the dashboard
   labels provisional bars as such.
 
