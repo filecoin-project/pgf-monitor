@@ -211,7 +211,9 @@ detectors, synthesize, pipeline, store, land, report/, governance/, transform/, 
 ONLY on the two `filecoin.filpgf_public.*` mart tables. Its public URL needs the `/view` suffix
 (`https://www.oso.xyz/filecoin/propgf-kernel-health-live/view`); the bare path 307s to `/login`.
 Publishing is AUTOMATIC since 2026-09-20 — `published-page.yml` republishes on every push to the
-notebook and daily at 09:10 UTC (after the mart DAG reaches `filpgf_public` at 08:30), from a
+notebook and daily at 09:10 UTC (after the mart DAG reaches `filpgf_public` at 08:30), retrying at
+11:10 and 13:10 if the mart has not yet reached main's latest reading (it FAILS at 13:10; a page
+equal to a stale mart is not current — 2026-09-30), from a
 CHECKOUT of main so `hosted == main` holds by construction, then verifies both that the hash
 matches AND that the page's rendered `as of` date and row counts equal the mart's — a hash alone
 is blind to data staleness, which is how the page sat a day behind on 2026-09-20 with a green
