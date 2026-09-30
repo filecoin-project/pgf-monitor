@@ -1,17 +1,21 @@
 ---
 name: query-gtm-pipeline
-description: Use when evaluating a Filecoin pod, or answering any question about the pods' go-to-market sales pipeline — how big FilOne's open book is, how it splits by stage, how many FOC partnerships are open, won, lost or dormant, how fresh the pipeline data is. Queries the one public table, `filecoin.filpgf_public.gtm_pipeline_by_stage`, with any OSO API key. Triggers on "GTM pipeline", "sales pipeline", "pipeline by stage", "FilOne book", "FOC partnerships", "pod funnel", "weighted pipeline". For kernel SLA readings use `docs/public-datasets.md` instead.
+description: Use when evaluating a Filecoin pod, or answering any question about the pods' go-to-market sales pipeline — how big FilOne's open book is, how it splits by stage, how many FOC partnerships are open, won, lost or dormant, how fresh the pipeline data is. Queries the public tables `filecoin.filpgf_public.gtm_pipeline_by_stage` (the funnel) and `pod_gtm_summary` (Fil One's closed-lost tail and FOC's data-activity count), with any OSO API key. Triggers on "GTM pipeline", "sales pipeline", "pipeline by stage", "FilOne book", "FOC partnerships", "pod funnel", "weighted pipeline". For a pod's commitments, funding and business-review KPIs use `query-pod-reporting`; for kernel SLA readings use `docs/public-datasets.md`.
 ---
 
 # Query the pods' GTM pipeline
 
-The Filecoin pods' sales pipelines are published as **one public table**:
+The Filecoin pods' sales pipelines are published as **two public tables**:
 
 ```
-filecoin.filpgf_public.gtm_pipeline_by_stage
+filecoin.filpgf_public.gtm_pipeline_by_stage   -- the funnel: one row per pod × stage
+filecoin.filpgf_public.pod_gtm_summary         -- per pod: what the funnel can't carry
 ```
 
-It holds one row per pod × stage, built daily from the pods' own CRM data. Everyone reads this
+Both are built daily from the pods' own CRM data. `gtm_pipeline_by_stage` is the source of truth
+for the funnel and for all pipeline money. `pod_gtm_summary` adds only two figures the stage
+table structurally can't: Fil One's **closed-lost tail** (excluded from the stage table) and
+FOC's count of partnerships **already moving data** (not a stage). Everyone reads this
 same table: the community, filpgf.io, and sims evaluating a pod. There's no richer version to
 ask for, so don't go looking for one. Deal-level and partner-level records are private by
 design, and the query will be denied.
@@ -73,6 +77,14 @@ so you can join pipeline to the pods' funding and activity metrics.
    up to $50k per row. Quote them as approximate ("about $X M").
 7. **Open book only.** Lost web2 deals are excluded. `amount_usd` is potential value, not
    revenue: there's no closed-won stage in the feed, so nothing here shows signed contracts.
+   For what was excluded, read `pod_gtm_summary.closed_lost_entities` and
+   `closed_lost_amount_usd`:
+   - **NULL means withheld.** A tail of one or two lost deals would isolate a single deal, and
+     `closed_lost_suppressed` is then true.
+   - **0 means zero.**
+8. **FOC's data-activity count is banded.** `pod_gtm_summary.data_activity_count` is NULL until
+   it reaches 5, and `data_activity_label` then reads "fewer than 5". Quote the label, never a
+   guessed number.
 
 ## Queries
 
@@ -127,6 +139,28 @@ SELECT
 FROM filecoin.filpgf_public.gtm_pipeline_by_stage
 GROUP BY stage_kind, pod_slug
 ORDER BY stage_kind, pod_slug
+```
+
+**Per-pod summary, latest snapshot per pod** (never one global `MAX(snapshot_date)`, which
+drops whichever pod is behind):
+
+```sql
+SELECT
+  s.pod_slug,
+  s.snapshot_date,
+  s.open_entities,
+  s.closed_lost_entities,
+  s.closed_lost_amount_usd,
+  s.closed_lost_suppressed,
+  s.data_activity_label
+FROM filecoin.filpgf_public.pod_gtm_summary AS s
+JOIN (
+  SELECT pod_slug, MAX(snapshot_date) AS snapshot_date
+  FROM filecoin.filpgf_public.pod_gtm_summary
+  GROUP BY pod_slug
+) AS l
+  ON l.pod_slug = s.pod_slug AND l.snapshot_date = s.snapshot_date
+ORDER BY s.pod_slug
 ```
 
 ## Writing it up
