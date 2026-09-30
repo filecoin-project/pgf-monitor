@@ -32,8 +32,10 @@ non-kernel Coordination/RFP)
 (Karma form, pre-award) · `reconcile-metrics` (decide what a team is measured on; keep agreement
 §3, registry, facts and dashboard in agreement) · `author-manifest` (a team encodes its agreed
 set) · `review-and-land` (run the pipeline, adjudicate readings, land verdicts).
-Outside the program order: `query-gtm-pipeline` (read the pods' public sales pipeline,
-`filecoin.filpgf_public.gtm_pipeline_by_stage`; what sims and the community use).
+Outside the program order, for reading the Revenue Development pods' PUBLIC data (what sims and
+the community use): `query-gtm-pipeline` (sales pipeline: `gtm_pipeline_by_stage`,
+`pod_gtm_summary`) · `query-pod-reporting` (commitments, funding, business-review KPIs:
+`pod_commitments`, `pod_funding`, `pod_review_metrics`, `pod_review_activity`).
 
 ## Hard rules
 
