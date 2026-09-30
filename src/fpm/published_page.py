@@ -165,4 +165,3 @@ def scheduled_action(
     if source_drifted:
         return "upload"
     return "skip" if page_current else "force"
-

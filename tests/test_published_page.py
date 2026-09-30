@@ -100,7 +100,6 @@ def test_a_matching_hash_only_needs_a_data_refresh():
     assert publish_action("aaa", "aaa") == "force"
 
 
-
 # ------------------------------------------------------------- is the mart itself current?
 
 
@@ -125,36 +124,53 @@ def test_a_mart_with_no_rows_is_behind():
 
 
 def test_a_lagging_mart_waits_for_a_later_attempt():
-    assert scheduled_action(
-        source_drifted=False, mart_current=False, page_current=False, final_attempt=False
-    ) == "wait"
+    assert (
+        scheduled_action(
+            source_drifted=False, mart_current=False, page_current=False, final_attempt=False
+        )
+        == "wait"
+    )
 
 
 def test_a_lagging_mart_on_the_final_attempt_fails_loudly():
-    assert scheduled_action(
-        source_drifted=False, mart_current=False, page_current=False, final_attempt=True
-    ) == "fail"
+    assert (
+        scheduled_action(
+            source_drifted=False, mart_current=False, page_current=False, final_attempt=True
+        )
+        == "fail"
+    )
 
 
 def test_a_lagging_mart_still_takes_a_source_fix_on_the_final_attempt():
     """The source fix is independent of the data; the verify step then fails on the lag."""
-    assert scheduled_action(
-        source_drifted=True, mart_current=False, page_current=False, final_attempt=True
-    ) == "upload"
+    assert (
+        scheduled_action(
+            source_drifted=True, mart_current=False, page_current=False, final_attempt=True
+        )
+        == "upload"
+    )
 
 
 def test_a_current_page_is_left_alone():
     """Later scheduled attempts must not mint a republish every day once the page is current."""
-    assert scheduled_action(
-        source_drifted=False, mart_current=True, page_current=True, final_attempt=False
-    ) == "skip"
+    assert (
+        scheduled_action(
+            source_drifted=False, mart_current=True, page_current=True, final_attempt=False
+        )
+        == "skip"
+    )
 
 
 def test_a_current_mart_under_a_stale_page_is_refreshed():
-    assert scheduled_action(
-        source_drifted=False, mart_current=True, page_current=False, final_attempt=False
-    ) == "force"
-    assert scheduled_action(
-        source_drifted=True, mart_current=True, page_current=True, final_attempt=False
-    ) == "upload"
-
+    assert (
+        scheduled_action(
+            source_drifted=False, mart_current=True, page_current=False, final_attempt=False
+        )
+        == "force"
+    )
+    assert (
+        scheduled_action(
+            source_drifted=True, mart_current=True, page_current=True, final_attempt=False
+        )
+        == "upload"
+    )
