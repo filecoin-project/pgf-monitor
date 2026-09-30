@@ -38,7 +38,15 @@ import sys
 import time
 from pathlib import Path
 
-from fpm.published_page import publish_action
+from fpm.observations import load_rows
+from fpm.published_page import (
+    expected_as_of,
+    mart_lag_problem,
+    publish_action,
+    rendered_facts,
+    scheduled_action,
+    staleness_problems,
+)
 
 NOTEBOOK = Path("dashboards/propgf-kernel-public.py")
 ORG = "filecoin"
@@ -73,7 +81,7 @@ def gql(key: str, query: str, variables: dict | None = None) -> dict:
 def hosted(key: str) -> dict:
     q = (
         '{ publishedNotebookByName(orgName:"%s", notebookName:"%s")'
-        "{ status sourceHash errorMessage } }" % (ORG, NAME)
+        "{ status sourceHash errorMessage contentUrl } }" % (ORG, NAME)
     )
     return gql(key, q).get("publishedNotebookByName") or {}
 
@@ -125,6 +133,11 @@ def main(argv=None) -> int:
     ap.add_argument(
         "--dry-run", action="store_true", help="say what would be published, publish nothing"
     )
+    ap.add_argument(
+        "--final",
+        action="store_true",
+        help="the last attempt of the day: a mart still behind main FAILS instead of waiting",
+    )
     args = ap.parse_args(argv)
 
     key = os.environ.get("OSO_API_KEY", "")
@@ -134,8 +147,39 @@ def main(argv=None) -> int:
 
     local = hashlib.sha256(NOTEBOOK.read_bytes()).hexdigest()
     before = hosted(key)
-    action = publish_action(local, before.get("sourceHash", ""))
-    print(f"local {local[:16]}  hosted {str(before.get('sourceHash'))[:16]}  -> {action}")
+    drifted = publish_action(local, before.get("sourceHash", "")) == "upload"
+
+    # Is the mart current, and is the page already showing it? Decided before touching anything,
+    # so a lagging mart is never re-rendered and verified as current (2026-09-30).
+    # Run as a file by the workflow, so the repo root is not importable by default.
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from scripts.check_published_page import _fetch, _mart_totals
+
+    expected = expected_as_of(r["observed_at"] for r in load_rows())
+    latest, rows, with_value = _mart_totals()
+    lag = mart_lag_problem(latest, expected)
+    page = rendered_facts(_fetch(before["contentUrl"])) if before.get("contentUrl") else None
+    page_current = page is not None and not staleness_problems(page, latest, rows, with_value)
+    action = scheduled_action(
+        source_drifted=drifted,
+        mart_current=lag is None,
+        page_current=page_current,
+        final_attempt=args.final,
+    )
+    print(
+        f"local {local[:16]}  hosted {str(before.get('sourceHash'))[:16]}  "
+        f"main {expected}  mart {latest}  page {page.as_of if page else None}  -> {action}"
+    )
+
+    if action == "skip":
+        print("the page already renders main over a current mart; nothing to do")
+        return 0
+    if action == "wait":
+        print(f"::notice::{lag} A later scheduled attempt will retry.")
+        return 0
+    if action == "fail":
+        print(f"::error::{lag}", file=sys.stderr)
+        return 1
 
     if args.dry_run:
         print("dry run: nothing published")

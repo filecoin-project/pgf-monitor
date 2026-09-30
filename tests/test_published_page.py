@@ -11,8 +11,11 @@ Fixtures below are the real escaped shapes served from `contentUrl`, not idealis
 
 from fpm.published_page import (
     RenderedFacts,
+    expected_as_of,
+    mart_lag_problem,
     publish_action,
     rendered_facts,
+    scheduled_action,
     staleness_problems,
     unescape,
 )
@@ -95,3 +98,63 @@ def test_source_drift_needs_an_upload():
 
 def test_a_matching_hash_only_needs_a_data_refresh():
     assert publish_action("aaa", "aaa") == "force"
+
+
+
+# ------------------------------------------------------------- is the mart itself current?
+
+
+def test_the_expected_date_is_the_latest_reading_on_main():
+    assert expected_as_of(["2026-09-28", "2026-09-30", "2026-09-29T05:40:00+00:00"]) == "2026-09-30"
+    assert expected_as_of([]) is None
+
+
+def test_the_2026_09_30_outage_is_caught():
+    """Page == mart, both a day behind main. The old check passed this; it must not."""
+    problem = mart_lag_problem("2026-09-29", "2026-09-30")
+    assert problem and "2026-09-29" in problem and "2026-09-30" in problem
+
+
+def test_a_current_mart_raises_nothing():
+    assert mart_lag_problem("2026-09-30", "2026-09-30") is None
+    assert mart_lag_problem("2026-09-30", None) is None
+
+
+def test_a_mart_with_no_rows_is_behind():
+    assert mart_lag_problem(None, "2026-09-30")
+
+
+def test_a_lagging_mart_waits_for_a_later_attempt():
+    assert scheduled_action(
+        source_drifted=False, mart_current=False, page_current=False, final_attempt=False
+    ) == "wait"
+
+
+def test_a_lagging_mart_on_the_final_attempt_fails_loudly():
+    assert scheduled_action(
+        source_drifted=False, mart_current=False, page_current=False, final_attempt=True
+    ) == "fail"
+
+
+def test_a_lagging_mart_still_takes_a_source_fix_on_the_final_attempt():
+    """The source fix is independent of the data; the verify step then fails on the lag."""
+    assert scheduled_action(
+        source_drifted=True, mart_current=False, page_current=False, final_attempt=True
+    ) == "upload"
+
+
+def test_a_current_page_is_left_alone():
+    """Later scheduled attempts must not mint a republish every day once the page is current."""
+    assert scheduled_action(
+        source_drifted=False, mart_current=True, page_current=True, final_attempt=False
+    ) == "skip"
+
+
+def test_a_current_mart_under_a_stale_page_is_refreshed():
+    assert scheduled_action(
+        source_drifted=False, mart_current=True, page_current=False, final_attempt=False
+    ) == "force"
+    assert scheduled_action(
+        source_drifted=True, mart_current=True, page_current=True, final_attempt=False
+    ) == "upload"
+

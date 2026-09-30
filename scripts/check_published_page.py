@@ -20,7 +20,10 @@ the two things that actually matter to a reader:
      notebook renders whatever it queried into a static page, so once the mart gains a day the
      page serves the old numbers under an unchanged hash. That is exactly what happened on
      2026-09-20 -- this check passed at 06:52 while the page said "as of 2026-09-19" and the mart
-     had rebuilt to 09-20. Source drift and data staleness are independent faults.
+     had rebuilt to 09-20. Source drift and data staleness are independent faults;
+  4. the warehouse itself has reached the latest reading on main. Page == mart passes when BOTH
+     are a day behind, which is what happened on 2026-09-30 when a Trino outage failed the
+     scheduled metrics rebuild and the page shipped the previous day's numbers with a green check.
 
 Live network, so it is quarantined like the smokes and no test imports it.
 
@@ -36,7 +39,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-from fpm.published_page import rendered_facts, staleness_problems
+from fpm.observations import load_rows
+from fpm.published_page import (
+    expected_as_of,
+    mart_lag_problem,
+    rendered_facts,
+    staleness_problems,
+)
 
 NOTEBOOK = Path("dashboards/propgf-kernel-public.py")
 ORG = "filecoin"
@@ -149,6 +158,12 @@ def main(argv=None) -> int:
             f"mart     as of {latest}  rows {rows}  with value {with_value}"
         )
         problems.extend(staleness_problems(facts, latest, rows, with_value))
+        # Page == mart is not enough: both can be a day behind (2026-09-30). Main is the outside
+        # expectation, since observe.yml commits each night's readings there by ~06:00 UTC.
+        expected = expected_as_of(r["observed_at"] for r in load_rows())
+        print(f"main     latest reading {expected}")
+        if lag := mart_lag_problem(latest, expected):
+            problems.append(lag)
 
     if problems:
         for p in problems:

@@ -24,10 +24,20 @@ on:
     paths: ["dashboards/propgf-kernel-public.py"]
   schedule:
     # 09:10 UTC: AFTER the mart DAG reaches filpgf_public at 08:30 (staging 07:00 -> entities
-    # 07:30 -> metrics 08:00 -> filpgf_public 08:30). The old cron was 06:40, tuned to the 05:23
-    # observe run, which is far too early -- it would have republished yesterday's mart and
-    # verified it as current. If the DAG moves, this moves with it.
+    # 07:30 -> metrics 08:00 -> filpgf_public 08:30, all UTC since 2026-09-30; they were
+    # America/New_York, which would have moved the whole DAG an hour later when DST ended).
+    # The old cron was 06:40, tuned to the 05:23 observe run, which is far too early -- it would
+    # have republished yesterday's mart and verified it as current. If the DAG moves, this moves
+    # with it.
+    #
+    # Two RETRIES, because the DAG can be late or fail outright: on 2026-09-30 OSO's Trino was
+    # unreachable 08:00-08:10, every metrics model failed, and the 09:10 run shipped the previous
+    # day's numbers with a green check. Each attempt compares the mart with main's latest reading
+    # (scripts/publish_page.py): current -> publish, or skip if the page already shows it; behind
+    # -> wait for the next attempt. Only 13:10 is final, and a mart still behind then FAILS.
     - cron: "10 9 * * *"
+    - cron: "10 11 * * *"
+    - cron: "10 13 * * *"
   workflow_dispatch:
     inputs:
       check_only:
@@ -61,7 +71,11 @@ jobs:
         if: ${{ !inputs.check_only }}
         env:
           OSO_API_KEY: ${{ secrets.OSO_API_KEY }}
-        run: uv run python scripts/publish_page.py
+        # --final on the last scheduled attempt, and on a push or manual run: those are asked for
+        # by a person, so a lagging mart should say so now rather than wait quietly.
+        run: >-
+          uv run python scripts/publish_page.py
+          ${{ (github.event_name != 'schedule' || github.event.schedule == '10 13 * * *') && '--final' || '' }}
 
       # The same guard the publish step ends with, run alone when publishing is skipped. Kept as
       # its own step so `check_only` is a real mode rather than a comment.

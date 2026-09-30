@@ -107,3 +107,62 @@ def publish_action(local_hash: str, hosted_hash: str) -> str:
     is why it is not simply done unconditionally.
     """
     return "upload" if local_hash != hosted_hash else "force"
+
+
+# ------------------------------------------------------------------ is the MART itself current?
+#
+# Everything above compares the page with the mart, so it passes whenever both are a day behind.
+# On 2026-09-30 OSO's Trino was unreachable from 08:00 to 08:10 UTC, every scheduled `metrics`
+# model failed, `filpgf_public` rebuilt at 08:30 on the previous day's metrics, and the 09:10
+# publish shipped 09-29 data with a green check: page == mart, both stale. Only a human re-run at
+# 10:21 repaired it.
+#
+# The fix is an expectation from outside the warehouse. `observe.yml` commits each night's
+# readings to main by ~06:00 UTC, so the latest `observed_at` in main's `data/observations.csv` is
+# the date the mart must reach. A publish that finds the mart short of it waits for a later
+# scheduled attempt instead of re-rendering stale numbers, and the last attempt fails loudly.
+
+
+def expected_as_of(observed_dates) -> str | None:
+    """The latest reading date committed to main -- the date the mart should have reached."""
+    dates = [str(d)[:10] for d in observed_dates if d]
+    return max(dates) if dates else None
+
+
+def mart_lag_problem(mart_latest: str | None, expected: str | None) -> str | None:
+    """A problem string when the mart has not yet reached the latest date committed to main."""
+    if expected is None:
+        return None
+    if mart_latest is None or str(mart_latest)[:10] < expected:
+        return (
+            f"the mart's latest sample_date is {mart_latest} but main already carries readings "
+            f"for {expected}: the mart DAG has not rebuilt today (a failed or late scheduled run). "
+            f"The page and the mart agree only because both are behind -- rebuild the kernel "
+            f"mart chain, then republish"
+        )
+    return None
+
+
+def scheduled_action(
+    *, source_drifted: bool, mart_current: bool, page_current: bool, final_attempt: bool
+) -> str:
+    """What one publish attempt should do.
+
+    `upload` / `force`  publish (source drift needs an upload; see `publish_action`).
+    `skip`              the page already renders main's source over a current mart.
+    `wait`              the mart is behind main; a later scheduled attempt will retry.
+    `fail`              the mart is still behind on the final attempt: say so, loudly.
+
+    A lagging mart is never re-rendered: that would publish stale numbers and verify them as
+    current, which is the exact failure this exists to stop. On the final attempt a drifted
+    SOURCE is still uploaded, because the source fix is independent of the data, and the verify
+    step then fails on the lag.
+    """
+    if not mart_current:
+        if not final_attempt:
+            return "wait"
+        return "upload" if source_drifted else "fail"
+    if source_drifted:
+        return "upload"
+    return "skip" if page_current else "force"
+
