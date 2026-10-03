@@ -1429,7 +1429,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-26,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
 2026-09-27,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
 2026-09-28,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
-2026-09-29,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,0.0,nightly,
+2026-09-29,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,nightly,void: filfox /address snapshot served 0 QAP for t0181521; its own power-stats history shows 261477608980480 unchanged 09-26..10-03
 2026-09-30,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
 2026-10-01,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,261477608980480.0,nightly,
 2026-10-02,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,nightly,ingestion run FAILED: no value in source response for the measurement window
@@ -4889,7 +4889,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-09-26,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.3308130914884671,nightly,
 2026-09-27,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.33086190233789997,nightly,
 2026-09-28,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.33084237626976104,nightly,
-2026-09-29,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.4298088208192285,nightly,
+2026-09-29,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,,nightly,void: implies calibnet network QAP of 8.96e14; filfox stats/power has 1.170e15 that morning (no drop) and power-stats has t0143103 unchanged at 385241386582016. Same night filfox served chainsafe t0181521 as 0
 2026-09-30,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.33084237626976104,nightly,
 2026-10-01,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,0.33084237626976104,nightly,
 2026-10-02,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,,nightly,ingestion run RUNNING: no value in source response for the measurement window
