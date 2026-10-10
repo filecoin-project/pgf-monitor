@@ -14,7 +14,7 @@ uv run python scripts/validate_draft.py --all          # drafts: schema+kernel+S
 uv run python -m scripts.validate_pr registry/<team>.yaml   # the PR gate, locally
 uv run python scripts/promote_draft.py registry/drafts/<team>.yaml --add-allowlist
 uv run fpm review <team> [--store DIR] [--dev-auto-approve] [--live --live-oso --oso-org UUID]
-uv run fpm observe [teams...] [--as-of DATE] [--dry-run] [--live-oso --oso-org UUID]  # readings only -> data/observations.csv
+uv run fpm observe [teams...] [--as-of DATE] [--dry-run] [--workers N] [--live-oso --oso-org UUID]  # readings only -> data/observations.csv; N metrics at once (default 5), failed fetches retried twice at the end
 uv run fpm report <team> --link URL [--intent "..."] [--out FILE]   # draft an entry from a URL
 uv run fpm land --store DIR --oso-org UUID [--public-name N --private-name N]
 uv run fpm contract <team> [--facts FILE] [--out FILE]   # render a grant contract from manifest + contracts/<team>.facts.yaml

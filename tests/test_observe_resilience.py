@@ -205,9 +205,10 @@ def test_readings_persist_per_manifest_not_per_run(tmp_path, monkeypatch):
         thresholds_csv=str(tmp_path / "thresholds.csv"),
     )
     assert rc == 0
-    # One append per manifest, each carrying only that manifest's rows.
+    # One append per manifest, each carrying only that manifest's rows. Sorted because manifests
+    # are measured concurrently and persist in whatever order they finish.
     assert len(calls) == 2
-    assert [set(teams) for teams in calls] == [{"chainsafe"}, {"zzz_second"}]
+    assert sorted(sorted(set(teams)) for teams in calls) == [["chainsafe"], ["zzz_second"]]
 
 
 def test_a_full_run_is_unchanged_without_a_deadline(tmp_path):

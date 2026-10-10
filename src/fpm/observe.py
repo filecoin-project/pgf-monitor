@@ -10,7 +10,10 @@ An Observation is one row of `data/observations.csv` — see fpm.observations fo
 
 from __future__ import annotations
 
+import threading
+import time
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -227,6 +230,189 @@ def unattempted(fn: FunctionSpec, team: str, as_of: datetime, method: str) -> Ob
     )
 
 
+def retryable(reading: Reading) -> bool:
+    """True when the FETCH failed, as opposed to a source that answered without a value.
+
+    An OSO ingestion run that ended FAILED or CANCELED, or a fetch that raised. These are the
+    platform's failures, and they are worth asking again: on 2026-10-09 three of 46 runs failed
+    within the same five seconds on an OPA 502 inside OSO's Trino, and every one succeeded when
+    re-run. A run still going at the poll ceiling is NOT retried -- a second run would race the
+    first. Nor is a warehouse read that returned the wrong shape, or a source that answered
+    with no value: asking again gets the same answer.
+    """
+    meta = reading.source_metadata
+    return "fetch_error" in meta or meta.get("run_status") in ("FAILED", "CANCELED")
+
+
+def observe_function(
+    fn: FunctionSpec,
+    team: str,
+    adapters: dict[str, Adapter],
+    as_of: datetime,
+    method: str,
+    previous: dict[tuple[str, str, str], tuple[str, float]] | None = None,
+    capture_dir: str | Path | None = None,
+) -> tuple[Observation, bool]:
+    """Measure one function and turn it into its row, age guard included.
+
+    Also says whether the fetch failed in a way worth retrying (see `retryable`).
+    """
+    _, reading, sla = measure(fn, team, adapters, as_of)
+    obs = to_observation(fn, team, reading, sla, as_of, method)
+    apply_age_guard(fn, obs, previous or {}, reading=reading, capture_dir=capture_dir)
+    return obs, retryable(reading)
+
+
+def observe_all(
+    manifest_paths: list[str | Path],
+    fixtures_dir: Path,
+    as_of: datetime,
+    method: str = "nightly",
+    oso_client=None,
+    org_id: str = "",
+    allowlist: set[str] | None = None,
+    poll_sleep: float = 0.0,
+    sql_allowlist: set[str] | None = None,
+    previous: dict[tuple[str, str, str], tuple[str, float]] | None = None,
+    capture_dir: str | Path | None = None,
+    should_continue: Callable[[], bool] | None = None,
+    workers: int = 1,
+    retries: int = 0,
+    on_observation: Callable[[Observation, float], None] | None = None,
+    on_retry: Callable[[Observation, float, int], None] | None = None,
+    on_manifest: Callable[[Path, list[Observation]], None] | None = None,
+) -> tuple[list[Observation], list[tuple[Path, Exception]]]:
+    """Measure every function in every manifest, up to `workers` of them at once.
+
+    Returns (observations, failed). Observations come back in manifest order and, within a
+    manifest, in function order, whatever order they finished in -- so two nights' outputs stay
+    comparable line for line. `failed` holds each manifest that could not be measured (it would
+    not load, or a function raised past `measure`'s own isolation) with the error; its functions
+    produce no rows, and the other manifests are unaffected.
+
+    Why concurrent: each live function is a whole OSO ingestion job (~20s on the platform, plus
+    polling and two Trino reads), and nearly all of that is waiting. Run one at a time, 46 of
+    them took 28-37 minutes against a 40-minute deadline and on 2026-10-07 a slow platform night
+    pushed past it.
+
+    The functions are queued in manifest order, and the pool takes them first in, first out, so
+    `order_by_cost` still decides what a short night collects first.
+
+    RETRIES. A function whose fetch failed (see `retryable`) is queued, not retried on the
+    spot, and the queue runs after every function has had its first attempt: a retry never
+    displaces a commitment that has not been asked at all, and by then a transient platform
+    fault has had minutes to clear. Up to `retries` rounds; whatever the last attempt says is
+    the row. Retrying is also what keeps a failure from leaking into TOMORROW: a run that fails
+    at dlt's load step leaves its fetched package pending, and the next run of that dataset
+    loads THAT package and ignores its own fetch. Seen live 2026-10-09, and almost certainly
+    why 2026-10-08 recorded 2026-10-07's data for the two load failures that night. A retry
+    tonight drains the package while it is minutes old instead of a day old.
+
+    `should_continue` is checked as each attempt STARTS, and once it goes false it stays false:
+    every function not yet started gets an `unattempted` row, while the ones already in flight
+    finish and keep their values. A retry the deadline stops keeps its failed attempt as the
+    row -- the function WAS attempted, and the failure is the truer note. Same promise as
+    `observe`, one row per function, always.
+
+    All callbacks run on the CALLING thread, never on a worker, so a caller can print and write
+    files without locking. `on_observation(obs, seconds)` fires as each function's FINAL
+    attempt lands (not for an unattempted one; see `observe`). `on_retry(obs, seconds, attempt)`
+    fires for an attempt that failed and was queued again, `attempt` counting from 1.
+    `on_manifest(path, observations)` fires once per manifest, as soon as its last function is
+    final, so the caller can persist it immediately: a killed process then loses only the
+    manifests still in flight.
+    """
+    adapters = build_adapters(
+        fixtures_dir,
+        oso_client=oso_client,
+        org_id=org_id,
+        allowlist=allowlist,
+        poll_sleep=poll_sleep,
+        sql_allowlist=sql_allowlist,
+    )
+    failed: list[tuple[Path, Exception]] = []
+    manifests: list[tuple[Path, Manifest]] = []
+    for path in map(Path, manifest_paths):
+        try:
+            manifests.append((path, load_manifest(path)))
+        except Exception as exc:
+            failed.append((path, exc))
+
+    lock = threading.Lock()
+    stopped = [False]
+
+    def run(fn: FunctionSpec, team: str) -> tuple[Observation, float, bool] | None:
+        """One attempt, or None when the deadline has passed and it was not started."""
+        with lock:
+            if not stopped[0] and should_continue is not None and not should_continue():
+                stopped[0] = True
+            if stopped[0]:
+                return None
+        started = time.monotonic()
+        obs, again = observe_function(fn, team, adapters, as_of, method, previous, capture_dir)
+        return obs, time.monotonic() - started, again
+
+    results: dict[Path, dict[int, Observation]] = {path: {} for path, _ in manifests}
+    remaining = {path: len(manifest.functions) for path, manifest in manifests}
+    broken: set[Path] = set()
+
+    def final(path: Path, manifest: Manifest, index: int, obs: Observation) -> None:
+        results[path][index] = obs
+        remaining[path] -= 1
+        if remaining[path] == 0 and on_manifest is not None:
+            on_manifest(path, [results[path][i] for i in range(len(manifest.functions))])
+
+    queue = [
+        (path, manifest, index, fn)
+        for path, manifest in manifests
+        for index, fn in enumerate(manifest.functions)
+    ]
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        for attempt in range(1, retries + 2):
+            futures = {pool.submit(run, item[3], item[1].team): item for item in queue}
+            queue = []
+            for future in as_completed(futures):
+                path, manifest, index, fn = item = futures[future]
+                if path in broken:
+                    continue
+                try:
+                    got = future.result()
+                except Exception as exc:
+                    broken.add(path)
+                    failed.append((path, exc))
+                    continue
+                if got is None:
+                    # Not started. A first attempt becomes an `unattempted` row, with no progress
+                    # callback: the log line reports what a metric DID, and nothing was done --
+                    # reporting it would make a truncated night look like a night of broken
+                    # sources. A retry keeps the failed attempt it already has.
+                    if attempt == 1:
+                        final(path, manifest, index, unattempted(fn, manifest.team, as_of, method))
+                    else:
+                        final(path, manifest, index, results[path].pop(index))
+                    continue
+                obs, seconds, again = got
+                if again and attempt <= retries:
+                    results[path][index] = obs
+                    queue.append(item)
+                    if on_retry is not None:
+                        on_retry(obs, seconds, attempt)
+                    continue
+                if on_observation is not None:
+                    on_observation(obs, seconds)
+                final(path, manifest, index, obs)
+            if not queue:
+                break
+
+    out = [
+        results[path][i]
+        for path, manifest in manifests
+        if path not in broken
+        for i in range(len(manifest.functions))
+    ]
+    return out, failed
+
+
 def observe(
     manifest_path: str | Path,
     fixtures_dir: Path,
@@ -242,7 +428,7 @@ def observe(
     capture_dir: str | Path | None = None,
     should_continue: Callable[[], bool] | None = None,
 ) -> list[Observation]:
-    """Measure every function in one manifest. One Observation per function, always.
+    """Measure every function in one manifest, one at a time. One Observation per function, always.
 
     `on_observation` fires as each metric lands, so a caller can report progress during a run
     that takes tens of minutes rather than only at the end.
@@ -258,32 +444,27 @@ def observe(
     manifest can be five metrics at the 320s poll ceiling -- 27 minutes, enough to overshoot any
     budget a per-manifest check could honour. Functions after the stop get `unattempted` rows, so
     the one-per-function promise above holds on a truncated run too.
+
+    The single-manifest, single-worker case of `observe_all`, and raises where that would report
+    the manifest as failed.
     """
-    manifest: Manifest = load_manifest(manifest_path)
-    adapters = build_adapters(
+    out, failed = observe_all(
+        [manifest_path],
         fixtures_dir,
+        as_of,
+        method=method,
         oso_client=oso_client,
         org_id=org_id,
         allowlist=allowlist,
         poll_sleep=poll_sleep,
         sql_allowlist=sql_allowlist,
+        previous=previous,
+        capture_dir=capture_dir,
+        should_continue=should_continue,
+        on_observation=None if on_observation is None else (lambda obs, _s: on_observation(obs)),
     )
-    out = []
-    stopped = False
-    for fn in manifest.functions:
-        if not stopped and should_continue is not None and not should_continue():
-            stopped = True
-        if stopped:
-            # No progress callback: the log line reports what a metric DID, and nothing was done.
-            # Reporting it would make a truncated night look like a night of broken sources.
-            out.append(unattempted(fn, manifest.team, as_of, method))
-            continue
-        _, reading, sla = measure(fn, manifest.team, adapters, as_of)
-        obs = to_observation(fn, manifest.team, reading, sla, as_of, method)
-        apply_age_guard(fn, obs, previous or {}, reading=reading, capture_dir=capture_dir)
-        out.append(obs)
-        if on_observation is not None:
-            on_observation(obs)
+    if failed:
+        raise failed[0][1]
     return out
 
 
