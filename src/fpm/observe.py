@@ -128,7 +128,7 @@ def measure(
 def _note(reading: Reading, sla: SlaResult) -> str:
     """Why a reading is what it is — the failure cause when there is one, else empty."""
     meta = reading.source_metadata
-    for key in ("fetch_error", "transform_error", "sql_error"):
+    for key in ("fetch_error", "stale_load", "transform_error", "sql_error"):
         if meta.get(key):
             return f"{key}: {meta[key]}"
     # A failed ingestion run leaves no rows, which then reads as "no value in source response" —
@@ -239,9 +239,16 @@ def retryable(reading: Reading) -> bool:
     re-run. A run still going at the poll ceiling is NOT retried -- a second run would race the
     first. Nor is a warehouse read that returned the wrong shape, or a source that answered
     with no value: asking again gets the same answer.
+
+    A run that loaded a stale pending package IS retried: it consumed that package, so the next
+    run on the dataset fetches fresh.
     """
     meta = reading.source_metadata
-    return "fetch_error" in meta or meta.get("run_status") in ("FAILED", "CANCELED")
+    return (
+        "fetch_error" in meta
+        or "stale_load" in meta
+        or meta.get("run_status") in ("FAILED", "CANCELED")
+    )
 
 
 def observe_function(

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fpm.domain import Claim, EvidenceRef, MeasurementWindow, OsoRunRef, Reading
 from fpm.hashing import oso_evidence
@@ -29,6 +29,33 @@ from fpm.reduce import derive_observed
 from fpm.transform.validate import bind_transform_sql, validate_transform_sql
 
 _TERMINAL = {"SUCCESS", "FAILED", "CANCELED"}
+
+# How far before the run was triggered its rows may have been loaded. A run that fails at dlt's
+# load step leaves its package pending, and the NEXT run on that dataset loads that package and
+# drops its own fetch: it reports SUCCESS over rows fetched a night earlier, and the reading lands
+# a day late under the wrong date. An hour admits clock skew and a same-night retry, which loads
+# the package its own first attempt left minutes before; a pending package from any earlier run
+# is hours older.
+_MAX_LOAD_LAG = timedelta(hours=1)
+
+
+def _stale_load(rows: list[dict], triggered_at: datetime) -> str | None:
+    """Why the rows predate this run, or None when they are this run's (or carry no load id)."""
+    load_ids = []
+    for row in rows:
+        try:
+            load_ids.append(float(row["_dlt_load_id"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not load_ids:
+        return None
+    loaded_at = datetime.fromtimestamp(max(load_ids), timezone.utc)
+    if loaded_at >= triggered_at - _MAX_LOAD_LAG:
+        return None
+    return (
+        f"rows were loaded at {loaded_at:%Y-%m-%d %H:%M} UTC, before this run was triggered at "
+        f"{triggered_at:%Y-%m-%d %H:%M} UTC: a package left pending by an earlier failed run"
+    )
 
 
 class OsoAdapter:
@@ -111,6 +138,7 @@ class OsoAdapter:
         fingerprint: dict,
         fetched_at: datetime,
         transform_error: str | None = None,
+        stale_load: str | None = None,
     ) -> Reading:
         run_ref = OsoRunRef(
             run_id=run.run_id if run else "none",
@@ -138,6 +166,8 @@ class OsoAdapter:
         source_metadata = {"kind": fn.source.kind, "run_status": run_ref.status}
         if transform_error is not None:
             source_metadata["transform_error"] = transform_error
+        if stale_load is not None:
+            source_metadata["stale_load"] = stale_load
         return Reading(
             team=team,
             function_id=fn.function_id,
@@ -187,6 +217,9 @@ class OsoAdapter:
         fetched_at = datetime.now(timezone.utc)
         fingerprint = config_fingerprint(fn, window)
         dataset_id = self._ensure_dataset(fn, team, window)
+        # Taken here, not with fetched_at: provisioning can take a while, and the stale-load
+        # check should measure from the trigger itself.
+        triggered_at = datetime.now(timezone.utc)
         run_id = self._client.trigger_run(dataset_id)
         run = self._poll(dataset_id, run_id)
         if run is None or run.status != "SUCCESS":
@@ -203,6 +236,12 @@ class OsoAdapter:
             if not full:
                 full = self._client.table_full_name(dataset_id)
             rows = self._read_rows(full)
+        # The transform reads the same table, so these rows vouch for its input too.
+        stale = _stale_load(rows, triggered_at)
+        if stale is not None:
+            return self._reading(
+                fn, team, window, None, run, rows, fingerprint, fetched_at, stale_load=stale
+            )
         if fn.transform is not None:
             if full:
                 value, transform_error = self._transform_value(fn, full, window, fetched_at)

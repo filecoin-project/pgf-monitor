@@ -300,6 +300,7 @@ def test_a_manifest_waiting_on_a_retry_is_handed_over_once_after_it(monkeypatch,
         ({"fetch_error": ""}, True),  # an exception with an empty message still counts
         ({"run_status": "FAILED"}, True),
         ({"run_status": "CANCELED"}, True),
+        ({"run_status": "SUCCESS", "stale_load": "rows were loaded ..."}, True),  # consumed it
         ({"run_status": "TIMEOUT"}, False),  # still running; a second run would race it
         ({"run_status": "SUCCESS"}, False),  # the source answered, with or without a value
         ({"sql_error": "sql result is not numeric"}, False),  # same answer every time
