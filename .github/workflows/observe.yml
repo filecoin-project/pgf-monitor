@@ -63,8 +63,8 @@ jobs:
     # Worst case 05:23 + ~10m scheduler lag + 70m = 06:43, still ahead of the 07:00 rebuild.
     timeout-minutes: 70
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
       - run: uv sync
 
       - name: Check credentials
@@ -141,7 +141,7 @@ jobs:
       # not cost us the sample; `if-no-files-found: ignore` because the normal night writes none.
       - name: Preserve evidence for any refused reading
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: refused-readings-${{ github.run_id }}
           path: evidence/refused-readings/
