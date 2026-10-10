@@ -56,8 +56,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
       # --extra dashboards because `marimo` lives there, not in the base deps, and the
       # validate step below needs it. pyoso IS a base dep, so the check itself does not.
       - run: uv sync --extra dashboards
