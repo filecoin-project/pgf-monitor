@@ -57,9 +57,11 @@ jobs:
   observe:
     runs-on: ubuntu-latest
     # Measured 2026-08-14: two full 47-metric runs at 23m23s and 24m18s, each metric being an
-    # OSO ingestion run polled to terminal. 60 leaves ~2.5x headroom and fails a wedged run an
-    # hour sooner than the original 90-minute guess did.
-    timeout-minutes: 60
+    # OSO ingestion run polled to terminal. 60 left ~2.5x headroom and failed a wedged run an
+    # hour sooner than the original 90-minute guess did. Raised to 70 on 2026-10-09 with the
+    # observe deadline (40 -> 50), to keep the same post-measurement margin -- see that step.
+    # Worst case 05:23 + ~10m scheduler lag + 70m = 06:43, still ahead of the 07:00 rebuild.
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -90,21 +92,26 @@ jobs:
           GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
         run: |
           set -euo pipefail
-          # 40, under the job's own 60-minute cap. The cap is a SIGKILL and lands wherever it
+          # 50, under the job's own 70-minute cap. The cap is a SIGKILL and lands wherever it
           # lands; this stops the loop at a metric boundary with everything so far already on
           # disk, so the commit, both republishes and the collection assert all still run. On
           # 2026-09-18 the cap fired instead and took 20 collected readings with it.
           #
           # The arithmetic, because the deadline is a SOFT bound and the margin is the point.
-          # It is checked BEFORE each metric, so the run can overshoot by one whole metric --
-          # ~320s at the OSO poll ceiling (30 attempts x 10s). Worst case measurement therefore
-          # ends at 40m + 5m20s = 45m20s after the timer starts, and the timer starts after
-          # checkout and `uv sync` (~2m). That leaves ~12m under the cap for the commit, both
-          # republishes and the assert. 45 would leave ~7m, which is thinner than it looks for
-          # two full-table uploads. A normal night measures in 25m, so 40 still only truncates
-          # on a night already 1.6x slower than usual.
+          # It is checked as each metric STARTS, so the metrics already in flight run on past
+          # it -- at most ~320s each at the OSO poll ceiling (30 attempts x 10s), and they run
+          # side by side, so the overshoot is one metric's worth, not one per worker. Worst
+          # case measurement therefore ends at 50m + 5m20s = 55m20s after the timer starts, and
+          # the timer starts after checkout and `uv sync` (~2m). That leaves ~12m under the cap
+          # for the commit, both republishes and the assert.
+          #
+          # Was 40 under a 60 cap until 2026-10-09. Measured one metric at a time, normal nights
+          # had crept to 28-37m and 2026-10-07 truncated at 40.7m (OSO's runs were 2-4x slower
+          # that night). `--workers 5` (the default) now measures five at once, and a failed fetch
+          # is retried up to twice after every metric has had its first attempt, so a normal night
+          # should finish in minutes and this deadline only bites on a platform stall.
           uv run fpm observe \
-            --deadline-minutes 40 \
+            --deadline-minutes 50 \
             --live-oso --oso-org "${{ vars.OSO_ORG_ID }}" \
             ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} \
             ${{ inputs.dry_run && '--dry-run' || '' }} \

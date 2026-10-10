@@ -148,6 +148,8 @@ def run_observe_cli(
     reprovision: bool = False,
     thresholds_csv: str = "data/thresholds.csv",
     deadline_minutes: float | None = None,
+    workers: int = 5,
+    retries: int = 2,
 ) -> int:
     """Measure every function in every named manifest and append the readings to the CSV.
 
@@ -161,13 +163,14 @@ def run_observe_cli(
     from fpm.governance.allowlist import load_allowlist, load_sql_allowlist
     from fpm.guards import capture_dir as guard_capture_dir
     from fpm.observations import append_observations, declared_triples
-    from fpm.observe import TRUNCATED_NOTE, observe, thresholds_for
+    from fpm.observe import TRUNCATED_NOTE, observe_all, thresholds_for
     from fpm.thresholds import append_thresholds
 
-    # A live run takes tens of minutes (47 metrics, each an OSO ingestion run polled to terminal).
-    # Every progress line is flushed because stdout is block-buffered whenever it is not a tty —
-    # which is always, under GitHub Actions — and an unflushed run shows an empty log for an hour
-    # and then everything at once, so a hang is indistinguishable from slow progress.
+    # A live run takes minutes (46 metrics, each an OSO ingestion run polled to terminal, `workers`
+    # of them in flight at once). Every progress line is flushed because stdout is block-buffered
+    # whenever it is not a tty — which is always, under GitHub Actions — and an unflushed run
+    # shows an empty log for an hour and then everything at once, so a hang is indistinguishable
+    # from slow progress.
     def _say(line: str = "") -> None:
         print(line, flush=True)
 
@@ -231,61 +234,48 @@ def run_observe_cli(
     deadline = None if deadline_minutes is None else started + deadline_minutes * 60
     if deadline is not None:
         _say(f"deadline: {deadline_minutes:.0f}m; cheapest manifests first")
+    _say(f"workers: {workers} metrics in flight at once; up to {retries} retries of a failed fetch")
 
     def within_deadline() -> bool:
         return deadline is None or time.monotonic() < deadline
 
-    observations, failed = [], []
     threshold_records: list = []
-    for index, path in enumerate(paths, start=1):
-        team_started = time.monotonic()
-        last = [team_started]
+    done = [0]
 
-        def progress(obs, _last=last) -> None:
-            now = time.monotonic()
-            _say(
-                f"    {obs.metric[:44]:44} {obs.outcome:14} "
-                f"{now - _last[0]:5.1f}s  (+{(now - started) / 60:.0f}m total)"
-            )
-            _last[0] = now
+    def progress(obs, seconds: float) -> None:
+        # Metrics from different manifests now land interleaved, so each line names its team.
+        name = f"{obs.team}/{obs.metric}"
+        _say(
+            f"    {name[:60]:60} {obs.outcome:14} "
+            f"{seconds:5.1f}s  (+{(time.monotonic() - started) / 60:.0f}m total)"
+        )
 
-        _say(f"[{index}/{len(paths)}] {path.stem}")
-        try:
-            got = observe(
-                manifest_path=path,
-                fixtures_dir=Path(fixtures),
-                as_of=as_of,
-                method=method,
-                oso_client=oso_client,
-                org_id=oso_org,
-                allowlist=allowlist,
-                poll_sleep=10.0 if live_oso else 0.0,
-                on_observation=progress,
-                sql_allowlist=sql_allowlist,
-                previous=previous,
-                should_continue=within_deadline,
-            )
-        except Exception as exc:
-            failed.append(path.stem)
-            print(f"    MANIFEST FAILED\t{exc}", file=sys.stderr, flush=True)
-            continue
+    def retrying(obs, seconds: float, attempt: int) -> None:
+        name = f"{obs.team}/{obs.metric}"
+        _say(
+            f"    {name[:60]:60} {'RETRY QUEUED':14} "
+            f"{seconds:5.1f}s  (attempt {attempt} failed: {obs.note[:60]})"
+        )
+
+    def finished(path: Path, got: list) -> None:
+        done[0] += 1
         counts = Counter(o.outcome for o in got)
         _say(
-            f"  {path.stem}: {len(got)} metrics  "
+            f"[{done[0]}/{len(paths)}] {path.stem}: {len(got)} metrics  "
             f"pass={counts['pass']} fail={counts['fail']} "
             f"unscored={counts['unscored']} indeterminate={counts['indeterminate']}"
-            f"  ({time.monotonic() - team_started:.0f}s)"
         )
-        observations.extend(got)
         # Recorded from the manifest that was just measured, so the two tables always carry the
         # same (day, team, function, metric) keys and the render-time join cannot miss.
         team_thresholds = thresholds_for(path, as_of)
         threshold_records.extend(team_thresholds)
 
-        # Persist THIS manifest before starting the next one. Until 2026-09-18 the whole run was
-        # appended once at the end, so a process killed mid-loop lost every reading it had taken
-        # -- 20 of them that night. Both stores are merge-on-key read-modify-writes, so appending
-        # 13 times is idempotent and costs one extra file rewrite per manifest.
+        # Persist THIS manifest as soon as its last metric lands, not at the end of the run.
+        # Until 2026-09-18 the whole run was appended once at the end, so a process killed
+        # mid-loop lost every reading it had taken -- 20 of them that night. Both stores are
+        # merge-on-key read-modify-writes, so appending 13 times is idempotent and costs one
+        # extra file rewrite per manifest. `observe_all` calls this on the main thread, so the
+        # writes never race.
         #
         # THRESHOLDS FIRST, READINGS LAST, and the order is load-bearing for the same reason it
         # is on the republish step. These are two separate file writes, so a process killed
@@ -299,6 +289,29 @@ def run_observe_cli(
         if not dry_run:
             append_thresholds(team_thresholds, Path(thresholds_csv))
             append_observations(got, Path(csv_path), declared=declared_triples(registry_dir))
+
+    observations, failures = observe_all(
+        paths,
+        fixtures_dir=Path(fixtures),
+        as_of=as_of,
+        method=method,
+        oso_client=oso_client,
+        org_id=oso_org,
+        allowlist=allowlist,
+        poll_sleep=10.0 if live_oso else 0.0,
+        sql_allowlist=sql_allowlist,
+        previous=previous,
+        should_continue=within_deadline,
+        workers=workers,
+        retries=retries,
+        on_observation=progress,
+        on_retry=retrying,
+        on_manifest=finished,
+    )
+    failed = []
+    for path, exc in failures:
+        failed.append(path.stem)
+        print(f"    MANIFEST FAILED\t{path.stem}\t{exc}", file=sys.stderr, flush=True)
 
     totals = Counter(o.outcome for o in observations)
     _say(
@@ -437,6 +450,14 @@ def main(argv: list[str] | None = None) -> int:
         "instead of letting the runner's own timeout kill the process mid-loop and lose "
         "everything collected so far. Also switches the run to cheapest-manifest-first.",
     )
+    obs.add_argument(
+        "--workers",
+        type=int,
+        default=5,
+        help="how many metrics to measure at once (default 5). Each live metric is an OSO "
+        "ingestion job that spends most of its time waiting, so this is the run's main speed "
+        "knob; 1 measures them one at a time, as before 2026-10.",
+    )
 
     report = sub.add_parser("report", help="draft a manifest entry from intent + a source link")
     report.add_argument("team")
@@ -484,6 +505,7 @@ def main(argv: list[str] | None = None) -> int:
             dry_run=args.dry_run,
             reprovision=args.reprovision,
             deadline_minutes=args.deadline_minutes,
+            workers=args.workers,
         )
 
     if args.command == "report":
