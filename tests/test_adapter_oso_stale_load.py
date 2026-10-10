@@ -61,7 +61,9 @@ def test_a_same_night_retry_may_read_its_first_attempts_package():
 
 
 def test_the_newest_load_decides():
-    """A table holding several loads is current if the newest one is."""
+    """Ingestion tables are `write_disposition: replace`, so one load fills the table and the max
+    is that load. Pinned anyway in case a table ever holds several: the newest decides. That
+    proves only that the newest load is current, not that every row is."""
     rows = _rows(loaded_ago=48 * HOUR) + _rows(loaded_ago=-5.0)
     assert "stale_load" not in _fetch(rows).source_metadata
 

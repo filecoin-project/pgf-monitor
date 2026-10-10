@@ -217,6 +217,9 @@ class OsoAdapter:
         fetched_at = datetime.now(timezone.utc)
         fingerprint = config_fingerprint(fn, window)
         dataset_id = self._ensure_dataset(fn, team, window)
+        # Taken here, not with fetched_at: provisioning can take a while, and the stale-load
+        # check should measure from the trigger itself.
+        triggered_at = datetime.now(timezone.utc)
         run_id = self._client.trigger_run(dataset_id)
         run = self._poll(dataset_id, run_id)
         if run is None or run.status != "SUCCESS":
@@ -234,7 +237,7 @@ class OsoAdapter:
                 full = self._client.table_full_name(dataset_id)
             rows = self._read_rows(full)
         # The transform reads the same table, so these rows vouch for its input too.
-        stale = _stale_load(rows, fetched_at)
+        stale = _stale_load(rows, triggered_at)
         if stale is not None:
             return self._reading(
                 fn, team, window, None, run, rows, fingerprint, fetched_at, stale_load=stale
