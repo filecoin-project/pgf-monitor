@@ -249,11 +249,16 @@ class OsoAdapter:
             return self._reading(
                 fn, team, window, None, run, rows, fingerprint, fetched_at, stale_load=stale
             )
-        # A lag or an age is measured from when the source was asked, not from when we got round
-        # to reading the answer. A retry can load the package its failed first attempt fetched
-        # minutes earlier: on 2026-10-11 that counted 8 minutes of our own delay as goldsky
-        # indexing lag (532s against a true ~34s, under a 600s bar). It also drops the poll time
-        # a normal run used to subtract, since fetched_at precedes the fetch itself.
+        # Every `now` a manifest reads is the moment the source was asked, not the moment we got
+        # round to reading the answer: an age (fil-b), a lag (goldsky, the head-lag epochs), and a
+        # trailing window (oif-ipni's providers advertised in the last 24h) all describe the
+        # snapshot, so they are evaluated against the snapshot's own clock. A later clock would
+        # judge an old snapshot against a window it could not have seen. It matters on a retry,
+        # which can load the package its failed first attempt fetched minutes earlier: on
+        # 2026-10-11 that counted 8 minutes of our own delay as goldsky indexing lag (532s
+        # against a true ~34s, under a 600s bar), and on a head-lag metric 8 minutes is 16
+        # epochs. It also drops the poll time a normal run used to subtract, since fetched_at
+        # precedes the fetch itself.
         measured_at = loaded_at or fetched_at
         if fn.transform is not None:
             if full:
