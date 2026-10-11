@@ -39,18 +39,24 @@ _TERMINAL = {"SUCCESS", "FAILED", "CANCELED"}
 _MAX_LOAD_LAG = timedelta(hours=1)
 
 
-def _stale_load(rows: list[dict], triggered_at: datetime) -> str | None:
-    """Why the rows predate this run, or None when they are this run's (or carry no load id)."""
+def _loaded_at(rows: list[dict]) -> datetime | None:
+    """When dlt loaded these rows, from the newest `_dlt_load_id`; None if none carries one.
+
+    Ingestion tables are `write_disposition: replace`, so the newest load is the only one. A load
+    id is the epoch second dlt began extracting, which is when the source was actually asked.
+    """
     load_ids = []
     for row in rows:
         try:
             load_ids.append(float(row["_dlt_load_id"]))
         except (KeyError, TypeError, ValueError):
             continue
-    if not load_ids:
-        return None
-    loaded_at = datetime.fromtimestamp(max(load_ids), timezone.utc)
-    if loaded_at >= triggered_at - _MAX_LOAD_LAG:
+    return datetime.fromtimestamp(max(load_ids), timezone.utc) if load_ids else None
+
+
+def _stale_load(loaded_at: datetime | None, triggered_at: datetime) -> str | None:
+    """Why the rows predate this run, or None when they are this run's (or carry no load id)."""
+    if loaded_at is None or loaded_at >= triggered_at - _MAX_LOAD_LAG:
         return None
     return (
         f"rows were loaded at {loaded_at:%Y-%m-%d %H:%M} UTC, before this run was triggered at "
@@ -237,18 +243,25 @@ class OsoAdapter:
                 full = self._client.table_full_name(dataset_id)
             rows = self._read_rows(full)
         # The transform reads the same table, so these rows vouch for its input too.
-        stale = _stale_load(rows, triggered_at)
+        loaded_at = _loaded_at(rows)
+        stale = _stale_load(loaded_at, triggered_at)
         if stale is not None:
             return self._reading(
                 fn, team, window, None, run, rows, fingerprint, fetched_at, stale_load=stale
             )
+        # A lag or an age is measured from when the source was asked, not from when we got round
+        # to reading the answer. A retry can load the package its failed first attempt fetched
+        # minutes earlier: on 2026-10-11 that counted 8 minutes of our own delay as goldsky
+        # indexing lag (532s against a true ~34s, under a 600s bar). It also drops the poll time
+        # a normal run used to subtract, since fetched_at precedes the fetch itself.
+        measured_at = loaded_at or fetched_at
         if fn.transform is not None:
             if full:
-                value, transform_error = self._transform_value(fn, full, window, fetched_at)
+                value, transform_error = self._transform_value(fn, full, window, measured_at)
             else:
                 value, transform_error = None, "no raw table available"
         elif fn.source.extract:
-            value = derive_observed(rows, fn.source.extract, fetched_at)
+            value = derive_observed(rows, fn.source.extract, measured_at)
             transform_error = None
         else:
             value = None
