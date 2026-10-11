@@ -88,3 +88,53 @@ def test_the_check_runs_before_a_transform():
     assert reading.claim.value is None
     assert "stale_load" in reading.source_metadata
     assert "transform_error" not in reading.source_metadata
+
+
+# ------------------------------------------------- lags and ages measure from the load
+
+
+def _capture_now(monkeypatch, name):
+    """Record the `now` the adapter hands to bind_transform_sql or derive_observed."""
+    import fpm.adapters.oso as oso_mod
+
+    seen = []
+    real = getattr(oso_mod, name)
+
+    def spy(*args):
+        seen.append(args[-1])
+        return real(*args)
+
+    monkeypatch.setattr(oso_mod, name, spy)
+    return seen
+
+
+def test_a_transform_measures_from_when_the_rows_were_loaded(monkeypatch):
+    """2026-10-11: a retry loaded rows its first attempt fetched 8 minutes earlier, and
+    `now - newest block` counted those 8 minutes as goldsky indexing lag (532s, true ~34s)."""
+    from tests.test_adapter_oso_transform import ALLOW as TRANSFORM_ALLOW
+    from tests.test_adapter_oso_transform import _transform_fn
+
+    seen = _capture_now(monkeypatch, "bind_transform_sql")
+    loaded = time.time() - 8 * 60
+    rows = [{"m": 480.0, "_dlt_load_id": f"{loaded:.6f}"}]
+    adapter = OsoAdapter(
+        FakeOsoClient(run_status="SUCCESS", query_rows=rows), "org", TRANSFORM_ALLOW
+    )
+    fn = _transform_fn()
+    adapter.fetch(fn, "team", window_for(fn.sla.cadence, AS_OF))
+
+    assert seen == [datetime.fromtimestamp(loaded, timezone.utc)]
+
+
+def test_an_age_derive_measures_from_when_the_rows_were_loaded(monkeypatch):
+    seen = _capture_now(monkeypatch, "derive_observed")
+    loaded = time.time() - 8 * 60
+    _fetch([{"expected": 5, "current": 5, "_dlt_load_id": f"{loaded:.6f}"}])
+    assert seen == [datetime.fromtimestamp(loaded, timezone.utc)]
+
+
+def test_without_a_load_id_the_fetch_time_stands_in(monkeypatch):
+    seen = _capture_now(monkeypatch, "derive_observed")
+    before = datetime.now(timezone.utc)
+    _fetch([{"expected": 5, "current": 5}])
+    assert before <= seen[0] <= datetime.now(timezone.utc)

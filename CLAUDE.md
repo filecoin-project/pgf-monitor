@@ -171,7 +171,9 @@ the community use): `query-gtm-pipeline` (sales pipeline: `gtm_pipeline_by_stage
 - An OSO run that fails at dlt's `step=load` leaves its package PENDING, and the next run on that
   dataset loads it and drops its own fetch -- reporting SUCCESS over a night-old number. The
   adapter refuses rows whose `_dlt_load_id` predates the trigger by over an hour (`stale_load`
-  note, retried). To flush a dataset by hand, trigger runs until the raw table's load id is fresh.
+  note, retried). Lags and ages are measured from that load time, not from when we read the rows,
+  since a retry may load its first attempt's minutes-old package. To flush a dataset by hand,
+  trigger runs until the raw table's load id is fresh.
 - `source.auth.secret_ref` names an ENV VAR, not an OSO secret: OSO wants the real VALUE in the
   config, lifts it into its own store, and keeps a path-derived marker
   (`{"name": "client.auth.token"}`). Passing a reference name makes it authenticate as that
