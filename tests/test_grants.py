@@ -218,12 +218,12 @@ def test_grant_ref_shows_which_grants_are_uninstrumented():
     """The point of the field: with a payee-slug-only bridge, a second grant on the same slug looks
     instrumented because its sibling is.
 
-    Two grants have no adopted metric, for different reasons:
-      * Beryx — both zondax.yaml entries are Core Infra's scope (archival RPC, Rosetta/Ledger).
-        Beryx's own scope, chain ETL and the explorer API, is measured nowhere. Only grant_ref
-        makes this visible; the payee slug `zondax` made it look covered.
+    One grant has no adopted metric:
       * FIL Ponto — its manifest is a draft, so nothing is adopted. Its signed §3 is empty by
         design, so that is the honest state rather than a gap to close.
+    Beryx was the case that motivated this: both original zondax.yaml entries are Core Infra's
+    scope, so only grant_ref showed that Beryx's own scope was measured nowhere -- the payee slug
+    `zondax` made it look covered. It left this list on 2026-10-13 with its traces freshness entry.
     """
     attributed = {fn.grant_ref for _n, _t, fn in _adopted_entries() if fn.grant_ref}
     uninstrumented = sorted(
@@ -231,4 +231,4 @@ def test_grant_ref_shows_which_grants_are_uninstrumented():
         for g in load_grants().grants
         if g.application_ref_id not in attributed
     )
-    assert uninstrumented == ["Beryx", "FIL Ponto"], f"changed: {uninstrumented}"
+    assert uninstrumented == ["FIL Ponto"], f"changed: {uninstrumented}"

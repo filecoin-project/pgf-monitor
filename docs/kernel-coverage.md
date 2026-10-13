@@ -5,7 +5,7 @@ Every catalogued kernel function (registry/_kernel.yaml) and the metrics that
 monitor it, from adopted manifests (registry/) plus any pending drafts
 (registry/drafts/). `fixture` sources are placeholders awaiting a real feed.
 
-**17/31 functions are adopted** — a metric in `registry/`, so a team is held to it today, and 17 of those read from a live, non-fixture source. **28/31 are modelled** — adopted or drafted. A metric is credited to the ONE kernel function its `kernel_id` names, never to every function sharing a slot.
+**18/31 functions are adopted** — a metric in `registry/`, so a team is held to it today, and 18 of those read from a live, non-fixture source. **29/31 are modelled** — adopted or drafted. A metric is credited to the ONE kernel function its `kernel_id` names, never to every function sharing a slot.
 
 🟢 adopted, live source · 🟡 drafted, or fixture-only · 🔴 nothing yet.
 
@@ -276,11 +276,13 @@ _No monitoring entry yet._
 |---|---|---|---|
 | lily | `lily_days_since_last_commit` (lily-etl-maintenance) | api.github.com | draft |
 
-### 🔴 Chain ETL and indexing
+### 🟢 Chain ETL and indexing
 
 `chain-etl-indexing`
 
-_No monitoring entry yet._
+| team | metric | source | state |
+|---|---|---|---|
+| zondax | `beryx_traces_indexing_freshness` (beryx-traces-indexing-freshness) | api.zondax.ch | adopted |
 
 ### 🟢 Mainnet block explorer (Lotus archive, indexing, NV maintenance)
 

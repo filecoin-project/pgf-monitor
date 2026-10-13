@@ -65,10 +65,11 @@ grants:
     facts: contracts/beryx.facts.yaml
     agreement_doc_id: 1nmHLdnu12olCy3oqqeYLlxooHTMMpn0m
     note: >-
-      Second Zondax grant, with its own executed agreement, and UNINSTRUMENTED: both zondax.yaml
-      entries belong to Core Infra. Its signed s3 is empty -- three requested additions, none with
-      a source -- and nothing is publicly measurable yet: the data API 401s every path without a
-      token and the explorer sits behind a bot challenge. Waits on the team exposing a source.
+      Second Zondax grant, with its own executed agreement. Its signed s3 lists three requested
+      additions with no source or bar. One is measured, unscored: traces freshness, read with a
+      Beryx API token because the API 401s every path without one and the explorer sits behind a
+      bot challenge -- so an outsider needs their own free token to re-derive it. Availability and
+      indexed-record scale have no endpoint that supports them.
 
   - application_funding_round: Filecoin ProPGF Batch 3
     application_funding_category: Kernel
