@@ -1,9 +1,9 @@
 # Zondax operates public Filecoin RPC with archival depth, and maintains the Rosetta
 # integration stack. This manifest tracks archival reachability and Rosetta release currency.
 #
-# Appendix reconciliation 2026-08-18: no agreement has been located for either Zondax grant, so
-# both metrics are measured and not scored. Both entries belong to the Core Infra grant; the
-# Beryx grant has no metric at all. Detail in contracts/zondax.facts.yaml (maintainer-local).
+# Both entries belong to the Core Infra grant and are scored against its executed appendix. The
+# Beryx grant has its own executed agreement and no metric at all: its s3 names no public
+# source. Detail in contracts/zondax.facts.yaml and contracts/beryx.facts.yaml (maintainer-local).
 team: zondax
 maintainers: ["@TODO-github-handle"]   # team fills in
 functions:

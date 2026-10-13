@@ -63,10 +63,12 @@ grants:
     funded_project_oso_slug: zondax
     metrics_registry: registry/zondax.yaml
     facts: contracts/beryx.facts.yaml
+    agreement_doc_id: 1nmHLdnu12olCy3oqqeYLlxooHTMMpn0m
     note: >-
-      Second Zondax grant, and UNINSTRUMENTED: with grant_ref in place both zondax.yaml entries
-      resolve to Core Infra, so Beryx's own scope is measured nowhere. No agreement located
-      either. Same maintainer and team as Core Infra, so one agreement may cover both.
+      Second Zondax grant, with its own executed agreement, and UNINSTRUMENTED: both zondax.yaml
+      entries belong to Core Infra. Its signed s3 is empty -- three requested additions, none with
+      a source -- and nothing is publicly measurable yet: the data API 401s every path without a
+      token and the explorer sits behind a bot challenge. Waits on the team exposing a source.
 
   - application_funding_round: Filecoin ProPGF Batch 3
     application_funding_category: Kernel
@@ -277,5 +279,7 @@ grants:
     funded_project_oso_slug: zondax
     metrics_registry: registry/zondax.yaml
     facts: contracts/zondax.facts.yaml
+    agreement_doc_id: 1QZ2bbvC2xkGHZsGHUNKMrkiED1lCqzg9
     note: >-
-      No agreement located. Both zondax.yaml entries belong to THIS grant, not Beryx.
+      Both zondax.yaml entries belong to THIS grant, not Beryx, and both are scored against the
+      signed s3.
