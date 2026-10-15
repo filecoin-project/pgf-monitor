@@ -36,6 +36,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -993,6 +994,169 @@ def _filecoin_pay_series(cutoff: datetime, now: datetime, already: set) -> list[
     return out
 
 
+# ---------------------------------------------------------------------------
+# PDP active proof sets: block-pinned reads, for nights the nightly lost
+# ---------------------------------------------------------------------------
+# The nightly reads one counter, `networkMetric.totalActiveProofSets`, with no time dimension, and
+# docs/metric-history.md records why it cannot be REBUILT from events. It can still be READ AT A
+# PAST BLOCK, two ways, and this strategy uses whichever reaches the day:
+#
+#   1. the subgraph itself, queried with `block: {number: N}` -- the nightly's own quantity, exactly.
+#      Goldsky prunes, so this only reaches back to the deployment's first retained block.
+#   2. PDPVerifier on chain: count the ids for which `dataSetLive(id)` is true at block N, via an
+#      archival eth_call. That is a DIFFERENT computation, so it is only used after the two have
+#      been shown to agree at the same block (THE CHECK below). Born 2026-10-15, when the subgraph
+#      was re-deployed and the old one deleted: the new one retained nothing before 2026-10-14.
+_PDP_SUBGRAPH_MARKER = "subgraphs/pdp-explorer-mainnet"
+_PDP_COLUMN = "data__network_metric__total_active_proof_sets"
+_PDP_NETWORK_METRIC_ID = "0x7064705f6e6574776f726b5f7374617473"  # "pdp_network_stats"
+_PDP_VERIFIER = "0xBADd0B92C1c71d02E7d520f64c0876538fa2557F"  # mainnet, FilOzone/pdp-explorer
+_PDP_RPC = "https://api.node.glif.io/rpc/v1"
+_SEL_DATASET_LIVE = "ca759f27"  # keccak("dataSetLive(uint256)")[:4]
+_SEL_NEXT_DATASET_ID = "442cded3"  # keccak("getNextDataSetId()")[:4]
+FILECOIN_GENESIS = 1598306400  # mainnet epoch 0, unix seconds; 30s epochs
+
+
+def epoch_at(t: datetime) -> int:
+    """The Filecoin mainnet epoch in progress at `t`."""
+    return int((t.timestamp() - FILECOIN_GENESIS) // 30)
+
+
+def pdp_proofsets_target(registry_dir: str = "registry"):
+    """(team, function_id, metric, endpoint) for the PDP active-proof-sets metric, by endpoint."""
+    from fpm.manifest import load_manifest
+
+    found = []
+    for path in sorted(Path(registry_dir).glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        manifest = load_manifest(path)
+        for fn in manifest.functions:
+            if _PDP_SUBGRAPH_MARKER not in (fn.source.endpoint or ""):
+                continue
+            column = fn.source.extract.column if fn.source.extract else None
+            if column != _PDP_COLUMN:
+                raise ValueError(
+                    f"{fn.function_id}: extracts {column!r}, not the {_PDP_COLUMN} this strategy "
+                    "reads at a past block. Reconcile them before backfilling."
+                )
+            found.append((manifest.team, fn.function_id, fn.sla.metric, fn.source.endpoint))
+    if len(found) != 1:
+        raise ValueError(f"expected exactly one PDP proof-set metric, found {len(found)}")
+    return found[0]
+
+
+class SubgraphPruned(Exception):
+    """The subgraph no longer retains the requested block."""
+
+
+def pdp_active_at_subgraph(endpoint: str, block: int) -> int:
+    query = '{ networkMetric(id: "%s", block: {number: %d}) { totalActiveProofSets } }' % (
+        _PDP_NETWORK_METRIC_ID,
+        block,
+    )
+    try:
+        data = _gql(endpoint, query)
+    except RuntimeError as exc:
+        if "only has data starting at block" in str(exc):
+            raise SubgraphPruned(str(exc)) from exc
+        raise
+    return int(data["networkMetric"]["totalActiveProofSets"])
+
+
+def _rpc(batch: list[dict]) -> list[dict]:
+    r = requests.post(_PDP_RPC, json=batch, headers=UA, timeout=120)
+    r.raise_for_status()
+    return r.json()
+
+
+def _eth_call(data: str, block: int, id_: int = 1) -> dict:
+    return {
+        "jsonrpc": "2.0",
+        "id": id_,
+        "method": "eth_call",
+        "params": [{"to": _PDP_VERIFIER, "data": "0x" + data}, hex(block)],
+    }
+
+
+def pdp_active_at_chain(block: int, rpc=_rpc, chunk: int = 50) -> int:
+    """Data sets live on PDPVerifier at `block`: every id below getNextDataSetId(), asked in turn."""
+    (head,) = rpc([_eth_call(_SEL_NEXT_DATASET_ID, block)])
+    if "result" not in head:
+        raise RuntimeError(f"getNextDataSetId at {block}: {head.get('error')}")
+    n = int(head["result"], 16)
+    live = 0
+    for lo in range(0, n, chunk):
+        ids = range(lo, min(n, lo + chunk))
+        answers = rpc([_eth_call(_SEL_DATASET_LIVE + format(i, "064x"), block, i) for i in ids])
+        for a in answers:
+            if "result" not in a:
+                # a missing answer would undercount silently; refuse instead
+                raise RuntimeError(f"dataSetLive({a.get('id')}) at {block}: {a.get('error')}")
+            live += int(a["result"], 16) == 1
+        time.sleep(0.2)
+    return live
+
+
+def _pdp_proofsets_series(
+    cutoff: datetime, now: datetime, have_value: set, subgraph=None, chain=None
+) -> list[dict]:
+    subgraph = subgraph or pdp_active_at_subgraph
+    chain = chain or pdp_active_at_chain
+    team, fid, metric, endpoint = pdp_proofsets_target()
+
+    day = cutoff.replace(hour=0, minute=0, second=0, microsecond=0)
+    out: list[dict] = []
+    checked = False
+    while day <= now:
+        iso = day.strftime("%Y-%m-%d")
+        sample = _anchor(day)
+        if sample > now or (iso, team, fid, metric) in have_value:
+            day += timedelta(days=1)
+            continue
+        block = epoch_at(sample)
+        try:
+            value = subgraph(endpoint, block)
+            method, note = "backfill:api.goldsky.com", f"subgraph counter read at block {block}"
+        except SubgraphPruned:
+            if not checked:
+                # THE CHECK: the chain count must equal the nightly's counter where both exist.
+                # The newest retained block is the cheapest such point: read it now.
+                probe = epoch_at(now) - 10
+                via_subgraph, via_chain = subgraph(endpoint, probe), chain(probe)
+                if via_subgraph != via_chain:
+                    raise RuntimeError(
+                        f"{fid}: at block {probe} the subgraph counts {via_subgraph} active proof "
+                        f"sets and PDPVerifier {via_chain}. The chain count is NOT the nightly's "
+                        "quantity; refusing to write it."
+                    )
+                print(f"    {fid}: chain agrees with the subgraph at {probe} ({via_chain})")
+                checked = True
+            value = chain(block)
+            method = "backfill:api.node.glif.io"
+            note = (
+                f"PDPVerifier dataSetLive() count at block {block}; subgraph pruned that far back"
+            )
+        out.append(_row(day, team, fid, metric, value, method, note))
+        day += timedelta(days=1)
+    print(f"    {fid}: +{len(out)}")
+    return out
+
+
+def _valued_keys() -> set:
+    """(observed_at, team, function_id, metric) that already carry a VALUE, under any method.
+
+    Unlike `_recorded_keys`, a null row does not count: filling a failed nightly is the point, and
+    a backfill row beside a null nightly is the established shape (2026-08-22, 2026-09-28).
+    """
+    rows = fpm_observations.load_rows(CSV_PATH) if CSV_PATH.exists() else []
+    return {
+        (r["observed_at"], r["team"], r["function_id"], r["metric"])
+        for r in rows
+        if r.get("observed_value") not in (None, "")
+    }
+
+
 # TARGETED_ONLY strategies are reachable via `--only` and are NOT in the default rotation.
 # Both were written to recover the 2026-08-22/23 outage, and both emit a row per day for as far
 # back as their source reaches -- 115 days for the GitHub run history, 53 for GeckoTerminal's
@@ -1005,8 +1169,17 @@ def _filecoin_pay_series(cutoff: datetime, now: datetime, already: set) -> list[
 # per oso-sql metric as a side effect. It is a one-time fill, so it must be asked for.
 # `release-cadence` joins them because it emits a row per day per repo across the whole
 # window -- a year is ~2,000 rows across six functions -- so it must be asked for.
+# `pdp-proofsets` joins them because its chain fallback issues ~35 batched archival eth_calls per
+# day; it exists to fill specific lost nights, so name them with --date.
 TARGETED_ONLY = frozenset(
-    {"pipeline-success", "pool-volume", "warehouse", "release-cadence", "filecoin-pay"}
+    {
+        "pipeline-success",
+        "pool-volume",
+        "warehouse",
+        "release-cadence",
+        "filecoin-pay",
+        "pdp-proofsets",
+    }
 )
 
 
@@ -1047,6 +1220,7 @@ def backfill(
         "warehouse": lambda: _warehouse_series(cutoff, now, set(dates) if dates else None),
         "release-cadence": lambda: _release_avg_series(cutoff, now, _recorded_keys()),
         "filecoin-pay": lambda: _filecoin_pay_series(cutoff, now, _recorded_keys()),
+        "pdp-proofsets": lambda: _pdp_proofsets_series(cutoff, now, _valued_keys()),
     }
     stale = TARGETED_ONLY - set(strategies)
     if stale:

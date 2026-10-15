@@ -83,7 +83,14 @@ functions:
       query: "/api/v1/overview"
       extract: { column: average_tipset_blocks, reduce: single, derive: value, unit: blocks }
 
-  # Public Goldsky subgraph behind FilOzone's own PDP explorer (pdp.vxb.ai / github.com/FilOzone/pdp-explorer).
+  # Public Goldsky subgraph behind FilOzone's own PDP explorer (pdp.filecoin.cloud /
+  # github.com/FilOzone/pdp-explorer). Read through the `prod` TAG, which FilOz's release process
+  # moves to each new version, so a release no longer breaks this read. Re-pointed 2026-10-15: the
+  # pinned version we read before (`.../pdp-explorer/mainnet311e`) was deleted on 2026-10-13 when
+  # FilOz moved to a new Goldsky project, nulling three nights. The new deployment counts 956 active
+  # proof sets against the old one's 1,171 -- the new count is the right one: all 1,733 data sets'
+  # `isActive` match PDPVerifier.dataSetLive() on chain, so the old deployment was missing ~215
+  # deactivations and readings before 2026-10-13 run high.
   # Single-object GraphQL query on purpose — a list response would land in a child table.
   # Column name assumes dlt's snake_case flattening of data.networkMetric.totalActiveProofSets.
   # Covers the PDP leg of the function only; the deal-making leg has no verified public source.
@@ -106,8 +113,8 @@ functions:
       adapter: oso
       kind: http-json
       base_url: "https://api.goldsky.com"
-      endpoint: "https://api.goldsky.com/api/public/project_cmdfaaxeuz6us01u359yjdctw/subgraphs/pdp-explorer/mainnet311e/gn"
-      query: "/api/public/project_cmdfaaxeuz6us01u359yjdctw/subgraphs/pdp-explorer/mainnet311e/gn"
+      endpoint: "https://api.goldsky.com/api/public/project_cmr0lp7u23a7d01w7bxeef1fj/subgraphs/pdp-explorer-mainnet/prod/gn"
+      query: "/api/public/project_cmr0lp7u23a7d01w7bxeef1fj/subgraphs/pdp-explorer-mainnet/prod/gn"
       method: POST
       # literal GraphQL braces are doubled ({{ }}) — dlt's rest_api treats single
       # braces in param/json values as placeholder expressions

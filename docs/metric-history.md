@@ -131,6 +131,19 @@ They are kept deliberately; just do not count them as coverage.
   lifecycle cannot be replayed either. The counter is maintained internally by the subgraph's event
   handlers. Recovering it needs the PDP explorer to publish a dated snapshot.
 
+  It can still be READ AT A PAST BLOCK, which fills a lost night without rebuilding anything:
+  `backfill --only pdp-proofsets --date D` queries the counter with `block: {number: N}` while
+  Goldsky retains N, and past that counts `PDPVerifier.dataSetLive()` on chain via Glif -- only
+  after checking the two agree at a recent block. Both are shallow: the subgraph keeps only what its
+  current deployment has indexed since it went live, and Glif's archive answered ~6,600 epochs back
+  on 2026-10-15 but not a month. So this fills days, not history. It filled 2026-10-13..15, lost
+  when FilOz moved the subgraph to a new Goldsky project.
+
+  The move also exposed that **readings before 2026-10-13 run high.** The old deployment counted
+  1,171 active on 10-12; the new one counts 956, and all 1,733 of its data sets' `isActive` match
+  `dataSetLive()` on chain, with no deletion spike in between. The old one was missing ~215
+  deactivations. Neither source reaches back far enough to correct those readings.
+
 The shape of the endpoint decides it, not the vendor. No source in this registry is better or worse
 than another on this axis, and two of the exceptions below are cases where a provider we read as a
 gauge also publishes a perfectly good history elsewhere.

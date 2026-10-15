@@ -2991,8 +2991,11 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-10-10,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,1170.0,nightly,
 2026-10-11,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,1170.0,nightly,
 2026-10-12,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,1171.0,nightly,
+2026-10-13,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,955.0,backfill:api.node.glif.io,PDPVerifier dataSetLive() count at block 6452140; subgraph pruned that far back
 2026-10-13,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,,nightly,ingestion run FAILED: no value in source response for the measurement window
+2026-10-14,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,954.0,backfill:api.goldsky.com,subgraph counter read at block 6455020
 2026-10-14,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,,nightly,ingestion run FAILED: no value in source response for the measurement window
+2026-10-15,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,956.0,backfill:api.goldsky.com,subgraph counter read at block 6457900
 2026-10-15,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,,nightly,ingestion run FAILED: no value in source response for the measurement window
 2026-09-24,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,0.06239406545930973,nightly,
 2026-09-25,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,0.06188837600137745,nightly,
