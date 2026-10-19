@@ -42,6 +42,11 @@ class GraphqlStaticModelClient:
             json={"query": query, "variables": variables},
             timeout=60,
         )
+        if r.status_code == 400:
+            # A schema change fails GraphQL validation as a bare 400, and raise_for_status drops
+            # the body that names the offending field. Both static-model outages (2026-08-27,
+            # 2026-10-16) read as an anonymous HTTPError in the run log; keep the message.
+            raise requests.HTTPError(f"400 from {self._endpoint}: {r.text[:1000]}", response=r)
         r.raise_for_status()
         body = r.json()
         if body.get("errors"):
@@ -110,17 +115,23 @@ class GraphqlStaticModelClient:
         # createDataset -> dataset{id} shape). Confirmed live.
         return d["createStaticModel"]["staticModel"]["id"]
 
-    def upload_csv(self, static_model_id: str, csv_text: str) -> None:
-        # createStaticModelUploadUrl takes staticModelId directly (not an Input wrapper) and
-        # returns the pre-signed URL as a scalar String (no subselection). Confirmed live.
+    def upload_csv(self, static_model_id: str, csv_text: str) -> str:
+        """PUT the CSV to a fresh upload slot and return its `uploadId` for the run request."""
+        # createStaticModelUploadUrl takes staticModelId directly (not an Input wrapper). Until
+        # 2026-10-15 it returned the pre-signed URL as a scalar String; it now returns a
+        # `StaticModelUpload { uploadId url }` object, and the run request must name that
+        # uploadId. The old no-subselection query failed validation with a bare 400 and froze
+        # the warehouse and public mart at 2026-10-15 (introspected live 2026-10-19).
         d = self._gql(
-            "mutation($id:ID!){ createStaticModelUploadUrl(staticModelId:$id) }",
+            "mutation($id:ID!){ createStaticModelUploadUrl(staticModelId:$id){ uploadId url } }",
             {"id": static_model_id},
         )
-        url = d["createStaticModelUploadUrl"]
-        # The pre-signed URL is S3-style (Cloudflare R2) and accepts PUT. Confirmed live.
-        r = requests.put(url, data=csv_text.encode("utf-8"), timeout=60)
+        slot = d["createStaticModelUploadUrl"]
+        # The pre-signed URL is S3-style (Cloudflare R2), accepts PUT, and expires 15 minutes
+        # after it is issued. Confirmed live.
+        r = requests.put(slot["url"], data=csv_text.encode("utf-8"), timeout=60)
         r.raise_for_status()
+        return slot["uploadId"]
 
     def get_runs(self, dataset_id: str) -> list[RunInfo]:
         d = self._gql(
@@ -135,7 +146,7 @@ class GraphqlStaticModelClient:
                 out.append(RunInfo(run_id=n["id"], status=n["status"], logs_url=n.get("logsUrl")))
         return out
 
-    def run_static_model(self, dataset_id: str, static_model_id: str) -> None:
+    def run_static_model(self, dataset_id: str, static_model_id: str, upload_id: str) -> None:
         # OSO finished migrating this mutation to run groups on 2026-08-27, five days after it did
         # the same to `createDataIngestionRunRequest` (see graphql_client.trigger_run): the payload
         # is now `CreateRunGroupPayload`, which has no `run` field, so the old selection failed
@@ -152,11 +163,22 @@ class GraphqlStaticModelClient:
         # now requires BOTH `datasetId` and `staticModelId` (introspected live 2026-08-31). Fixing
         # only the payload selection still 400s, with the same bare HTTPError, because `_gql` raises
         # on status before it can surface the GraphQL message.
+        #
+        # A third required field arrived 2026-10-16: `uploadId`, naming which upload to load.
+        # REPLACE is explicit because every caller republishes the whole table; APPEND would
+        # duplicate the series.
         d = self._gql(
             "mutation($i:CreateStaticModelRunRequestInput!){ "
             "createStaticModelRunRequest(input:$i){ success message "
             "runGroup{ id runs{ edges{ node{ id } } } } } }",
-            {"i": {"datasetId": dataset_id, "staticModelId": static_model_id}},
+            {
+                "i": {
+                    "datasetId": dataset_id,
+                    "staticModelId": static_model_id,
+                    "uploadId": upload_id,
+                    "writeDisposition": "REPLACE",
+                }
+            },
         )
         payload = d["createStaticModelRunRequest"]
         group = payload.get("runGroup") or {}

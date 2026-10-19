@@ -16,8 +16,9 @@ def test_sink_publish_sequence_and_public_grant(sample_bundle):
     assert model_id in client.granted_public
     # The run must be requested for the model that just received the CSV, not merely for the
     # dataset: CreateStaticModelRunRequestInput requires BOTH ids, and passing the dataset id
-    # twice is the shape that silently 400s against the live API.
-    assert client.ran == [(client.models[model_id], model_id)]
+    # twice is the shape that silently 400s against the live API. Since 2026-10-16 it also
+    # requires the `uploadId` that createStaticModelUploadUrl issued for THIS upload.
+    assert client.ran == [(client.models[model_id], model_id, client.upload_ids[model_id])]
 
 
 def test_sink_private_not_granted_public(sample_bundle):

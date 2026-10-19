@@ -1346,8 +1346,8 @@ def upload(org_id: str, csv_path: Path, name: str) -> None:
     # ensure_, not create_: this republishes the SAME table every run, so creating
     # unconditionally fails with ALREADY_EXISTS from the second upload onward.
     model_id = client.ensure_static_model(org_id, dataset_id, name)
-    client.upload_csv(model_id, csv_path.read_text())
-    client.run_static_model(dataset_id, model_id)
+    upload_id = client.upload_csv(model_id, csv_path.read_text())
+    client.run_static_model(dataset_id, model_id, upload_id)
     client.grant_public(model_id)
     print(f"uploaded {csv_path} -> {name} (dataset {dataset_id})")
 
