@@ -22,7 +22,7 @@ design, and the query will be denied.
 
 ## Connecting
 
-Any OSO API key reads it (create one at oso.xyz). The warehouse speaks **Trino SQL**.
+Any OSO API key reads it (create one at www.artio.so, formerly oso.xyz). The warehouse speaks **Trino SQL**.
 
 - **Python:** `uv add pyoso`, set `OSO_API_KEY`, then
   `pyoso.Client().to_pandas("SELECT ... FROM filecoin.filpgf_public.gtm_pipeline_by_stage")`.

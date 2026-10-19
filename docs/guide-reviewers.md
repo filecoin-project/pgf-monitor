@@ -189,7 +189,7 @@ scripts/demo_reviewer_flow.sh          # offline end-to-end demo of this whole g
 
 The public dashboard renders the kernel taxonomy with live SLA status per function and
 per-function source history — hosted at
-<https://www.oso.xyz/filecoin/propgf-kernel-health-live/view>, or run it locally:
+<https://www.artio.so/filecoin/propgf-kernel-health-live/view>, or run it locally:
 
 ```bash
 uv sync --extra dashboards

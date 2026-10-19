@@ -1,9 +1,9 @@
 # Dashboards
 
 **One notebook.** `propgf-kernel-public.py` is the ProPGF monitoring dashboard, hosted in the
-`filecoin` org on oso.xyz as `propgf-kernel-health-live`:
+`filecoin` org on artio.so (formerly oso.xyz) as `propgf-kernel-health-live`:
 
-<https://www.oso.xyz/filecoin/propgf-kernel-health-live/view>
+<https://www.artio.so/filecoin/propgf-kernel-health-live/view>
 
 The `/view` suffix matters — that URL is readable without an account, while the bare
 `/filecoin/propgf-kernel-health-live` is the editor path and redirects to `/login`.
@@ -125,7 +125,7 @@ uv run marimo run dashboards/propgf-kernel-public.py     # read-only app view
 uv run marimo edit dashboards/propgf-kernel-public.py
 ```
 
-Set `OSO_API_KEY` in your environment (an [Open Source Observer](https://www.oso.xyz) API key)
+Set `OSO_API_KEY` in your environment (an [Open Source Observer](https://www.artio.so) API key)
 so the notebook can query the warehouse live:
 
 ```bash

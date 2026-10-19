@@ -5,7 +5,7 @@ description: Answer questions about the Filecoin kernel and what each ProPGF-fun
 
 # Filecoin Kernel Monitor — read-only agent skill
 
-The [Filecoin kernel](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view) is the set of
+The [Filecoin kernel](https://www.artio.so/filecoin/propgf-kernel-health-live/view) is the set of
 functions the network cannot operate without. Each ProPGF-funded team declares, in a public
 manifest, which kernel functions it maintains and how to check each one. A pipeline fetches
 each source, evaluates it, and publishes the result.
@@ -103,7 +103,7 @@ Outcomes are DERIVED, never stored, so that a corrected bar re-judges history in
 frozen verdict behind. A day can carry more than one row for one commitment (a `backfill:` reading
 beside a `nightly` one); prefer the row that has a value, and `nightly` over a backfill when both
 do. Link the
-[live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view) for current status.
+[live dashboard](https://www.artio.so/filecoin/propgf-kernel-health-live/view) for current status.
 
 **How much ProPGF funding is attached?** This repo cannot tell you, and deliberately does not try.
 Award amounts are not secret, but for several grants the committee slate, the signed Exhibit B and

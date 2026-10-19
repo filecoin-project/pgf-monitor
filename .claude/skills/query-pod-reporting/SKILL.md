@@ -21,7 +21,7 @@ design, and a query for them will be denied.
 
 ## Connecting
 
-Any OSO API key reads them (create one at oso.xyz). The warehouse speaks **Trino SQL**.
+Any OSO API key reads them (create one at www.artio.so, formerly oso.xyz). The warehouse speaks **Trino SQL**.
 
 - **Python:** `uv add pyoso`, set `OSO_API_KEY`, then
   `pyoso.Client().to_pandas("SELECT ... FROM filecoin.filpgf_public.pod_commitments")`.
