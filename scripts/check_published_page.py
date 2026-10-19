@@ -50,7 +50,10 @@ from fpm.published_page import (
 NOTEBOOK = Path("dashboards/propgf-kernel-public.py")
 ORG = "filecoin"
 NAME = "propgf-kernel-health-live"
-VIEW = f"https://www.oso.xyz/{ORG}/{NAME}/view"
+# The web app moved from www.oso.xyz to www.artio.so on 2026-10-19; the old host now 301s here.
+# Check the canonical host and do NOT follow redirects: the bare path (no /view) 307s to /login,
+# and following it would land on a 200 login page and pass.
+VIEW = f"https://www.artio.so/{ORG}/{NAME}/view"
 API = "https://api.oso.xyz/v1/graphql"
 
 QUERY = (
