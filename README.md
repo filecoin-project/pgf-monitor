@@ -4,7 +4,7 @@
 
 Machine-verifiable health monitoring for the Filecoin kernel functions, from public sources.
 
-[Live dashboard →](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view)
+[Live dashboard →](https://www.artio.so/filecoin/propgf-kernel-health-live/view)
 
 <!-- counts read live from badges.json via shields.io; regenerate it with: uv run python scripts/kernel_coverage.py --badges
      ADOPTED = a metric in registry/, so a team is held to it today. MODELLED also counts registry/drafts/,
@@ -46,7 +46,7 @@ FUNCTION → SLA → SOURCE → READING → EVALUATION → RECOMMENDATION → VE
         (the repo: what was promised)   (the pipeline: what was measured)   (a human: the call)
 ```
 
-The [live dashboard](https://www.oso.xyz/filecoin/propgf-kernel-health-live/view) shows each kernel
+The [live dashboard](https://www.artio.so/filecoin/propgf-kernel-health-live/view) shows each kernel
 function's current status — green (OK), red (a recent interruption), or amber
 (indeterminate) — alongside the ProPGF funding for each team.
 

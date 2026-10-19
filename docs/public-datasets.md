@@ -23,7 +23,7 @@ per-day count is the health signal — if it stops matching the number of live c
 upstream has stalled. The cumulative total keeps rising even during a stall (early history is
 sparse: 875 rows spread over 378 distinct `sample_date`s), so it can never detect one.
 
-**Reference implementation.** [`propgf-kernel-health-live`](https://www.oso.xyz/filecoin/propgf-kernel-health-live)
+**Reference implementation.** [`propgf-kernel-health-live`](https://www.artio.so/filecoin/propgf-kernel-health-live/view)
 is a working consumer of exactly these two tables and nothing else — source in this repo at
 `dashboards/propgf-kernel-public.py`. It embeds no data and queries live, so any OSO API key
 reproduces every number on it. Read it as the worked example of this contract. Note that the

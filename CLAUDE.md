@@ -217,7 +217,9 @@ detectors, synthesize, pipeline, store, land, report/, governance/, transform/, 
 `dashboards/` (marimo, `uv sync --extra dashboards`): **ONE notebook**,
 `propgf-kernel-public.py` — the PUBLIC surface, hosted as `propgf-kernel-health-live` and built
 ONLY on the two `filecoin.filpgf_public.*` mart tables. Its public URL needs the `/view` suffix
-(`https://www.oso.xyz/filecoin/propgf-kernel-health-live/view`); the bare path 307s to `/login`.
+(`https://www.artio.so/filecoin/propgf-kernel-health-live/view`); the bare path 307s to `/login`.
+The web app moved from `www.oso.xyz` to `www.artio.so` on 2026-10-19 (the old host 301s);
+`api.oso.xyz` and `mcp.oso.xyz` did NOT move, so leave those URLs alone.
 Publishing is AUTOMATIC since 2026-09-20 — `published-page.yml` republishes on every push to the
 notebook and daily at 09:10 UTC (after the mart DAG reaches `filpgf_public` at 08:30), retrying at
 11:10 and 13:10 if the mart has not yet reached main's latest reading (it FAILS at 13:10; a page
