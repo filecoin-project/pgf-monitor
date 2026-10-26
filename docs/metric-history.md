@@ -239,6 +239,26 @@ Tipsets carry heights and timestamps, so the items qualify — but `/tipset/rece
 recent window and we have not established a way to ask it about a past date. Treated as
 unrecoverable until someone demonstrates otherwise.
 
+### A gauge we can read at a past block, for 14 days — 1 metric
+
+`secured-finance/usdfc-peg-deviation` reads `slot0()` on the USDFC/axlUSDC pool. It is a gauge,
+but an `eth_call` takes a block, so the same read at a past epoch reproduces the nightly exactly.
+`filecoin.chain.love` serves state back 336 hours and refuses anything older, so the window is
+fourteen days and closing: `backfill --only usdfc-peg` fills null days inside it and skips the rest.
+
+It exists because of the **2026-10-13 GeckoTerminal freeze**. GeckoTerminal stopped indexing every
+USDFC pool at 10:00 UTC that day (the last hourly candle) while the pool went on trading on-chain.
+For seven nights it served one frozen price, reserve and a zero 24h volume, then dropped the pool
+from the list endpoint, so the transform found no row. The peg then read +0.0071 while the pool sat
+below peg. All 21 GeckoTerminal readings for 2026-10-14..20 are voided. The peg moved to `slot0()`
+and was recovered on chain for 2026-10-14..26. Pool depth and volume stay on GeckoTerminal and read
+`indeterminate` until it recovers. The candle strategy above cannot fill them, because the candles
+stop at the same hour.
+
+The new source reads the pool's spot price and the old one read GeckoTerminal's last-trade price. On
+2026-10-13, the last day both were good, they differed by 0.0017, so the series has a small
+definitional step at 2026-10-14.
+
 ## Metrics where our nightly reading is the only record
 
 For 36 of the 60, the endpoint reports "how are you right now?" — chain head lag, RPC uptime and

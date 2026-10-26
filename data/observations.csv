@@ -7101,13 +7101,13 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-10-11,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21429.8622,nightly,
 2026-10-12,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,23219.1381,nightly,
 2026-10-13,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21426.6578,nightly,
-2026-10-14,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21942.8786,nightly,
-2026-10-15,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,19283.6992,nightly,
-2026-10-16,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,19097.7426,nightly,
-2026-10-17,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,19097.7426,nightly,
-2026-10-18,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,19097.7426,nightly,
-2026-10-19,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,19097.7426,nightly,
-2026-10-20,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,19097.7426,nightly,
+2026-10-14,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-15,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-16,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-17,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-18,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-19,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-20,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
 2026-10-21,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,transform_error: transform result is not a single non-null cell
 2026-10-22,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,transform_error: transform result is not a single non-null cell
 2026-10-23,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,transform_error: transform result is not a single non-null cell
@@ -7177,13 +7177,13 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-10-11,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,34897.8305562409,nightly,
 2026-10-12,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,20493.8735033768,nightly,
 2026-10-13,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,180128.777718417,nightly,
-2026-10-14,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,56502.9202767261,nightly,
-2026-10-15,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,0.0,nightly,
-2026-10-16,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,0.0,nightly,
-2026-10-17,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,0.0,nightly,
-2026-10-18,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,0.0,nightly,
-2026-10-19,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,0.0,nightly,
-2026-10-20,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,0.0,nightly,
+2026-10-14,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-15,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-16,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-17,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-18,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-19,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-20,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
 2026-10-21,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,transform_error: transform result is not a single non-null cell
 2026-10-22,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,transform_error: transform result is not a single non-null cell
 2026-10-23,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,transform_error: transform result is not a single non-null cell
@@ -7617,18 +7617,31 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-10-11,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.019617145640610012,nightly,
 2026-10-12,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.020675578321750043,nightly,
 2026-10-13,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.01527640752175996,nightly,
-2026-10-14,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.007092255798970104,nightly,
-2026-10-15,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.007092255798970104,nightly,
-2026-10-16,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.007092255798970104,nightly,
-2026-10-17,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.007092255798970104,nightly,
-2026-10-18,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.007092255798970104,nightly,
-2026-10-19,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.007092255799999947,nightly,
-2026-10-20,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.007092255799999947,nightly,
+2026-10-14,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.015479,backfill:filecoin.chain.love,pool slot0() read at block 6455020
+2026-10-14,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-15,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.013854,backfill:filecoin.chain.love,pool slot0() read at block 6457900
+2026-10-15,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-16,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.024907,backfill:filecoin.chain.love,pool slot0() read at block 6460780
+2026-10-16,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-17,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,0.024907,backfill:filecoin.chain.love,pool slot0() read at block 6463660
+2026-10-17,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-18,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.006712,backfill:filecoin.chain.love,pool slot0() read at block 6466540
+2026-10-18,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-19,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.000397,backfill:filecoin.chain.love,pool slot0() read at block 6469420
+2026-10-19,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-20,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.005896,backfill:filecoin.chain.love,pool slot0() read at block 6472300
+2026-10-20,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,voided: GeckoTerminal stopped indexing USDFC pools at 2026-10-13 10:00 UTC and served frozen values while the pool kept trading on-chain
+2026-10-21,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.00517,backfill:filecoin.chain.love,pool slot0() read at block 6475180
 2026-10-21,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-22,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.004091,backfill:filecoin.chain.love,pool slot0() read at block 6478060
 2026-10-22,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-23,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.005528,backfill:filecoin.chain.love,pool slot0() read at block 6480940
 2026-10-23,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-24,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.00746,backfill:filecoin.chain.love,pool slot0() read at block 6483820
 2026-10-24,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-25,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.007475,backfill:filecoin.chain.love,pool slot0() read at block 6486700
 2026-10-25,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-26,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,-0.005446,backfill:filecoin.chain.love,pool slot0() read at block 6489580
 2026-10-26,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,nightly,transform_error: transform result is not a single non-null cell
 2026-07-15,secured-finance,usdfc-peg-stability,usdfc_peg_deviation,0.013057,live-review,scheduled review reading
 2026-08-25,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,0.5002168737746137,nightly,

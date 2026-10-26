@@ -96,8 +96,18 @@ functions:
   # child. The daily OHLCV has the identical shape, which is why the 30-day mean is not here
   # either; both belong in the recipient's monthly JSON, where s3 already has a promotion hook.
   #
-  # So: spot at read time, off the pools endpoint the two entries above ALREADY poll -- object
-  # shaped, no arrays, and proven in this manifest.
+  # So: spot at read time. Until 2026-10-26 that came off the GeckoTerminal pools endpoint the two
+  # entries above poll; it is now read from the pool contract itself, because GeckoTerminal stopped
+  # indexing every USDFC pool at 2026-10-13 10:00 UTC (last hourly candle) while the pool kept
+  # trading on-chain -- for a week it served a frozen +0.0071 while the pool sat BELOW peg.
+  #
+  # slot0() on the Sushiswap v3 pool, via the same public RPC as the redemption fee below. Word 0
+  # of the result is sqrtPriceX96 (a uint160, ~80 bits today), wider than a BIGINT, so the
+  # transform decodes its low 40 hex digits in three from_base chunks (10+15+15) and recombines
+  # them as DOUBLE. token0 is USDFC (18 decimals), token1 axlUSDC (6), so the USDFC price in
+  # axlUSDC is (sqrtPriceX96 / 2^96)^2 * 1e12. This is the pool's SPOT price; GeckoTerminal's
+  # base_token_price_usd was the last trade's, and the two differed by 0.0017 on 2026-10-13.
+  # `scripts/observations.py backfill --only usdfc-peg` replays this exact read at past blocks.
   #
   # SIGNED deviation, not absolute: every one of the 30 days to 2026-08-24 closed ABOVE peg (min
   # 1.0003, median 1.0111), and s3 says the ceiling is defended only by mint-and-sell at ~1.091.
@@ -112,20 +122,21 @@ functions:
     funded_project_oso_slug: secured-finance
     grant_ref: APP-Z1L7URG7-TJ3G5D
     sla:
-      statement: "USDFC peg deviation: USDFC–axlUSDC pool price minus 1.00 USD, signed, read at measurement time and measured daily. Positive is a premium over peg, negative a discount"
+      statement: "USDFC peg deviation: USDFC–axlUSDC pool spot price (slot0) minus 1.00, signed, read on-chain at measurement time and measured daily. Positive is a premium over peg, negative a discount"
       metric: usdfc_peg_deviation
       cadence: daily
       unscored_reason: no-signed-bar
     source:
       adapter: oso
       kind: http-json
-      base_url: "https://api.geckoterminal.com"
-      endpoint: "https://api.geckoterminal.com/api/v2/networks/filecoin/pools"
-      query: "/api/v2/networks/filecoin/pools"
-      data_selector: data
+      base_url: "https://filecoin.chain.love"
+      endpoint: "https://filecoin.chain.love/rpc/v1"
+      query: "/rpc/v1"
+      method: POST
+      params: { jsonrpc: "2.0", method: "eth_call", params: [ { to: "0x21ca72fe39095db9642ca9cc694fa056f906037f", data: "0x3850c7bd" }, "latest" ], id: 1 }
     transform:
-      # signed deviation from 1.00 USD for the one USDFC/axlUSDC pool, isolated by address
-      sql: "SELECT MAX(CAST(attributes__base_token_price_usd AS DOUBLE)) - 1 FROM raw WHERE attributes__address = '0x21ca72fe39095db9642ca9cc694fa056f906037f'"
+      # sqrtPriceX96 from slot0 word 0 (chars 27-66 of the result), squared, scaled for 18/6 decimals
+      sql: "SELECT MAX(power((CAST(from_base(substr(result, 27, 10), 16) AS DOUBLE) * power(16e0, 30) + CAST(from_base(substr(result, 37, 15), 16) AS DOUBLE) * power(16e0, 15) + CAST(from_base(substr(result, 52, 15), 16) AS DOUBLE)) / power(2e0, 96), 2) * 1e12) - 1 FROM raw"
 
   # The redemption fee is read straight off the TroveManager contract, so the fact is the
   # recipient's own even though the transport is a third party's public RPC. s3 explicitly accepts
