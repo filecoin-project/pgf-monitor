@@ -116,5 +116,96 @@ def test_days_past_the_node_lookback_are_skipped_not_invented(monkeypatch):
     assert [r["observed_at"] for r in rows] == ["2026-10-25", "2026-10-26"]
 
 
-def test_usdfc_peg_is_not_in_the_default_rotation():
-    assert "usdfc-peg" in OBS.TARGETED_ONLY
+def test_the_chain_strategies_are_not_in_the_default_rotation():
+    assert {"usdfc-peg", "usdfc-pool"} <= OBS.TARGETED_ONLY
+
+
+# --- pool depth and volume ------------------------------------------------------------------------
+
+
+class _FakeChain:
+    def __init__(self, oldest_block=0):
+        self.oldest, self.asked = oldest_block, []
+
+    def _check(self, block):
+        self.asked.append(block)
+        if block < self.oldest:
+            raise OBS.LookbackExceeded("lookbacks of more than 336h0m0s are disallowed")
+
+    def depth(self, block):
+        self._check(block)
+        return 21_000.0
+
+    def volume(self, block):
+        self._check(block)
+        return 9_000.0
+
+
+def _pool_run(chain, have_value=frozenset(), days=1):
+    return OBS._usdfc_pool_series(NOW - timedelta(days=days), NOW, set(have_value), chain=chain)
+
+
+def test_the_registry_pool_metrics_read_the_peg_pool():
+    targets = OBS.usdfc_pool_targets("0x21ca72fe39095db9642ca9cc694fa056f906037f")
+    assert targets == {
+        "usdfc_pool_tvl_usd": ("secured-finance", "usdfc-axlusdc-pool-tvl"),
+        "usdfc_pool_volume_usd": ("secured-finance", "usdfc-axlusdc-pool-volume"),
+    }
+
+
+def test_it_refuses_pool_metrics_pointed_at_another_pool():
+    with pytest.raises(ValueError, match="Reconcile"):
+        OBS.usdfc_pool_targets("0x0000000000000000000000000000000000000001")
+
+
+def test_both_pool_metrics_are_rebuilt_per_night_and_valued_days_are_skipped():
+    have = {("2026-10-26", "secured-finance", "usdfc-axlusdc-pool-tvl", "usdfc_pool_tvl_usd")}
+    rows = _pool_run(_FakeChain(), have_value=have)
+    got = {(r["observed_at"], r["metric"]): r for r in rows}
+    assert set(got) == {
+        ("2026-10-25", "usdfc_pool_tvl_usd"),
+        ("2026-10-25", "usdfc_pool_volume_usd"),
+        ("2026-10-26", "usdfc_pool_volume_usd"),
+    }
+    assert {r["method"] for r in rows} == {"backfill:filecoin.chain.love"}
+    assert got[("2026-10-25", "usdfc_pool_volume_usd")]["observed_value"] == 9_000.0
+
+
+def test_pool_days_past_the_lookback_are_skipped():
+    oldest = OBS.epoch_at(OBS._anchor(datetime(2026, 10, 26, tzinfo=UTC)))
+    rows = _pool_run(_FakeChain(oldest_block=oldest))
+    assert {r["observed_at"] for r in rows} == {"2026-10-26"}
+
+
+def test_the_swap_amount_is_read_as_signed():
+    assert OBS._signed("f" * 64) == -1
+    assert OBS._signed("0" * 63 + "5") == 5
+
+
+def test_a_log_window_the_node_will_not_load_is_halved_until_it_does(monkeypatch):
+    calls = []
+
+    def rpc(endpoint, method, params, attempts=4):
+        lo, hi = int(params[0]["fromBlock"], 16), int(params[0]["toBlock"], 16)
+        calls.append((lo, hi))
+        if lo <= 7 <= hi and hi - lo > 1:
+            raise RuntimeError("eth_getLogs: failed to load event message")
+        return [{"block": b} for b in range(lo, hi + 1)]
+
+    monkeypatch.setattr(OBS, "_chain_rpc", rpc)
+    chain = OBS.PoolChain.__new__(OBS.PoolChain)
+    chain.endpoint, chain.pool = "http://x", "0xp"
+    logs = chain.swap_logs(0, 15)
+    assert [log["block"] for log in logs] == list(range(16))  # every epoch exactly once
+    assert (0, 15) in calls and len(calls) > 1
+
+
+def test_a_single_epoch_that_will_not_load_is_an_error_not_a_gap(monkeypatch):
+    def rpc(endpoint, method, params, attempts=4):
+        raise RuntimeError("eth_getLogs: failed to load event message")
+
+    monkeypatch.setattr(OBS, "_chain_rpc", rpc)
+    chain = OBS.PoolChain.__new__(OBS.PoolChain)
+    chain.endpoint, chain.pool = "http://x", "0xp"
+    with pytest.raises(RuntimeError):
+        chain.swap_logs(0, 3)

@@ -251,9 +251,19 @@ USDFC pool at 10:00 UTC that day (the last hourly candle) while the pool went on
 For seven nights it served one frozen price, reserve and a zero 24h volume, then dropped the pool
 from the list endpoint, so the transform found no row. The peg then read +0.0071 while the pool sat
 below peg. All 21 GeckoTerminal readings for 2026-10-14..20 are voided. The peg moved to `slot0()`
-and was recovered on chain for 2026-10-14..26. Pool depth and volume stay on GeckoTerminal and read
-`indeterminate` until it recovers. The candle strategy above cannot fill them, because the candles
-stop at the same hour.
+and was recovered on chain for 2026-10-14..26.
+
+Pool depth and 24h volume cannot each be one `eth_call`, so their nightly stays on GeckoTerminal and
+reads `indeterminate` until it recovers. The candle strategy above cannot fill them, because the
+candles stop at the same hour. `backfill --only usdfc-pool` rebuilds them from the pool instead.
+Depth is `balanceOf(pool)` for both tokens at the `slot0()` price, and volume is the axlUSDC leg of
+the pool's Swap logs over the trailing 2,880 epochs. axlUSDC is valued at 1 USD. Both were checked
+against GeckoTerminal on 2026-10-13, the last day it was good. Depth came out at 21,435.91 against
+21,426.66 (0.04%). Hourly volume was within 0.16% on every full hour.
+**While GeckoTerminal stays dark, this has to be re-run within 14 days or the nights are lost.**
+Lotus intermittently fails `eth_getLogs` with `failed to load event message` on a full 360-epoch
+window whose parts all load, so a failing window is halved until it loads. A day that still fails is
+left empty, never summed from part of its logs.
 
 The new source reads the pool's spot price and the old one read GeckoTerminal's last-trade price. On
 2026-10-13, the last day both were good, they differed by 0.0017, so the series has a small
