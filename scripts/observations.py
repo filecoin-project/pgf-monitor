@@ -1143,6 +1143,249 @@ def _pdp_proofsets_series(
     return out
 
 
+# The registry's usdfc-peg-deviation transform, verbatim. The backfill below re-implements it in
+# Python, so it refuses to run when the registry says anything else.
+_PEG_METRIC = "usdfc_peg_deviation"
+_SLOT0 = "0x3850c7bd"  # keccak("slot0()")[:4]
+_PEG_SQL = (
+    "SELECT MAX(power((CAST(from_base(substr(result, 27, 10), 16) AS DOUBLE) * power(16e0, 30) "
+    "+ CAST(from_base(substr(result, 37, 15), 16) AS DOUBLE) * power(16e0, 15) "
+    "+ CAST(from_base(substr(result, 52, 15), 16) AS DOUBLE)) / power(2e0, 96), 2) * 1e12) - 1 "
+    "FROM raw"
+)
+
+
+def usdfc_peg_target(registry_dir: str = "registry"):
+    """(team, function_id, metric, endpoint, pool) for the USDFC peg, checked against _PEG_SQL."""
+    from fpm.manifest import load_manifest
+
+    found = []
+    for path in sorted(Path(registry_dir).glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        manifest = load_manifest(path)
+        for fn in manifest.functions:
+            if fn.sla.metric != _PEG_METRIC:
+                continue
+            call = (fn.source.params or {}).get("params") or [{}]
+            sql = fn.transform.sql if fn.transform else None
+            if call[0].get("data") != _SLOT0 or sql != _PEG_SQL:
+                raise ValueError(
+                    f"{fn.function_id}: the registry no longer reads slot0() with the transform "
+                    "this strategy replays. Reconcile them before backfilling."
+                )
+            found.append(
+                (manifest.team, fn.function_id, _PEG_METRIC, fn.source.endpoint, call[0]["to"])
+            )
+    if len(found) != 1:
+        raise ValueError(f"expected exactly one {_PEG_METRIC} metric, found {len(found)}")
+    return found[0]
+
+
+def peg_deviation_from_slot0(result: str) -> float:
+    """_PEG_SQL in Python, chunk for chunk: Trino's substr is 1-based, Python slices are not."""
+    chunk = lambda start, n: int(result[start - 1 : start - 1 + n], 16)  # noqa: E731
+    sqrt_price = chunk(27, 10) * 16.0**30 + chunk(37, 15) * 16.0**15 + chunk(52, 15)
+    return (sqrt_price / 2.0**96) ** 2 * 1e12 - 1
+
+
+class LookbackExceeded(Exception):
+    """The node no longer serves state that far back (chain.love: 336h)."""
+
+
+def _chain_rpc(endpoint: str, method: str, params: list, attempts: int = 4):
+    """One JSON-RPC call; LookbackExceeded when the node has dropped that state.
+
+    Retried because Lotus nodes intermittently fail eth_getLogs with "failed to load event message"
+    on ranges that succeed a moment later (seen on 2026-10-23's blocks, 2026-10-26).
+    """
+    payload = {"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
+    for attempt in range(attempts):
+        r = requests.post(endpoint, json=payload, headers=UA, timeout=60)
+        body = r.json() if r.content else {}
+        if "result" in body:
+            return body["result"]
+        message = str((body.get("error") or {}).get("message", r.text))
+        # eth_call and eth_getLogs word the same limit differently
+        if "lookbacks of more than" in message or "outside available upstream range" in message:
+            raise LookbackExceeded(message)
+        if "null round" in message:
+            break  # deterministic: the caller steps back an epoch
+        time.sleep(1 + attempt)
+    raise RuntimeError(f"{method}: {message}")
+
+
+def eth_call_at(endpoint: str, to: str, data: str, block: int, null_rounds: int = 5) -> str:
+    """eth_call at `block`, stepping back over null rounds (epochs with no tipset)."""
+    for b in range(block, block - null_rounds, -1):
+        try:
+            return _chain_rpc(endpoint, "eth_call", [{"to": to, "data": data}, hex(b)])
+        except RuntimeError as exc:
+            if "null round" not in str(exc):
+                raise
+    raise RuntimeError(f"eth_call: {null_rounds} null rounds in a row before {block}")
+
+
+def slot0_at(endpoint: str, pool: str, block: int) -> str:
+    return eth_call_at(endpoint, pool, _SLOT0, block)
+
+
+def _usdfc_peg_series(cutoff: datetime, now: datetime, have_value: set, read=None) -> list[dict]:
+    """USDFC peg deviation re-read from the pool contract at each night's read instant.
+
+    The same eth_call the nightly makes, at a past block instead of "latest", so it reproduces
+    the nightly by construction. Bounded by how far back the RPC serves state (14 days on
+    chain.love); older days are skipped, not invented. Written for the 2026-10-14.. GeckoTerminal
+    freeze (docs/metric-history.md).
+    """
+    team, fid, metric, endpoint, pool = usdfc_peg_target()
+    read = read or (lambda block: slot0_at(endpoint, pool, block))
+    host = endpoint.split("/")[2]
+    day = cutoff.replace(hour=0, minute=0, second=0, microsecond=0)
+    out: list[dict] = []
+    while day <= now:
+        iso = day.strftime("%Y-%m-%d")
+        sample = _anchor(day)
+        if sample <= now and (iso, team, fid, metric) not in have_value:
+            block = epoch_at(sample)
+            try:
+                value = peg_deviation_from_slot0(read(block))
+                note = f"pool slot0() read at block {block}"
+                out.append(_row(day, team, fid, metric, value, f"backfill:{host}", note))
+            except LookbackExceeded:
+                pass
+        day += timedelta(days=1)
+    print(f"    {fid}: +{len(out)}")
+    return out
+
+
+# The pool's depth and 24h volume, which GeckoTerminal computes and the nightly reads from it.
+# Neither can be one eth_call, so the nightly stays on GeckoTerminal; this rebuilds what it would
+# have served from the pool itself. Checked against GeckoTerminal on 2026-10-13, the last day it
+# indexed the pool: depth 21,435.91 vs 21,426.66 (0.04%); hourly volume within 0.16% on every
+# full hour. axlUSDC is valued at 1 USD, which GeckoTerminal's own figures bear out.
+_POOL_METRICS = {"usdfc_pool_tvl_usd": "reserve_in_usd", "usdfc_pool_volume_usd": "volume_usd__h24"}
+_SWAP = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"  # Uniswap v3 Swap
+_LOG_SPAN = 360  # chain.love's eth_getLogs range limit, in epochs
+_DAY_EPOCHS = 2880
+
+
+def usdfc_pool_targets(pool: str, registry_dir: str = "registry") -> dict:
+    """{metric: (team, function_id)} for the two GeckoTerminal pool metrics, on the peg's pool."""
+    from fpm.manifest import load_manifest
+
+    found = {}
+    for path in sorted(Path(registry_dir).glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        manifest = load_manifest(path)
+        for fn in manifest.functions:
+            column = _POOL_METRICS.get(fn.sla.metric)
+            if column is None:
+                continue
+            sql = (fn.transform.sql if fn.transform else "").lower()
+            if f"attributes__{column}" not in sql or pool.lower() not in sql:
+                raise ValueError(
+                    f"{fn.function_id}: the registry no longer reads {column} for pool {pool}. "
+                    "Reconcile them before backfilling."
+                )
+            found[fn.sla.metric] = (manifest.team, fn.function_id)
+    if set(found) != set(_POOL_METRICS):
+        raise ValueError(f"expected one each of {sorted(_POOL_METRICS)}, found {sorted(found)}")
+    return found
+
+
+def _signed(word: str) -> int:
+    x = int(word, 16)
+    return x - (1 << 256) if x >> 255 else x
+
+
+class PoolChain:
+    """Reads the pool's depth and trailing-24h volume at a past block."""
+
+    def __init__(self, endpoint: str, pool: str):
+        self.endpoint, self.pool = endpoint, pool
+
+        def latest(to: str, data: str) -> str:
+            return _chain_rpc(endpoint, "eth_call", [{"to": to, "data": data}, "latest"])
+
+        self.token0 = "0x" + latest(pool, "0x0dfe1681")[-40:]
+        self.token1 = "0x" + latest(pool, "0xd21220a7")[-40:]
+        self.dec0 = int(latest(self.token0, "0x313ce567"), 16)
+        self.dec1 = int(latest(self.token1, "0x313ce567"), 16)
+
+    def depth(self, block: int) -> float:
+        owner = "0x70a08231" + self.pool[2:].rjust(64, "0")  # balanceOf(pool)
+        bal0 = int(eth_call_at(self.endpoint, self.token0, owner, block), 16) / 10**self.dec0
+        bal1 = int(eth_call_at(self.endpoint, self.token1, owner, block), 16) / 10**self.dec1
+        price = peg_deviation_from_slot0(slot0_at(self.endpoint, self.pool, block)) + 1
+        return bal0 * price + bal1
+
+    def swap_logs(self, lo: int, hi: int) -> list[dict]:
+        """Swap logs in [lo, hi]. A range the node will not load is halved until it does: a large
+        window can fail repeatedly where every part of it succeeds (2026-10-23's blocks)."""
+        query = {"address": self.pool, "fromBlock": hex(lo), "toBlock": hex(hi), "topics": [_SWAP]}
+        try:
+            return _chain_rpc(self.endpoint, "eth_getLogs", [query], attempts=2)
+        except RuntimeError:
+            if lo == hi:
+                raise
+        mid = (lo + hi) // 2
+        return self.swap_logs(lo, mid) + self.swap_logs(mid + 1, hi)
+
+    def volume(self, block: int) -> float:
+        total = 0.0
+        for hi in range(block, block - _DAY_EPOCHS, -_LOG_SPAN):
+            logs = self.swap_logs(hi - _LOG_SPAN + 1, hi)
+            # data = amount0, amount1, ... ; the axlUSDC leg is the USD value of the trade
+            total += sum(abs(_signed(log["data"][66:130])) for log in logs) / 10**self.dec1
+        return total
+
+
+def _usdfc_pool_series(cutoff: datetime, now: datetime, have_value: set, chain=None) -> list[dict]:
+    """USDFC pool depth and trailing-24h volume rebuilt on chain at each night's read instant.
+
+    Bounded by the RPC's 14-day lookback, like the peg. Written for the 2026-10-14.. GeckoTerminal
+    freeze (docs/metric-history.md); while GeckoTerminal stays dark the nightly reads nothing, so
+    this has to be re-run inside that window or the days are lost.
+    """
+    _, _, _, endpoint, pool = usdfc_peg_target()
+    targets = usdfc_pool_targets(pool)
+    chain = chain or PoolChain(endpoint, pool)
+    host = endpoint.split("/")[2]
+    reads = {
+        "usdfc_pool_tvl_usd": (chain.depth, "pool balanceOf() x slot0() price at block {b}"),
+        "usdfc_pool_volume_usd": (
+            chain.volume,
+            "trailing-24h axlUSDC leg of pool Swap logs ending at block {b}",
+        ),
+    }
+    day = cutoff.replace(hour=0, minute=0, second=0, microsecond=0)
+    out: list[dict] = []
+    while day <= now:
+        iso, sample = day.strftime("%Y-%m-%d"), _anchor(day)
+        if sample <= now:
+            block = epoch_at(sample)
+            for metric, (team, fid) in targets.items():
+                if (iso, team, fid, metric) in have_value:
+                    continue
+                read, note = reads[metric]
+                try:
+                    value = read(block)
+                except LookbackExceeded:
+                    continue
+                except RuntimeError as exc:
+                    # never a partial sum: a day the node will not answer in full is left empty
+                    print(f"    {fid} {iso}: skipped, {exc}", file=sys.stderr)
+                    continue
+                out.append(
+                    _row(day, team, fid, metric, value, f"backfill:{host}", note.format(b=block))
+                )
+        day += timedelta(days=1)
+    print(f"    usdfc pool: +{len(out)}")
+    return out
+
+
 def _valued_keys() -> set:
     """(observed_at, team, function_id, metric) that already carry a VALUE, under any method.
 
@@ -1171,6 +1414,8 @@ def _valued_keys() -> set:
 # window -- a year is ~2,000 rows across six functions -- so it must be asked for.
 # `pdp-proofsets` joins them because its chain fallback issues ~35 batched archival eth_calls per
 # day; it exists to fill specific lost nights, so name them with --date.
+# `usdfc-peg` and `usdfc-pool` join them for the same reason: archival chain reads per day (one
+# eth_call for the peg; three calls and eight log queries for the pool), for named nights.
 TARGETED_ONLY = frozenset(
     {
         "pipeline-success",
@@ -1179,6 +1424,8 @@ TARGETED_ONLY = frozenset(
         "release-cadence",
         "filecoin-pay",
         "pdp-proofsets",
+        "usdfc-peg",
+        "usdfc-pool",
     }
 )
 
@@ -1221,6 +1468,8 @@ def backfill(
         "release-cadence": lambda: _release_avg_series(cutoff, now, _recorded_keys()),
         "filecoin-pay": lambda: _filecoin_pay_series(cutoff, now, _recorded_keys()),
         "pdp-proofsets": lambda: _pdp_proofsets_series(cutoff, now, _valued_keys()),
+        "usdfc-peg": lambda: _usdfc_peg_series(cutoff, now, _valued_keys()),
+        "usdfc-pool": lambda: _usdfc_pool_series(cutoff, now, _valued_keys()),
     }
     stale = TARGETED_ONLY - set(strategies)
     if stale:
