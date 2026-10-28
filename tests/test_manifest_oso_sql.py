@@ -26,7 +26,7 @@ def _raw(**source_overrides):
 def test_the_fixture_is_valid():
     m = manifest_from_raw(copy.deepcopy(BASE))
     assert m.functions[0].source.kind == "oso-sql"
-    assert "filecoin_pay_rails" in m.functions[0].source.sql
+    assert "filecoin.fdp_raw.rails" in m.functions[0].source.sql
 
 
 def test_sql_survives_the_round_trip_into_the_model():
@@ -101,9 +101,7 @@ def test_changing_the_sql_registers_as_a_changed_field():
     from fpm.governance.fields import changed_field_paths
 
     old = manifest_from_raw(copy.deepcopy(BASE)).functions[0]
-    new = manifest_from_raw(
-        _raw(sql="SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails")
-    ).functions[0]
+    new = manifest_from_raw(_raw(sql="SELECT COUNT(*) FROM filecoin.fdp_raw.rails")).functions[0]
     assert "source.sql" in changed_field_paths(old, new)
 
 

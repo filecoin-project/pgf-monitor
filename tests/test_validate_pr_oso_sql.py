@@ -15,7 +15,7 @@ from scripts.dry_run_pr import dry_run
 from scripts.validate_pr import validate_manifest
 
 AS_OF = datetime(2026, 9, 10, tzinfo=timezone.utc)
-ALLOWED = {"filecoin.data_portal.filecoin_pay_rails"}
+ALLOWED = {"filecoin.fdp_raw.rails"}
 PRIVATE = "filecoin.funding_model_static.applicant_identity"
 
 
@@ -42,7 +42,7 @@ def _manifest(sql: str) -> Manifest:
     )
 
 
-GOOD = _manifest("SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails")
+GOOD = _manifest("SELECT COUNT(*) FROM filecoin.fdp_raw.rails")
 PRIVATE_READ = _manifest(f"SELECT COUNT(*) FROM {PRIVATE}")
 
 

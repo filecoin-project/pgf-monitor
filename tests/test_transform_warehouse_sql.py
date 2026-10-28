@@ -21,17 +21,17 @@ from fpm.transform.validate import (
 )
 
 ALLOWED = {
-    "filecoin.data_portal.daily_filecoin_pay_operators_metrics",
-    "filecoin.data_portal.filecoin_pay_rails",
+    "filecoin.fdp_raw.daily_operator_metrics",
+    "filecoin.fdp_raw.rails",
 }
 
 # The real metric: FWSS payment volume, which needs a join and so has no shape as a transform.
 FWSS_SQL = """
 SELECT SUM(m.filecoin_pay_gross_payment_volume_run_rate_usd)
-FROM filecoin.data_portal.daily_filecoin_pay_operators_metrics AS m
-WHERE m.date = (SELECT MAX(date) FROM filecoin.data_portal.daily_filecoin_pay_operators_metrics)
+FROM filecoin.fdp_raw.daily_operator_metrics AS m
+WHERE m.date = (SELECT MAX(date) FROM filecoin.fdp_raw.daily_operator_metrics)
   AND m.operator IN (
-    SELECT DISTINCT operator FROM filecoin.data_portal.filecoin_pay_rails WHERE service = 'FWSS'
+    SELECT DISTINCT operator FROM filecoin.fdp_raw.rails WHERE service = 'FWSS'
   )
 """
 
@@ -43,10 +43,8 @@ def test_accepts_the_two_table_join_the_metric_needs():
 
 def test_alias_is_not_part_of_the_table_name():
     """`... AS m` must not leak into the name, or the allowlist check never matches."""
-    tree = validate_warehouse_sql(
-        "SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails AS r", ALLOWED
-    )
-    assert qualified_tables(tree) == {"filecoin.data_portal.filecoin_pay_rails"}
+    tree = validate_warehouse_sql("SELECT COUNT(*) FROM filecoin.fdp_raw.rails AS r", ALLOWED)
+    assert qualified_tables(tree) == {"filecoin.fdp_raw.rails"}
 
 
 @pytest.mark.parametrize(
@@ -66,7 +64,7 @@ def test_rejects_a_private_table_joined_beside_an_allowlisted_one():
     """The interesting attempt: hide the private read inside an otherwise legitimate query."""
     sql = """
     SELECT MAX(a.applicant_name)
-    FROM filecoin.data_portal.filecoin_pay_rails AS r
+    FROM filecoin.fdp_raw.rails AS r
     JOIN filecoin.funding_model_static.applicant_identity AS a ON a.operator = r.operator
     """
     with pytest.raises(TransformSqlError, match="applicant_identity"):
@@ -76,17 +74,17 @@ def test_rejects_a_private_table_joined_beside_an_allowlisted_one():
 def test_rejects_an_unqualified_table_name():
     """An unqualified name cannot be checked at all, so omission must not be a bypass."""
     with pytest.raises(TransformSqlError, match="fully qualified"):
-        validate_warehouse_sql("SELECT COUNT(*) FROM filecoin_pay_rails", ALLOWED)
+        validate_warehouse_sql("SELECT COUNT(*) FROM rails", ALLOWED)
 
 
 def test_rejects_a_schema_qualified_but_catalog_less_name():
     with pytest.raises(TransformSqlError, match="fully qualified"):
-        validate_warehouse_sql("SELECT COUNT(*) FROM data_portal.filecoin_pay_rails", ALLOWED)
+        validate_warehouse_sql("SELECT COUNT(*) FROM fdp_raw.rails", ALLOWED)
 
 
 def test_rejects_a_cte_because_its_name_is_unqualified():
     sql = """
-    WITH svc AS (SELECT operator FROM filecoin.data_portal.filecoin_pay_rails)
+    WITH svc AS (SELECT operator FROM filecoin.fdp_raw.rails)
     SELECT COUNT(*) FROM svc
     """
     with pytest.raises(TransformSqlError, match="fully qualified"):
@@ -94,30 +92,25 @@ def test_rejects_a_cte_because_its_name_is_unqualified():
 
 
 def test_rejects_two_statements():
-    sql = (
-        "SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails; "
-        "SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails"
-    )
+    sql = "SELECT COUNT(*) FROM filecoin.fdp_raw.rails; SELECT COUNT(*) FROM filecoin.fdp_raw.rails"
     with pytest.raises(TransformSqlError, match="exactly one statement"):
         validate_warehouse_sql(sql, ALLOWED)
 
 
 def test_rejects_a_non_select_statement():
     with pytest.raises(TransformSqlError, match="only a single SELECT"):
-        validate_warehouse_sql("DROP TABLE filecoin.data_portal.filecoin_pay_rails", ALLOWED)
+        validate_warehouse_sql("DROP TABLE filecoin.fdp_raw.rails", ALLOWED)
 
 
 def test_rejects_more_than_one_projection():
     with pytest.raises(TransformSqlError, match="exactly one column"):
-        validate_warehouse_sql(
-            "SELECT operator, service FROM filecoin.data_portal.filecoin_pay_rails", ALLOWED
-        )
+        validate_warehouse_sql("SELECT operator, service FROM filecoin.fdp_raw.rails", ALLOWED)
 
 
 def test_rejects_an_unknown_bind_token():
     with pytest.raises(TransformSqlError, match="unknown bind token"):
         validate_warehouse_sql(
-            "SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails WHERE created_at > :nope",
+            "SELECT COUNT(*) FROM filecoin.fdp_raw.rails WHERE created_at > :nope",
             ALLOWED,
         )
 
@@ -134,13 +127,13 @@ def test_empty_allowlist_rejects_everything():
 
 
 def test_allowlist_membership_is_case_insensitive_and_whitespace_tolerant():
-    messy = {"  FILECOIN.Data_Portal.Filecoin_Pay_Rails  "}
-    validate_warehouse_sql("SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails", messy)
+    messy = {"  FILECOIN.Fdp_Raw.Rails  "}
+    validate_warehouse_sql("SELECT COUNT(*) FROM filecoin.fdp_raw.rails", messy)
 
 
 def test_bind_substitutes_window_tokens_with_owned_literals():
     sql = (
-        "SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails "
+        "SELECT COUNT(*) FROM filecoin.fdp_raw.rails "
         "WHERE created_at >= :window_start_tz AND created_at < :now_tz"
     )
     tree = validate_warehouse_sql(sql, ALLOWED)
@@ -150,14 +143,14 @@ def test_bind_substitutes_window_tokens_with_owned_literals():
     assert ":window_start_tz" not in bound and ":now_tz" not in bound
     assert "2026-09-01 00:00:00 +00:00" in bound
     # The table is already real, so binding must leave it exactly as written.
-    assert "filecoin.data_portal.filecoin_pay_rails" in bound
+    assert "filecoin.fdp_raw.rails" in bound
 
 
 def test_the_raw_transform_regime_is_unchanged():
     """The refactor must not have loosened the http-json guard."""
     validate_transform_sql("SELECT COUNT(*) FROM raw")
     with pytest.raises(TransformSqlError, match="only the bound `raw` table"):
-        validate_transform_sql("SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails")
+        validate_transform_sql("SELECT COUNT(*) FROM filecoin.fdp_raw.rails")
 
 
 def test_the_two_regimes_do_not_accept_each_other():
@@ -174,13 +167,13 @@ def test_the_two_regimes_do_not_accept_each_other():
     [
         # >3 parts: sqlglot's catalog/db/name keep first/second/last, so the middle vanished from
         # the checked string and survived into the executed SQL.
-        "SELECT 1 FROM filecoin.data_portal.filpgf_private.filecoin_pay_rails",
-        "SELECT 1 FROM filecoin.data_portal.a.b.c.filecoin_pay_rails",
+        "SELECT 1 FROM filecoin.fdp_raw.filpgf_private.rails",
+        "SELECT 1 FROM filecoin.fdp_raw.a.b.c.rails",
         # dots inside a quoted identifier: re-joins to an allowlisted string, but Trino resolves
         # it against the session default catalog/schema instead.
-        'SELECT 1 FROM "filecoin.data_portal".filecoin_pay_rails',
-        'SELECT 1 FROM filecoin."data_portal.filecoin_pay_rails"',
-        'SELECT 1 FROM "filecoin.data_portal.filecoin_pay_rails"',
+        'SELECT 1 FROM "filecoin.fdp_raw".rails',
+        'SELECT 1 FROM filecoin."fdp_raw.rails"',
+        'SELECT 1 FROM "filecoin.fdp_raw.rails"',
     ],
 )
 def test_a_reference_that_checks_as_allowlisted_but_executes_as_something_else_is_rejected(sql):
@@ -189,10 +182,7 @@ def test_a_reference_that_checks_as_allowlisted_but_executes_as_something_else_i
 
 
 def test_a_quoted_cte_alias_cannot_impersonate_an_allowlisted_table():
-    sql = (
-        'WITH "filecoin.data_portal.filecoin_pay_rails" AS (SELECT 1 AS v) '
-        'SELECT v FROM "filecoin.data_portal.filecoin_pay_rails"'
-    )
+    sql = 'WITH "filecoin.fdp_raw.rails" AS (SELECT 1 AS v) SELECT v FROM "filecoin.fdp_raw.rails"'
     with pytest.raises(TransformSqlError, match="exactly catalog.schema.table"):
         validate_warehouse_sql(sql, ALLOWED)
 
@@ -204,18 +194,16 @@ def test_table_refs_reports_every_part_faithfully():
     tree = validate_warehouse_sql(FWSS_SQL, ALLOWED)
     assert all(len(r) == 3 for r in table_refs(tree))
     parsed = __import__("sqlglot").parse_one(
-        "SELECT 1 FROM filecoin.data_portal.filpgf_private.filecoin_pay_rails", dialect="trino"
+        "SELECT 1 FROM filecoin.fdp_raw.filpgf_private.rails", dialect="trino"
     )
-    assert table_refs(parsed) == [
-        ("filecoin", "data_portal", "filpgf_private", "filecoin_pay_rails")
-    ]
+    assert table_refs(parsed) == [("filecoin", "fdp_raw", "filpgf_private", "rails")]
 
 
 def test_select_star_is_rejected_at_validation_not_left_to_the_adapter():
     """One projection to the parser, any number of columns at runtime — otherwise it becomes a
     permanent `indeterminate` that both static gates call fine."""
     with pytest.raises(TransformSqlError, match="not a single scalar"):
-        validate_warehouse_sql("SELECT * FROM filecoin.data_portal.filecoin_pay_rails", ALLOWED)
+        validate_warehouse_sql("SELECT * FROM filecoin.fdp_raw.rails", ALLOWED)
 
 
 def test_select_star_is_rejected_in_the_raw_transform_regime_too():

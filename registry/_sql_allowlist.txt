@@ -13,11 +13,15 @@
 #      same PR is not yet trusted when its metric is checked.
 #   2. Prefer a table whose UPSTREAM is itself public. Every http-json metric can be re-derived by
 #      any outside reader from a public endpoint; a warehouse read breaks that unless the source
-#      data is public too. Both tables below come from Filecoin Data Portal's public parquet at
-#      https://data.filecoindataportal.xyz/, so the numbers stay independently checkable.
+#      data is public too. Both fdp_raw tables below come from Filecoin Data Portal's public
+#      parquet at https://data.filecoindataportal.xyz/, so the numbers stay independently
+#      checkable. They replaced filecoin.data_portal.* on 2026-10-28, after FDP PR #323 renamed
+#      its exports (filecoin_pay_rails -> rails, daily_filecoin_pay_operators_metrics ->
+#      daily_operator_metrics) and the old ingest started to 404. data_portal is now FROZEN at
+#      2026-10-25, so a metric reading it would only ever see that date.
 #      The ProbeLab table is landed by udms/probelab/miner_power_by_agent.py, row for row, from
 #      the public chart at https://probelab.io/filecoin/mainnet/charts/miner-power/.
 
-filecoin.data_portal.daily_filecoin_pay_operators_metrics
-filecoin.data_portal.filecoin_pay_rails
+filecoin.fdp_raw.daily_operator_metrics
+filecoin.fdp_raw.rails
 filecoin.probelab.miner_power_by_agent
