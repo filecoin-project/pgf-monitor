@@ -18,8 +18,8 @@ from fpm.manifest import load_manifest
 from fpm.transform.validate import validate_warehouse_sql
 
 ALLOWED = {
-    "filecoin.data_portal.daily_filecoin_pay_operators_metrics",
-    "filecoin.data_portal.filecoin_pay_rails",
+    "filecoin.fdp_raw.daily_operator_metrics",
+    "filecoin.fdp_raw.rails",
 }
 
 
@@ -179,7 +179,7 @@ def test_the_cadence_window_is_bound_not_a_zero_width_one():
     from fpm.transform.validate import validate_warehouse_sql as _v
 
     windowed = _v(
-        "SELECT COUNT(*) FROM filecoin.data_portal.filecoin_pay_rails "
+        "SELECT COUNT(*) FROM filecoin.fdp_raw.rails "
         "WHERE created_at >= :window_start AND created_at < :window_end",
         ALLOWED,
     )

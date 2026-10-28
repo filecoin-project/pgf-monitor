@@ -19,8 +19,8 @@ from fpm.oso.client import FakeOsoClient
 
 AS_OF = datetime(2026, 9, 10, tzinfo=timezone.utc)
 ALLOWED = {
-    "filecoin.data_portal.daily_filecoin_pay_operators_metrics",
-    "filecoin.data_portal.filecoin_pay_rails",
+    "filecoin.fdp_raw.daily_operator_metrics",
+    "filecoin.fdp_raw.rails",
 }
 
 

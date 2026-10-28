@@ -91,11 +91,10 @@ def table_refs(tree: exp.Expression) -> list[tuple[str, ...]]:
     attributes are a LOSSY projection of the reference. For a name with more than three parts
     sqlglot keeps first/second/last, so the middle silently disappears from anything built out of
     them while surviving verbatim into the SQL we execute. That divergence made
-    `filecoin.data_portal.filpgf_private.filecoin_pay_rails` check as the allowlisted
-    `filecoin.data_portal.filecoin_pay_rails`. A quoted identifier can also carry dots INSIDE one
-    part (`"filecoin.data_portal".filecoin_pay_rails`), which joins back to the same allowlisted
-    string while resolving against a different catalog at query time. Both are why the caller
-    must inspect the parts, never a re-joined string.
+    `filecoin.fdp_raw.filpgf_private.rails` check as the allowlisted `filecoin.fdp_raw.rails`.
+    A quoted identifier can also carry dots INSIDE one part (`"filecoin.fdp_raw".rails`), which
+    joins back to the same allowlisted string while resolving against a different catalog at
+    query time. Both are why the caller must inspect the parts, never a re-joined string.
     """
     return [tuple(part.name.lower() for part in t.parts) for t in tree.find_all(exp.Table)]
 

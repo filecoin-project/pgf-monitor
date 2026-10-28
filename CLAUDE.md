@@ -59,7 +59,9 @@ the community use): `query-gtm-pipeline` (sales pipeline: `gtm_pipeline_by_stage
   and prefer tables whose upstream is public so an outsider can still re-derive the number.
   `scripts/live_oso_sql_smoke.py` proves both halves live. **Freshness is an ORDERING
   property**: an oso-sql metric is only as fresh as the ingestion feeding it, so the
-  `data_portal` dataset runs 21:00 UTC (after FDP's ~18:08 publish) and `observe` 05:23 UTC.
+  `fdp_raw` loaders run 23:40 UTC (after FDP's ~18:08 publish) and `observe` 05:23 UTC.
+  `fdp_raw` replaced the `data_portal` ingest on 2026-10-28 when FDP PR #323 renamed its exports;
+  `filecoin.data_portal.*` is FROZEN at 2026-10-25 and unscheduled, so never allowlist it.
   Until 2026-09-10 the ingest ran at 06:00 UTC -- 37 min AFTER observe -- and the reading was
   silently three days stale. Statements carry a staleness floor (`date > :now - INTERVAL '4'
   DAY`) so a broken order reads `indeterminate`, not a frozen number. History is rebuilt with

@@ -205,8 +205,8 @@ It had been published, which rendered private funding values into a page anyone 
 Most metrics fetch a public endpoint. `kind: oso-sql` instead runs ONE Trino SELECT over tables
 already in the warehouse — reach for it when the number needs a join, which `transform` cannot
 express because it binds exactly one `raw` table. The Filecoin Pay case is the worked example:
-per-operator volume lives in `data_portal.daily_filecoin_pay_operators_metrics`, but the column
-that says which operators belong to a service is in `data_portal.filecoin_pay_rails`.
+per-operator volume lives in `fdp_raw.daily_operator_metrics`, but the column that says which
+operators belong to a service is in `fdp_raw.rails`.
 
 ```yaml
 source:
@@ -214,9 +214,9 @@ source:
   kind: oso-sql          # no base_url / endpoint / query / params: nothing is fetched
   sql: |
     SELECT SUM(m.filecoin_pay_gross_payment_volume_run_rate_usd)
-    FROM filecoin.data_portal.daily_filecoin_pay_operators_metrics AS m
+    FROM filecoin.fdp_raw.daily_operator_metrics AS m
     WHERE m.operator IN (
-        SELECT DISTINCT operator FROM filecoin.data_portal.filecoin_pay_rails
+        SELECT DISTINCT operator FROM filecoin.fdp_raw.rails
         WHERE service = 'FWSS'
       )
 ```
