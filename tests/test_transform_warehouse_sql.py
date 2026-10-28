@@ -43,9 +43,7 @@ def test_accepts_the_two_table_join_the_metric_needs():
 
 def test_alias_is_not_part_of_the_table_name():
     """`... AS m` must not leak into the name, or the allowlist check never matches."""
-    tree = validate_warehouse_sql(
-        "SELECT COUNT(*) FROM filecoin.fdp_raw.rails AS r", ALLOWED
-    )
+    tree = validate_warehouse_sql("SELECT COUNT(*) FROM filecoin.fdp_raw.rails AS r", ALLOWED)
     assert qualified_tables(tree) == {"filecoin.fdp_raw.rails"}
 
 
@@ -94,10 +92,7 @@ def test_rejects_a_cte_because_its_name_is_unqualified():
 
 
 def test_rejects_two_statements():
-    sql = (
-        "SELECT COUNT(*) FROM filecoin.fdp_raw.rails; "
-        "SELECT COUNT(*) FROM filecoin.fdp_raw.rails"
-    )
+    sql = "SELECT COUNT(*) FROM filecoin.fdp_raw.rails; SELECT COUNT(*) FROM filecoin.fdp_raw.rails"
     with pytest.raises(TransformSqlError, match="exactly one statement"):
         validate_warehouse_sql(sql, ALLOWED)
 
@@ -109,9 +104,7 @@ def test_rejects_a_non_select_statement():
 
 def test_rejects_more_than_one_projection():
     with pytest.raises(TransformSqlError, match="exactly one column"):
-        validate_warehouse_sql(
-            "SELECT operator, service FROM filecoin.fdp_raw.rails", ALLOWED
-        )
+        validate_warehouse_sql("SELECT operator, service FROM filecoin.fdp_raw.rails", ALLOWED)
 
 
 def test_rejects_an_unknown_bind_token():
@@ -189,10 +182,7 @@ def test_a_reference_that_checks_as_allowlisted_but_executes_as_something_else_i
 
 
 def test_a_quoted_cte_alias_cannot_impersonate_an_allowlisted_table():
-    sql = (
-        'WITH "filecoin.fdp_raw.rails" AS (SELECT 1 AS v) '
-        'SELECT v FROM "filecoin.fdp_raw.rails"'
-    )
+    sql = 'WITH "filecoin.fdp_raw.rails" AS (SELECT 1 AS v) SELECT v FROM "filecoin.fdp_raw.rails"'
     with pytest.raises(TransformSqlError, match="exactly catalog.schema.table"):
         validate_warehouse_sql(sql, ALLOWED)
 
@@ -206,9 +196,7 @@ def test_table_refs_reports_every_part_faithfully():
     parsed = __import__("sqlglot").parse_one(
         "SELECT 1 FROM filecoin.fdp_raw.filpgf_private.rails", dialect="trino"
     )
-    assert table_refs(parsed) == [
-        ("filecoin", "fdp_raw", "filpgf_private", "rails")
-    ]
+    assert table_refs(parsed) == [("filecoin", "fdp_raw", "filpgf_private", "rails")]
 
 
 def test_select_star_is_rejected_at_validation_not_left_to_the_adapter():

@@ -101,9 +101,7 @@ def test_changing_the_sql_registers_as_a_changed_field():
     from fpm.governance.fields import changed_field_paths
 
     old = manifest_from_raw(copy.deepcopy(BASE)).functions[0]
-    new = manifest_from_raw(
-        _raw(sql="SELECT COUNT(*) FROM filecoin.fdp_raw.rails")
-    ).functions[0]
+    new = manifest_from_raw(_raw(sql="SELECT COUNT(*) FROM filecoin.fdp_raw.rails")).functions[0]
     assert "source.sql" in changed_field_paths(old, new)
 
 
