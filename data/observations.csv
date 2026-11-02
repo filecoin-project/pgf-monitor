@@ -7407,8 +7407,11 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-10-25,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,transform_error: transform result is not a single non-null cell
 2026-10-26,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21348.841064,backfill:filecoin.chain.love,pool balanceOf() x slot0() price at block 6489580
 2026-10-26,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-27,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21344.46852,backfill:filecoin.chain.love,pool balanceOf() x slot0() price at block 6492460
 2026-10-27,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-28,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21405.07838,backfill:filecoin.chain.love,pool balanceOf() x slot0() price at block 6495340
 2026-10-28,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-29,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21389.760457,backfill:filecoin.chain.love,pool balanceOf() x slot0() price at block 6498220
 2026-10-29,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,nightly,transform_error: transform result is not a single non-null cell
 2026-10-30,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21406.1307,nightly,
 2026-10-31,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,21369.8409,nightly,
@@ -7503,8 +7506,11 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-10-25,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,transform_error: transform result is not a single non-null cell
 2026-10-26,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,21885.716874,backfill:filecoin.chain.love,trailing-24h axlUSDC leg of pool Swap logs ending at block 6489580
 2026-10-26,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-27,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,21598.636181,backfill:filecoin.chain.love,trailing-24h axlUSDC leg of pool Swap logs ending at block 6492460
 2026-10-27,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-28,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,20547.141329,backfill:filecoin.chain.love,trailing-24h axlUSDC leg of pool Swap logs ending at block 6495340
 2026-10-28,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,transform_error: transform result is not a single non-null cell
+2026-10-29,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,35075.813532,backfill:filecoin.chain.love,trailing-24h axlUSDC leg of pool Swap logs ending at block 6498220
 2026-10-29,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,nightly,transform_error: transform result is not a single non-null cell
 2026-10-30,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,62166.3363148739,nightly,
 2026-10-31,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,44415.4264729756,nightly,
