@@ -265,6 +265,12 @@ Lotus intermittently fails `eth_getLogs` with `failed to load event message` on 
 window whose parts all load, so a failing window is halved until it loads. A day that still fails is
 left empty, never summed from part of its logs.
 
+GeckoTerminal came back on 2026-10-30: the depth and volume nightlies read from that night on. The
+three nights before it (2026-10-27..29) were recovered with this strategy on 2026-11-02, inside the
+window. Two of the volume days needed several runs before `eth_getLogs` loaded. The failing event
+message changed on every attempt, so the fault was in the node and not missing data. The gap from
+10-14 to 10-30 is now closed for all three metrics.
+
 The new source reads the pool's spot price and the old one read GeckoTerminal's last-trade price. On
 2026-10-13, the last day both were good, they differed by 0.0017, so the series has a small
 definitional step at 2026-10-14.
