@@ -8332,6 +8332,7 @@ observed_at,team,function_id,metric,observed_value,method,note
 2026-10-31,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,45.0,nightly,
 2026-11-01,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,107.0,nightly,
 2026-11-02,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,40.0,nightly,
+2026-11-03,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,58.0,live-review,re-read by hand at ~16:55 UTC through the same OSO ingestion and transform after the 05:23 nightly ingestion run failed
 2026-11-03,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,,nightly,ingestion run FAILED: no value in source response for the measurement window
 2026-07-15,zondax,rosetta-release-currency,rosetta_release_age_days,7.960063,live-review,scheduled review reading
 2026-08-14,zondax,rosetta-release-currency,rosetta_release_age_days,37.82411857635335,nightly,
