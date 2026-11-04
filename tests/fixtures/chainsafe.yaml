@@ -1,5 +1,5 @@
 team: chainsafe
-maintainers: ["@lemmih", "@dignifiedquire"]
+maintainers: ["@lesnyrumcajs", "@liveder"]
 functions:
   - function_id: network-uptime
     kernel_id: chain-sync-state

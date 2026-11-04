@@ -6,7 +6,7 @@
 # signed document; the rest are measured and not scored (see each unscored_reason).
 # Detail in contracts/chainsafe.facts.yaml (maintainer-local).
 team: chainsafe
-maintainers: ["@lemmih", "@dignifiedquire"]
+maintainers: ["@lesnyrumcajs", "@liveder"]
 functions:
 
   # Snapshot-listing worker (ChainSafe/filecoin-snapshot-listing) publishes a JSON listing
