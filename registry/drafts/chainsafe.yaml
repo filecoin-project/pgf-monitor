@@ -10,7 +10,7 @@
 # All four were probed live 2026-07-16 and resolve. Do NOT edit registry/chainsafe.yaml
 # from here — these are new rows only.
 team: chainsafe
-maintainers: ["@lemmih", "@dignifiedquire"]
+maintainers: ["@lesnyrumcajs", "@liveder"]
 x_draft:
   # This draft spans BOTH promoted ChainSafe slate rows:
   slates:

@@ -1,5 +1,5 @@
 team: chainsafe
-maintainers: ["@lemmih"]
+maintainers: ["@lesnyrumcajs"]
 functions:
   - function_id: filecoin-tvl
     kernel_id: open-network-datasets
