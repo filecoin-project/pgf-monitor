@@ -13,14 +13,17 @@ functions:
   # via ?format=json — used here instead of the unversioned /list/mainnet/latest endpoint,
   # which returns an empty listing.
   # THRESHOLD: 6h — roughly three missed cycles at the observed ~2h publish cadence.
+  # Attributed to Filecoin Infrastructure Services, not Forest (2026-11-05, at ChainSafe's request):
+  # the snapshot service is run by the infrastructure team, not the Forest developers, and the
+  # Infrastructure Services agreement is the one that carries the mainnet snapshot SLO.
   - function_id: mainnet-snapshot-freshness
     kernel_id: validated-snapshots
     origin: oso
     tier: essential
     category: 'Blockchain Core & Physical Storage'
     sub_category: 'Mainnet Infrastructure'
-    funded_project_oso_slug: forest-chainsafe
-    grant_ref: APP-P0UD8I92-78VVRM
+    funded_project_oso_slug: filecoin-community-services-chainsafe
+    grant_ref: APP-VQC3PIBY-G2UDZJ
     sla:
       statement: "Mainnet snapshot freshness: age of the newest snapshot in the archive listing, measured daily"
       metric: snapshot_age_seconds
