@@ -207,6 +207,18 @@ WHERE is_in_scope          -- irreplaceable + essential, the tiers ProPGF funds
 ORDER BY adopted_metrics, kernel_function
 ```
 
+## When a metric's definition changes
+
+A metric keeps its name when we change how it is computed, so its series continues across the
+change. Readings from before the change are left as they were: they were correct measurements
+under the definition in force that day, and the same rule that stops us voiding a reading for a
+bad name stops us rewriting one for a changed formula. When you see a step in a series, check here
+before reading it as a change in the service.
+
+| Metric | From | Before | After | Why |
+|---|---|---|---|---|
+| `oif-ipni` / `ipni_error_free_ratio` | 2026-11-11 | share of **every listed** provider with no `LastError` | share of providers that **advertised in the past 14 days** with no `LastError` | On 2026-11-03 the indexer re-checked its whole roster and recorded an error against 51 of 163 providers. All of those failures were on the provider's side: endpoints that time out, expired certificates, dead DNS. Most of those providers had been dormant for months. The old ratio fell from 0.966 to 0.664 overnight while every provider active in the past week stayed error-free. IPNI is pruning those dormant providers, and expects that to take a few weeks. Under the new definition the 2026-11-10 value is 0.968, so expect the series to step up from about 0.68. |
+
 ## Compliance is not a column, on purpose
 
 No table stores pass/fail. The bar rides on each reading **as it stood on that day**, and the
