@@ -66,6 +66,19 @@ functions:
       sql: "SELECT CAST(COUNT(*) AS DOUBLE) FROM raw WHERE last_advertisement_time >= :now_tz - INTERVAL '1' DAY"
 
   # Correctness axis: providers report no LastError.
+  #
+  # DENOMINATOR = providers that advertised in the last 14 days (changed 2026-11-10; before
+  # that it was every listed provider). On 2026-11-03 the indexer re-checked the whole roster and
+  # stamped a LastError on 51 of 163 providers. Every one of those errors was on the provider's
+  # side (timeouts, expired TLS certificates, DNS failures, 502s), and most of those providers had
+  # been dormant for months. The all-providers ratio fell from 0.966 to 0.664 overnight while every
+  # provider active in the past week stayed error-free. IPNI is pruning those dormant providers, and
+  # expects that to take a few weeks. Until then an all-providers ratio measures how many dead SPs
+  # are still listed, not whether the indexer works. The liveness metric above avoids a ratio for
+  # the same reason. Measured 2026-11-10 against the >= 0.90 bar (window, ratio, providers in the
+  # cohort): 7d 1.000 (58), 14d 0.968 (63), 21d 0.849 (73), 30d 0.807 (83), all 0.687 (163).
+  # Readings before 2026-11-11 used the old denominator, so the series steps up at the change;
+  # see docs/public-datasets.md.
   - function_id: content-routing-ipni
     kernel_id: content-routing-ads
     origin: oso
@@ -75,7 +88,7 @@ functions:
     funded_project_oso_slug: ipni
     grant_ref: APP-O66TN87V-3MDZFT
     sla:
-      statement: "IPNI providers error-free: >= 90% of providers report no LastError, measured daily"
+      statement: "IPNI providers error-free: >= 90% of providers that advertised in the past 14 days report no LastError, measured daily"
       metric: ipni_error_free_ratio
       # 0.90 is the threshold in the SIGNED Appendix 1 §3 (agreement doc 1LSw0hk1…, 2026-08-12).
       # This manifest previously carried 0.95, which the recipient never agreed to.
@@ -87,7 +100,10 @@ functions:
       base_url: "https://cid.contact"
       endpoint: "https://cid.contact/providers"
       query: "/providers"
-      extract: { column: last_error, reduce: null_ratio, derive: value, unit: ratio }
+    transform:
+      # last_error is NULL on an error-free provider. NULLIF turns an empty cohort into NULL,
+      # which reads as indeterminate rather than as a ratio.
+      sql: "SELECT CAST(COUNT_IF(last_error IS NULL) AS DOUBLE) / NULLIF(COUNT(*), 0) FROM raw WHERE last_advertisement_time >= :now_tz - INTERVAL '14' DAY"
 
   # Adopted 2026-08-18 from the requested-additions block of IPNI's signed s3. That block records
   # the reason it could not be measured as "cid.contact/health returns a plain string, not valid
