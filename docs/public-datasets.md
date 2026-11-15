@@ -218,6 +218,7 @@ before reading it as a change in the service.
 | Metric | From | Before | After | Why |
 |---|---|---|---|---|
 | `oif-ipni` / `ipni_error_free_ratio` | 2026-11-11 | share of **every listed** provider with no `LastError` | share of providers that **advertised in the past 14 days** with no `LastError` | On 2026-11-03 the indexer re-checked its whole roster and recorded an error against 51 of 163 providers. All of those failures were on the provider's side: endpoints that time out, expired certificates, dead DNS. Most of those providers had been dormant for months. The old ratio fell from 0.966 to 0.664 overnight while every provider active in the past week stayed error-free. IPNI is pruning those dormant providers, and expects that to take a few weeks. Under the new definition the 2026-11-10 value is 0.968, so expect the series to step up from about 0.68. |
+| `oif-ipni` / `ipni_error_free_ratio` | 2026-11-16 | share of providers that **advertised in the past 14 days** with no `LastError` | share of **every listed** provider with no `LastError`, the original definition | This reverts the interim definition above. IPNI's pruning landed on 2026-11-14 and took the roster from 166 providers to 114. On 2026-11-15, 6 of 113 providers carried an error, all dormant for 19 days or more, so the all-providers ratio was 0.947. The definition IPNI signed now passes on its own, so the workaround is no longer needed. The 14-day readings were 0.968 to 1.000, so expect the series to step down to about 0.95. |
 
 ## Compliance is not a column, on purpose
 
