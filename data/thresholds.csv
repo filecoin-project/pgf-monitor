@@ -101,6 +101,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
 2026-11-22,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
 2026-11-23,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
+2026-11-24,ankr,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
 2026-08-20,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,,,provisional
 2026-08-21,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,,,provisional
 2026-08-22,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,,,provisional
@@ -197,6 +198,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4.0,signed-appendix
 2026-11-22,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4.0,signed-appendix
 2026-11-23,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4.0,signed-appendix
+2026-11-24,ankr,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,4.0,signed-appendix
 2026-07-15,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,,,provisional
 2026-08-14,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,,,provisional
 2026-08-15,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,,,provisional
@@ -300,6 +302,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3.0,signed-appendix
 2026-11-22,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3.0,signed-appendix
 2026-11-23,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3.0,signed-appendix
+2026-11-24,ankr,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,3.0,signed-appendix
 2026-07-15,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,,,provisional
 2026-08-14,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,,,provisional
 2026-08-15,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,,,provisional
@@ -402,6 +405,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,,,provisional
 2026-11-22,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,,,provisional
 2026-11-23,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,,,provisional
+2026-11-24,blockscout,calibnet-explorer-blockscout,blockscout_calibnet_head_age_seconds,,,provisional
 2025-07-16,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,,,historical
 2025-07-17,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,,,historical
 2025-07-18,blockscout,calibnet-explorer-blockscout,daily_indexed_transactions,,,historical
@@ -834,6 +838,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,blockscout,calibnet-explorer-health-flag,blockscout_calibnet_health_ok,,,provisional
 2026-11-22,blockscout,calibnet-explorer-health-flag,blockscout_calibnet_health_ok,,,provisional
 2026-11-23,blockscout,calibnet-explorer-health-flag,blockscout_calibnet_health_ok,,,provisional
+2026-11-24,blockscout,calibnet-explorer-health-flag,blockscout_calibnet_health_ok,,,provisional
 2026-09-23,blockscout,calibnet-explorer-indexer-lag,blockscout_calibnet_indexer_block_lag,,,provisional
 2026-09-24,blockscout,calibnet-explorer-indexer-lag,blockscout_calibnet_indexer_block_lag,,,provisional
 2026-09-25,blockscout,calibnet-explorer-indexer-lag,blockscout_calibnet_indexer_block_lag,,,provisional
@@ -896,6 +901,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,blockscout,calibnet-explorer-indexer-lag,blockscout_calibnet_indexer_block_lag,,,provisional
 2026-11-22,blockscout,calibnet-explorer-indexer-lag,blockscout_calibnet_indexer_block_lag,,,provisional
 2026-11-23,blockscout,calibnet-explorer-indexer-lag,blockscout_calibnet_indexer_block_lag,,,provisional
+2026-11-24,blockscout,calibnet-explorer-indexer-lag,blockscout_calibnet_indexer_block_lag,,,provisional
 2026-07-15,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,,,provisional
 2026-08-14,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,,,provisional
 2026-08-15,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,,,provisional
@@ -998,6 +1004,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,,,provisional
 2026-11-22,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,,,provisional
 2026-11-23,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,,,provisional
+2026-11-24,blockscout,fevm-mainnet-explorer-blockscout,blockscout_mainnet_head_age_seconds,,,provisional
 2025-07-16,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,,,historical
 2025-07-17,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,,,historical
 2025-07-18,blockscout,fevm-mainnet-explorer-blockscout,daily_indexed_transactions,,,historical
@@ -1470,6 +1477,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,blockscout,mainnet-block-explorer,explorer_max_tipset_gap_seconds,,,provisional
 2026-11-22,blockscout,mainnet-block-explorer,explorer_max_tipset_gap_seconds,,,provisional
 2026-11-23,blockscout,mainnet-block-explorer,explorer_max_tipset_gap_seconds,,,provisional
+2026-11-24,blockscout,mainnet-block-explorer,explorer_max_tipset_gap_seconds,,,provisional
 2026-09-23,blockscout,mainnet-explorer-health-flag,blockscout_mainnet_health_ok,,,provisional
 2026-09-24,blockscout,mainnet-explorer-health-flag,blockscout_mainnet_health_ok,,,provisional
 2026-09-25,blockscout,mainnet-explorer-health-flag,blockscout_mainnet_health_ok,,,provisional
@@ -1532,6 +1540,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,blockscout,mainnet-explorer-health-flag,blockscout_mainnet_health_ok,,,provisional
 2026-11-22,blockscout,mainnet-explorer-health-flag,blockscout_mainnet_health_ok,,,provisional
 2026-11-23,blockscout,mainnet-explorer-health-flag,blockscout_mainnet_health_ok,,,provisional
+2026-11-24,blockscout,mainnet-explorer-health-flag,blockscout_mainnet_health_ok,,,provisional
 2026-09-23,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,,,provisional
 2026-09-24,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,,,provisional
 2026-09-25,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,,,provisional
@@ -1594,6 +1603,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,,,provisional
 2026-11-22,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,,,provisional
 2026-11-23,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,,,provisional
+2026-11-24,blockscout,mainnet-explorer-indexer-lag,blockscout_mainnet_indexer_block_lag,,,provisional
 2026-08-20,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
 2026-08-21,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
 2026-08-22,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
@@ -1689,6 +1699,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
 2026-11-22,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
 2026-11-23,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
+2026-11-24,chain-love,chain-sync-rpc-calibnet-head-lag,rpc_calibnet_head_lag_epochs,,,provisional
 2026-07-15,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,,,provisional
 2026-08-14,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,,,provisional
 2026-08-15,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,,,provisional
@@ -1792,6 +1803,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,10.0,signed-appendix
 2026-11-22,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,10.0,signed-appendix
 2026-11-23,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,10.0,signed-appendix
+2026-11-24,chain-love,chain-sync-rpc-fevm-eth-head-lag,fevm_eth_head_lag_epochs,<=,10.0,signed-appendix
 2026-07-15,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,,,provisional
 2026-08-14,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,,,provisional
 2026-08-15,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,,,provisional
@@ -1895,6 +1907,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,5.0,signed-appendix
 2026-11-22,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,5.0,signed-appendix
 2026-11-23,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,5.0,signed-appendix
+2026-11-24,chain-love,chain-sync-rpc-mainnet-head-lag,rpc_head_lag_epochs,<=,5.0,signed-appendix
 2026-08-20,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,,,provisional
 2026-08-21,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,,,provisional
 2026-08-22,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,,,provisional
@@ -1990,6 +2003,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,,,provisional
 2026-11-22,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,,,provisional
 2026-11-23,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,,,provisional
+2026-11-24,chain-love,rpc-endpoint-uptime,rpc_endpoint_uptime_pct,,,provisional
 2026-08-20,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,,,provisional
 2026-08-21,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,,,provisional
 2026-08-22,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,,,provisional
@@ -2085,6 +2099,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,,,provisional
 2026-11-22,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,,,provisional
 2026-11-23,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,,,provisional
+2026-11-24,chain-love,rpc-latency-p50,rpc_p50_latency_seconds,,,provisional
 2026-07-15,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,,provisional
 2026-08-14,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,,provisional
 2026-08-15,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,,provisional
@@ -2187,6 +2202,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,,provisional
 2026-11-22,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,,provisional
 2026-11-23,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,,provisional
+2026-11-24,chainsafe,bootstrap-dns-mainnet,bootstrap_dns_status,,,provisional
 2026-07-15,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,,provisional
 2026-08-14,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,,provisional
 2026-08-15,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,,provisional
@@ -2289,6 +2305,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,,provisional
 2026-11-22,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,,provisional
 2026-11-23,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,,provisional
+2026-11-24,chainsafe,calibnet-miner-power,calibnet_miner_qap_bytes,,,provisional
 2026-07-15,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,,,provisional
 2026-08-14,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,,,provisional
 2026-08-15,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,,,provisional
@@ -2391,6 +2408,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,,,provisional
 2026-11-22,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,,,provisional
 2026-11-23,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,,,provisional
+2026-11-24,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds,,,provisional
 2026-07-07,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,,,inherited
 2026-07-08,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,,,inherited
 2026-07-09,chainsafe,calibnet-snapshot-freshness,calibnet_snapshot_age_seconds_daily_max_gap,,,inherited
@@ -2508,6 +2526,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2026-11-22,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2026-11-23,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
+2026-11-24,chainsafe,forest-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2025-07-23,chainsafe,forest-release-cadence,days_between_releases,,,inherited
 2025-08-27,chainsafe,forest-release-cadence,days_between_releases,,,inherited
 2025-09-08,chainsafe,forest-release-cadence,days_between_releases,,,inherited
@@ -2635,6 +2654,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,,,provisional
 2026-11-22,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,,,provisional
 2026-11-23,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,,,provisional
+2026-11-24,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds,,,provisional
 2026-07-03,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,,,inherited
 2026-07-04,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,,,inherited
 2026-07-05,chainsafe,mainnet-snapshot-freshness,snapshot_age_seconds_daily_max_gap,,,inherited
@@ -2747,6 +2767,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,fil-b,docs-open-issues,docs_open_issues,,,provisional
 2026-11-22,fil-b,docs-open-issues,docs_open_issues,,,provisional
 2026-11-23,fil-b,docs-open-issues,docs_open_issues,,,provisional
+2026-11-24,fil-b,docs-open-issues,docs_open_issues,,,provisional
 2025-08-15,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,,,provisional
 2025-08-22,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,,,provisional
 2025-08-29,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,,,provisional
@@ -2899,6 +2920,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,<=,60.0,signed-appendix
 2026-11-22,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,<=,60.0,signed-appendix
 2026-11-23,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,<=,60.0,signed-appendix
+2026-11-24,fil-b,network-documentation-commit-recency,docs_last_commit_age_days,<=,60.0,signed-appendix
 2026-07-15,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,,provisional
 2026-08-14,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,,provisional
 2026-08-15,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,,provisional
@@ -3001,6 +3023,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,,provisional
 2026-11-22,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,,provisional
 2026-11-23,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,,provisional
+2026-11-24,filecoin-data-portal,network-data-portal-pipeline-freshness,pipeline_success_age_days,,,provisional
 2026-09-12,filoz,curio-filecoin-pay-service-volume,filecoin_pay_volume_curio_services,,,provisional
 2026-09-13,filoz,curio-filecoin-pay-service-volume,filecoin_pay_volume_curio_services,,,provisional
 2026-09-14,filoz,curio-filecoin-pay-service-volume,filecoin_pay_volume_curio_services,,,provisional
@@ -3073,6 +3096,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,filoz,curio-filecoin-pay-service-volume,filecoin_pay_volume_curio_services,,,provisional
 2026-11-22,filoz,curio-filecoin-pay-service-volume,filecoin_pay_volume_curio_services,,,provisional
 2026-11-23,filoz,curio-filecoin-pay-service-volume,filecoin_pay_volume_curio_services,,,provisional
+2026-11-24,filoz,curio-filecoin-pay-service-volume,filecoin_pay_volume_curio_services,,,provisional
 2026-07-15,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,,,provisional
 2026-08-14,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,,,provisional
 2026-08-15,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,,,provisional
@@ -3176,6 +3200,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,>=,500.0,signed-appendix
 2026-11-22,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,>=,500.0,signed-appendix
 2026-11-23,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,>=,500.0,signed-appendix
+2026-11-24,filoz,curio-pdp-active-proofsets,pdp_active_proof_sets,>=,500.0,signed-appendix
 2026-09-24,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,,,provisional
 2026-09-25,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,,,provisional
 2026-09-26,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,,,provisional
@@ -3237,6 +3262,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,,,provisional
 2026-11-22,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,,,provisional
 2026-11-23,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,,,provisional
+2026-11-24,filoz,curio-porep-miner-power-share,curio_porep_miner_power_share,,,provisional
 2026-07-15,filoz,curio-sealing-release-cadence,avg_days_between_releases,,,provisional
 2026-08-14,filoz,curio-sealing-release-cadence,avg_days_between_releases,,,provisional
 2026-08-15,filoz,curio-sealing-release-cadence,avg_days_between_releases,,,provisional
@@ -3340,6 +3366,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2026-11-22,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2026-11-23,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
+2026-11-24,filoz,curio-sealing-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2025-08-21,filoz,curio-sealing-release-cadence,days_between_releases,,,inherited
 2025-09-09,filoz,curio-sealing-release-cadence,days_between_releases,,,inherited
 2025-09-18,filoz,curio-sealing-release-cadence,days_between_releases,,,inherited
@@ -3459,6 +3486,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,>=,4.5,signed-appendix
 2026-11-22,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,>=,4.5,signed-appendix
 2026-11-23,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,>=,4.5,signed-appendix
+2026-11-24,filoz,curio-windowpost-winningpost-scheduler,avg_blocks_per_tipset,>=,4.5,signed-appendix
 2026-07-15,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,,,provisional
 2026-08-14,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,,,provisional
 2026-08-15,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,,,provisional
@@ -3562,6 +3590,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0.0,signed-appendix
 2026-11-22,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0.0,signed-appendix
 2026-11-23,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0.0,signed-appendix
+2026-11-24,goldsky,fevm-chain-indexing-errors,fevm_subgraph_indexing_errors,==,0.0,signed-appendix
 2026-07-15,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,,,provisional
 2026-08-14,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,,,provisional
 2026-08-15,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,,,provisional
@@ -3665,6 +3694,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,<=,600.0,signed-appendix
 2026-11-22,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,<=,600.0,signed-appendix
 2026-11-23,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,<=,600.0,signed-appendix
+2026-11-24,goldsky,fevm-chain-indexing-freshness,fevm_subgraph_indexing_lag_seconds,<=,600.0,signed-appendix
 2026-07-15,oif-ipni,content-routing-ipni,ipni_error_free_ratio,,,provisional
 2026-08-14,oif-ipni,content-routing-ipni,ipni_error_free_ratio,,,provisional
 2026-08-15,oif-ipni,content-routing-ipni,ipni_error_free_ratio,,,provisional
@@ -3768,6 +3798,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
 2026-11-22,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
 2026-11-23,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
+2026-11-24,oif-ipni,content-routing-ipni,ipni_error_free_ratio,>=,0.9,signed-appendix
 2026-07-15,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,,,provisional
 2026-08-14,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,,,provisional
 2026-08-15,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,,,provisional
@@ -3871,6 +3902,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,>=,15.0,signed-appendix
 2026-11-22,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,>=,15.0,signed-appendix
 2026-11-23,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,>=,15.0,signed-appendix
+2026-11-24,oif-ipni,content-routing-ipni-ingest-liveness,ipni_providers_advertised_24h,>=,15.0,signed-appendix
 2026-07-15,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,,,provisional
 2026-08-14,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,,,provisional
 2026-08-15,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,,,provisional
@@ -3974,6 +4006,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,>=,100.0,signed-appendix
 2026-11-22,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,>=,100.0,signed-appendix
 2026-11-23,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,>=,100.0,signed-appendix
+2026-11-24,oif-ipni,content-routing-ipni-provider-count,ipni_provider_count,>=,100.0,signed-appendix
 2026-08-20,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,,,provisional
 2026-08-21,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,,,provisional
 2026-08-22,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,,,provisional
@@ -4069,6 +4102,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,,,provisional
 2026-11-22,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,,,provisional
 2026-11-23,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,,,provisional
+2026-11-24,oif-ipni,content-routing-ipni-readiness,ipni_indexer_ready,,,provisional
 2026-07-15,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,,,provisional
 2026-08-14,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,,,provisional
 2026-08-15,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,,,provisional
@@ -4172,6 +4206,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
 2026-11-22,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
 2026-11-23,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
+2026-11-24,plumbline,calibnet-sp-power-share,calibnet_miner_qap_share,<,0.3334,signed-appendix
 2026-07-15,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,,,provisional
 2026-08-14,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,,,provisional
 2026-08-15,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,,,provisional
@@ -4275,6 +4310,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2.0,signed-appendix
 2026-11-22,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2.0,signed-appendix
 2026-11-23,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2.0,signed-appendix
+2026-11-24,randamu,drand-relay-mirror-liveness,relay_mirror_round_lag,<=,2.0,signed-appendix
 2026-07-15,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,,,provisional
 2026-08-14,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,,,provisional
 2026-08-15,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,,,provisional
@@ -4378,6 +4414,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20.0,signed-appendix
 2026-11-22,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20.0,signed-appendix
 2026-11-23,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20.0,signed-appendix
+2026-11-24,randamu,drand-relay-quicknet-freshness,relay_quicknet_round_lag,<=,20.0,signed-appendix
 2025-07-20,randamu,drand-relay-statuspage,statuspage_impact_level,,,provisional
 2025-07-21,randamu,drand-relay-statuspage,statuspage_impact_level,,,provisional
 2025-07-22,randamu,drand-relay-statuspage,statuspage_impact_level,,,provisional
@@ -4846,6 +4883,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1.0,signed-appendix
 2026-11-22,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1.0,signed-appendix
 2026-11-23,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1.0,signed-appendix
+2026-11-24,randamu,drand-relay-statuspage,statuspage_impact_level,<=,1.0,signed-appendix
 2026-08-14,randamu,drand-release-cadence,avg_days_between_releases,,,provisional
 2026-08-15,randamu,drand-release-cadence,avg_days_between_releases,,,provisional
 2026-08-16,randamu,drand-release-cadence,avg_days_between_releases,,,provisional
@@ -4948,6 +4986,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,randamu,drand-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2026-11-22,randamu,drand-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2026-11-23,randamu,drand-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
+2026-11-24,randamu,drand-release-cadence,avg_days_between_releases,<=,45.0,signed-appendix
 2026-07-15,randamu,randomness-beacon,beacon_round_lag,,,provisional
 2026-08-14,randamu,randomness-beacon,beacon_round_lag,,,provisional
 2026-08-15,randamu,randomness-beacon,beacon_round_lag,,,provisional
@@ -5051,6 +5090,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,randamu,randomness-beacon,beacon_round_lag,<=,1.0,signed-appendix
 2026-11-22,randamu,randomness-beacon,beacon_round_lag,<=,1.0,signed-appendix
 2026-11-23,randamu,randomness-beacon,beacon_round_lag,<=,1.0,signed-appendix
+2026-11-24,randamu,randomness-beacon,beacon_round_lag,<=,1.0,signed-appendix
 2026-08-14,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,,provisional
 2026-08-15,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,,provisional
 2026-08-16,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,,provisional
@@ -5152,6 +5192,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,,provisional
 2026-11-22,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,,provisional
 2026-11-23,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,,provisional
+2026-11-24,secured-finance,usdfc-axlusdc-pool-tvl,usdfc_pool_tvl_usd,,,provisional
 2026-08-14,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,,provisional
 2026-08-15,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,,provisional
 2026-08-16,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,,provisional
@@ -5253,6 +5294,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,,provisional
 2026-11-22,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,,provisional
 2026-11-23,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,,provisional
+2026-11-24,secured-finance,usdfc-axlusdc-pool-volume,usdfc_pool_volume_usd,,,provisional
 2026-08-25,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,,provisional
 2026-08-26,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,,provisional
 2026-08-27,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,,provisional
@@ -5343,6 +5385,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,,provisional
 2026-11-22,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,,provisional
 2026-11-23,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,,provisional
+2026-11-24,secured-finance,usdfc-peg-deviation,usdfc_peg_deviation,,,provisional
 2026-08-25,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,,,provisional
 2026-08-26,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,,,provisional
 2026-08-27,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,,,provisional
@@ -5433,6 +5476,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,,,provisional
 2026-11-22,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,,,provisional
 2026-11-23,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,,,provisional
+2026-11-24,secured-finance,usdfc-redemption-fee,usdfc_redemption_fee_pct,,,provisional
 2026-10-14,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,,,provisional
 2026-10-15,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,,,provisional
 2026-10-16,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,,,provisional
@@ -5474,6 +5518,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,,,provisional
 2026-11-22,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,,,provisional
 2026-11-23,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,,,provisional
+2026-11-24,zondax,beryx-traces-indexing-freshness,beryx_traces_indexing_freshness,,,provisional
 2026-07-15,zondax,rosetta-release-currency,rosetta_release_age_days,,,provisional
 2026-08-14,zondax,rosetta-release-currency,rosetta_release_age_days,<=,60,signed-appendix
 2026-08-15,zondax,rosetta-release-currency,rosetta_release_age_days,<=,60,signed-appendix
@@ -5577,6 +5622,7 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,zondax,rosetta-release-currency,rosetta_release_age_days,<=,60.0,signed-appendix
 2026-11-22,zondax,rosetta-release-currency,rosetta_release_age_days,<=,60.0,signed-appendix
 2026-11-23,zondax,rosetta-release-currency,rosetta_release_age_days,<=,60.0,signed-appendix
+2026-11-24,zondax,rosetta-release-currency,rosetta_release_age_days,<=,60.0,signed-appendix
 2026-07-15,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,,,provisional
 2026-08-14,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix
 2026-08-15,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000,signed-appendix
@@ -5680,3 +5726,4 @@ observed_at,team,function_id,metric,threshold_op,threshold_value,source
 2026-11-21,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000.0,signed-appendix
 2026-11-22,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000.0,signed-appendix
 2026-11-23,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000.0,signed-appendix
+2026-11-24,zondax,zondax-node-rpc-archival-depth,archival_tipset_height_served,==,100000.0,signed-appendix
